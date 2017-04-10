@@ -33,3 +33,7 @@
 
 # Vim
 .*.swp
+
+# I like to call temporary files for storing random crap one of these.
+log
+tmp
