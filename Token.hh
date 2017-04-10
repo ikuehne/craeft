@@ -51,18 +51,18 @@ namespace Tok {
  * @brief Names of types.
  */
 struct TypeName {
-    std::wstring name;
+    std::string name;
 
-    TypeName(std::wstring name): name(std::move(name)) {}
+    TypeName(std::string name): name(std::move(name)) {}
 };
 
 /**
  * @brief Non-type identifiers.
  */
 struct Identifier {
-    std::wstring name;
+    std::string name;
 
-    Identifier(std::wstring name): name(std::move(name)) {}
+    Identifier(std::string name): name(std::move(name)) {}
 };
 
 /**
@@ -96,9 +96,9 @@ struct FloatLiteral {
  * @brief Operators.
  */
 struct Operator {
-    std::wstring op;
+    std::string op;
 
-    Operator(std::wstring op): op(std::move(op)) {}
+    Operator(std::string op): op(std::move(op)) {}
 };
 
 /**
