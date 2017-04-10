@@ -27,3 +27,9 @@
 *.exe
 *.out
 *.app
+
+# YouCompleteMe
+.ycm_*
+
+# Vim
+.*.swp
