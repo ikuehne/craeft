@@ -32,6 +32,8 @@
 
 #include <boost/variant.hpp>
 
+namespace Compiler {
+
 namespace Tok {
 
 /**
@@ -49,18 +51,18 @@ namespace Tok {
  * @brief Names of types.
  */
 struct TypeName {
-    std::string name;
+    std::wstring name;
 
-    TypeName(std::string name): name(std::move(name)) {}
+    TypeName(std::wstring name): name(std::move(name)) {}
 };
 
 /**
  * @brief Non-type identifiers.
  */
 struct Identifier {
-    std::string name;
+    std::wstring name;
 
-    Identifier(std::string name): name(std::move(name)) {}
+    Identifier(std::wstring name): name(std::move(name)) {}
 };
 
 /**
@@ -93,10 +95,10 @@ struct FloatLiteral {
 /**
  * @brief Operators.
  */
-class Operator {
-    std::string op;
+struct Operator {
+    std::wstring op;
 
-    Operator(std::string op): op(std::move(op)) {}
+    Operator(std::wstring op): op(std::move(op)) {}
 };
 
 /**
@@ -107,6 +109,7 @@ struct OpenParen {};
 struct CloseParen {};
 struct OpenBrace {};
 struct CloseBrace {};
+struct Comma {};
 struct Fn {};
 struct Struct {};
 struct Return {};
@@ -123,8 +126,11 @@ typedef boost::variant< TypeName,
                         Operator,
                         OpenParen, CloseParen,
                         OpenBrace, CloseBrace,
+                        Comma,
                         Fn, Struct,
                         Return,
                         If, Else, While > Token;
+
+}
 
 }
