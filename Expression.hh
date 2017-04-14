@@ -8,7 +8,7 @@
  * data members and a simple constructor taking corresponding arguments.
  */
 
-/* CS 81 Compiler: a compiler for a new systems programming language.
+/* Craeft: a new systems programming language.
  *
  * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
  * 
@@ -36,7 +36,7 @@
 #include "Error.hh"
 #include "Type.hh"
 
-namespace Compiler {
+namespace Craeft {
 
 namespace AST {
 

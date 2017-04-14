@@ -7,7 +7,7 @@
  * variant type `Token` which can be any of those classes.
  */
 
-/* CS 81 Compiler: a compiler for a new systems programming language.
+/* Craeft: a new systems programming language.
  *
  * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
  * 
@@ -35,7 +35,7 @@
 #include "Error.hh"
 #include "Token.hh"
 
-namespace Compiler {
+namespace Craeft {
 
 class Lexer {
 public:

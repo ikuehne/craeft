@@ -1,3 +1,10 @@
+/**
+ * @file expr_parse_demo.cpp
+ *
+ * A demo/test of the expression parser.  To be deleted once the parser is
+ * completed and more systematic testing is added.
+ */
+
 #include <iostream>
 
 #include "Parser.hh"
@@ -5,10 +12,10 @@
 int main(int argc, char **argv) {
     std::string fname = argv[1];
 
-    auto parser = Compiler::Parser(fname);
+    auto parser = Craeft::Parser(fname);
 
     try {
-        Compiler::AST::print_expr(parser.parse_expression(), std::cout);
+        Craeft::AST::print_expr(parser.parse_expression(), std::cout);
         std::cout << std::endl;
     } catch (const char *msg) {
         std::cerr << "Error: " << msg << std::endl;

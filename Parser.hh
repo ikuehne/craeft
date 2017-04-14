@@ -4,7 +4,7 @@
  * @brief The parser.
  */
 
-/* CS 81 Compiler: a compiler for a new systems programming language.
+/* Craeft: a new systems programming language.
  *
  * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
  * 
@@ -29,7 +29,7 @@
 #include "Expression.hh"
 #include "Lexer.hh"
 
-namespace Compiler {
+namespace Craeft {
 
 class Parser {
 public:

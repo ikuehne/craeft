@@ -2,7 +2,7 @@
  * @file Parser.cpp
  */
 
-/* CS 81 Compiler: a compiler for a new systems programming language.
+/* Craeft: a new systems programming language.
  *
  * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
  * 
@@ -28,7 +28,7 @@
  * Utilities for converting tokens to simple AST nodes.
  */
 
-namespace Compiler {
+namespace Craeft {
 
 template <typename AstLiteral, typename TokLiteral>
 static inline AstLiteral get_literal(TokLiteral tok, SourcePos pos) {
@@ -101,8 +101,6 @@ AST::Expression Parser::parse_binop(int prec, AST::Expression lhs) {
 
     while (true) {
         int old_prec = get_token_precedence();
-
-        std::cerr << old_prec << ", " << prec << std::endl;
 
         if (old_prec < prec) return lhs;
 

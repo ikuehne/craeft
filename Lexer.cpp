@@ -2,7 +2,7 @@
  * @file Lexer.cpp
  */
 
-/* CS 81 Compiler: a compiler for a new systems programming language.
+/* Craeft: a new systems programming language.
  *
  * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
  * 
@@ -25,7 +25,7 @@
 
 #include "Lexer.hh"
 
-namespace Compiler {
+namespace Craeft {
 
 Lexer::Lexer(std::string fname)
     : c(' '), eof(false), tok(Tok::OpenParen()), pos(0, 0), stream(fname) {

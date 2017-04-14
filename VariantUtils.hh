@@ -4,7 +4,7 @@
  * Utilities for dealing with `boost::variant`s.
  */
 
-/* CS 81 Compiler: a compiler for a new systems programming language.
+/* Craeft: a new systems programming language.
  *
  * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
  * 
@@ -25,6 +25,7 @@
 #pragma once
 
 #include <boost/variant.hpp>
+
 /**
  * Check the type of a boost::variant.
  *

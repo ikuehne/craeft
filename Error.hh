@@ -4,7 +4,7 @@
  * @brief Error handling and related utilities.
  */
 
-/* CS 81 Compiler: a compiler for a new systems programming language.
+/* Craeft: a new systems programming language.
  *
  * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
  * 
@@ -26,7 +26,7 @@
 
 #include <cstdint>
 
-namespace Compiler {
+namespace Craeft {
 
 struct SourcePos {
     uint16_t charno;
