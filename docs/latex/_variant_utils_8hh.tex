@@ -1,0 +1,27 @@
+\hypertarget{_variant_utils_8hh}{}\section{Variant\+Utils.\+hh File Reference}
+\label{_variant_utils_8hh}\index{Variant\+Utils.\+hh@{Variant\+Utils.\+hh}}
+{\ttfamily \#include $<$boost/variant.\+hpp$>$}\newline
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$typename Query\+For , typename Variant\+Type $>$ }\\bool \hyperlink{_variant_utils_8hh_a028885bc69ad44b9ff431ad164b503da}{is\+\_\+type} (Variant\+Type v)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Utilities for dealing with {\ttfamily boost\+::variant}s. 
+
+\subsection{Function Documentation}
+\hypertarget{_variant_utils_8hh_a028885bc69ad44b9ff431ad164b503da}{}\label{_variant_utils_8hh_a028885bc69ad44b9ff431ad164b503da} 
+\index{Variant\+Utils.\+hh@{Variant\+Utils.\+hh}!is\+\_\+type@{is\+\_\+type}}
+\index{is\+\_\+type@{is\+\_\+type}!Variant\+Utils.\+hh@{Variant\+Utils.\+hh}}
+\subsubsection{\texorpdfstring{is\+\_\+type()}{is\_type()}}
+{\footnotesize\ttfamily template$<$typename Query\+For , typename Variant\+Type $>$ \\
+bool is\+\_\+type (\begin{DoxyParamCaption}\item[{Variant\+Type}]{v }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Check the type of a boost\+::variant.
+
+First template parameter is the type to ask about; the second is the variant type to ask of. Intended to be used by omitting second template parameter. 
+
+Definition at line 37 of file Variant\+Utils.\+hh.
+

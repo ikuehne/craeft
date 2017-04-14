@@ -8,11 +8,11 @@ COMPILER_OBJS=Parser.o Expression.o Lexer.o
 
 all: expr_parse_demo
 
-doc:
+docs:
 	doxygen
 
 expr_parse_demo: $(COMPILER_OBJS) expr_parse_demo.o
 
 clean:
 	$(RM) *.o expr_parse_demo
-	$(RM) -r doc
+	$(RM) -r docs
