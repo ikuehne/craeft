@@ -2,32 +2,35 @@ var indexSectionsWithContent =
 {
   0: "abcdefgiloprstuvw",
   1: "bcdefiloprstuvw",
-  2: "elptv",
-  3: "agilps",
-  4: "et",
-  5: "ct",
-  6: "c"
+  2: "c",
+  3: "elptv",
+  4: "agilps",
+  5: "et",
+  6: "ct",
+  7: "c"
 };
 
 var indexSectionNames =
 {
   0: "all",
   1: "classes",
-  2: "files",
-  3: "functions",
-  4: "typedefs",
-  5: "groups",
-  6: "pages"
+  2: "namespaces",
+  3: "files",
+  4: "functions",
+  5: "typedefs",
+  6: "groups",
+  7: "pages"
 };
 
 var indexSectionLabels =
 {
   0: "All",
   1: "Classes",
-  2: "Files",
-  3: "Functions",
-  4: "Typedefs",
-  5: "Modules",
-  6: "Pages"
+  2: "Namespaces",
+  3: "Files",
+  4: "Functions",
+  5: "Typedefs",
+  6: "Modules",
+  7: "Pages"
 };
 

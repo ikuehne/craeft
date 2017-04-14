@@ -28,6 +28,13 @@
 
 namespace Craeft {
 
+/**
+ * @brief Represent a position in a source file.
+ *
+ * Must be small (32 bits) because it is used to annotate all AST nodes, and
+ * they get passed around a lot.  Intended to allow for pretty and informative
+ * error messages.
+ */
 struct SourcePos {
     uint16_t charno;
     uint16_t lineno;

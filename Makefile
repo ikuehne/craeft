@@ -8,6 +8,7 @@ COMPILER_OBJS=Parser.o Expression.o Lexer.o
 
 all: expr_parse_demo
 
+.PHONY: docs
 docs:
 	doxygen
 

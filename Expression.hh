@@ -38,6 +38,10 @@
 
 namespace Craeft {
 
+/**
+ * @brief Contains all classes and utilities relating to the abstract syntax
+ * tree.
+ */
 namespace AST {
 
 /**

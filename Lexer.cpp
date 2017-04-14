@@ -25,6 +25,11 @@
 
 #include "Lexer.hh"
 
+/**
+ * @brief Contains all interfaces internal to the compiler.
+ *
+ * Should *not* be used for files intended to be compiled to executables.
+ */
 namespace Craeft {
 
 Lexer::Lexer(std::string fname)

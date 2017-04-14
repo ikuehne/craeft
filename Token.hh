@@ -34,6 +34,9 @@
 
 namespace Craeft {
 
+/**
+ * @brief Contains all classes and utilities relating to lexical tokens.
+ */
 namespace Tok {
 
 /**
