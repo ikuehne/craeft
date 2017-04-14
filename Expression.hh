@@ -28,11 +28,13 @@
 
 #pragma once
 
+#include <ostream>
 #include <vector>
 
 #include <boost/variant.hpp>
 
 #include "Error.hh"
+#include "Type.hh"
 
 namespace Compiler {
 
@@ -89,13 +91,13 @@ struct Cast;
  *
  * Use move semantics.
  */
-class Expression: public boost::variant< IntLiteral,
-                                         UIntLiteral,
-                                         FloatLiteral,
-                                         Variable,
-                                         std::unique_ptr<Binop>,
-                                         std::unique_ptr<FunctionCall>,
-                                         std::unique_ptr<Cast> > {};
+typedef boost::variant< IntLiteral,
+                        UIntLiteral,
+                        FloatLiteral,
+                        Variable,
+                        std::unique_ptr<Binop>,
+                        std::unique_ptr<FunctionCall>,
+                        std::unique_ptr<Cast> > Expression;
 /**
  * @brief Binary operator application.
  */
@@ -130,17 +132,26 @@ struct FunctionCall {
 };
 
 /**
- * @brief Casts.
+ * @brief Casts, from the syntactic form (Typename)expression.
  */
 struct Cast {
-    std::string tname;
+    std::unique_ptr<Type> t;
 
     Expression arg;
 
     SourcePos pos;
 
-    Cast(std::string tname, Expression arg, SourcePos pos)
-        : tname(std::move(tname)), arg(std::move(arg)), pos(pos) {}
+    Cast(std::unique_ptr<Type> t, Expression arg, SourcePos pos)
+        : t(std::move(t)), arg(std::move(arg)), pos(pos) {}
 };
+
+/**
+ * @brief Print a representation of the expression to the given stream.
+ *
+ * Intended for debugging.
+ */
+void print_expr(const Expression &, std::ostream &);
+
+}
 
 }

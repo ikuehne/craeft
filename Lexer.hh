@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include <iostream>
+#include <string>
 #include <fstream>
 #include <memory>
 
@@ -56,6 +58,11 @@ public:
     Tok::Token get_tok(void) const;
 
     /**
+     * @brief Return whether the lexer has reached the end of the stream.
+     */
+    bool at_eof() const;
+
+    /**
      * @brief Lex a new token.
      */
     void shift(void);
@@ -65,6 +72,7 @@ private:
     void get(void);
     boost::variant<double, uint64_t> lex_number(void);
 
+    bool eof;
     Tok::Token tok;
     SourcePos pos;
     std::ifstream stream;

@@ -28,7 +28,9 @@
 namespace Compiler {
 
 Lexer::Lexer(std::string fname)
-    : tok(Tok::OpenParen()), pos(0, 0), stream(fname) {}
+    : c(' '), eof(false), tok(Tok::OpenParen()), pos(0, 0), stream(fname) {
+    shift();
+}
 
 SourcePos Lexer::get_pos(void) const {
     return pos;
@@ -120,9 +122,14 @@ boost::variant<double, uint64_t> Lexer::lex_number(void) {
 }
 
 void Lexer::shift(void) {
-    do {
+    while (std::isspace(c)) {
         get();
-    } while (isspace(c));
+    }
+
+    if (c == std::char_traits<char>::eof()) {
+        eof = true;
+        return;
+    }
 
     /* Type name. */
     if (isupper(c)) {
@@ -171,11 +178,19 @@ void Lexer::shift(void) {
 
         tok = Tok::Operator(result);
     /* Some random syntax. */
-    } else if (c == '(') tok = Tok::OpenParen();
-      else if (c == ')') tok = Tok::CloseParen();
-      else if (c == '{') tok = Tok::OpenBrace();
-      else if (c == '}') tok = Tok::CloseBrace();
-      else throw "TODO";
+    } else if (c == '(') {
+        tok = Tok::OpenParen();
+        get();
+    } else if (c == ')') {
+        tok = Tok::CloseParen();
+        get();
+    } else if (c == '{') {
+        tok = Tok::OpenBrace();
+        get();
+    } else if (c == '}') {
+        tok = Tok::CloseBrace();
+        get();
+    } else throw "Character not recognized";
 }
 
 Tok::Token Lexer::get_tok(void) const {
@@ -192,5 +207,5 @@ void Lexer::get(void) {
         pos.charno++;
     }
 }
-    
+
 }
