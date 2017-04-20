@@ -140,7 +140,7 @@ void Lexer::shift(void) {
     if (isupper(c)) {
         std::string tname;
 
-        while (isalpha(c)) {
+        while (isalpha(c) || isdigit(c) || c == '_') {
             tname.push_back(c);
             get();
         }
@@ -150,7 +150,7 @@ void Lexer::shift(void) {
     } else if (islower(c)) {
         std::string ident;
 
-        while (isalpha(c)) {
+        while (isalpha(c) || isdigit(c) || c == '_') {
             ident.push_back(c);
             get();
         }
@@ -158,6 +158,7 @@ void Lexer::shift(void) {
         /* Keywords that otherwise look like identifiers. */
         if      (ident == "fn")     tok =  Tok::Fn();
         else if (ident == "struct") tok =  Tok::Struct();
+        else if (ident == "type")   tok =  Tok::Type();
         else if (ident == "return") tok =  Tok::Return();
         else if (ident == "if")     tok =  Tok::If();
         else if (ident == "else")   tok =  Tok::Else();
@@ -181,7 +182,11 @@ void Lexer::shift(void) {
             result.push_back(c);
         }
 
-        tok = Tok::Operator(result);
+        if (result == "->") {
+            tok =  Tok::Arrow();
+        } else {
+            tok = Tok::Operator(result);
+        }
     /* Some random syntax. */
     } else if (c == '(') {
         tok = Tok::OpenParen();
@@ -194,6 +199,9 @@ void Lexer::shift(void) {
         get();
     } else if (c == '}') {
         tok = Tok::CloseBrace();
+        get();
+    } else if (c == ';') {
+        tok = Tok::Semicolon();
         get();
     } else throw "Character not recognized";
 }

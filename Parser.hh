@@ -26,7 +26,7 @@
 
 #include <map>
 
-#include "Expression.hh"
+#include "AST.hh"
 #include "Lexer.hh"
 
 namespace Craeft {
@@ -46,6 +46,10 @@ public:
      * Start at the token the lexer is *currently* on.
      */
     AST::Expression parse_expression(void);
+
+    AST::Statement parse_statement(void);
+
+    AST::TopLevel parse_toplevel(void);
 
 private:
     /**
@@ -77,6 +81,22 @@ private:
      * @brief Parse anything but an operator application.
      */
     AST::Expression parse_primary(void);
+
+    /**
+     * @brief Parse a type.
+     */
+    AST::Type parse_type(void);
+
+    /**
+     * @brief Parse a variable declaration.
+     */
+    AST::Statement parse_declaration(void);
+    
+    AST::TypeDeclaration parse_type_declaration(void);
+
+    AST::StructDeclaration parse_struct_declaration(void);
+
+    AST::TopLevel parse_function(void);
 
     /**
      * @brief Look up the precedence of an operator.

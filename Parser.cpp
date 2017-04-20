@@ -20,8 +20,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Parser.hh"
+#include <cstdlib>
 
+#include "Parser.hh"
 #include "VariantUtils.hh"
 
 /*****************************************************************************
@@ -43,6 +44,36 @@ Parser::Parser(std::string fname): lexer(fname) {}
 
 AST::Expression Parser::parse_expression(void) {
     return parse_binop(0, parse_primary());
+}
+
+AST::Statement Parser::parse_statement(void) {
+    AST::Statement result;
+    if (is_type<Tok::TypeName>(lexer.get_tok())) {
+        result = parse_declaration();
+    } else {
+        result = std::make_unique<AST::Expression>(parse_expression());
+    }
+
+    if (!is_type<Tok::Semicolon>(lexer.get_tok())) {
+        throw "Expected ; after statement.";
+    }
+
+    // Shif the semicolon.
+    lexer.shift();
+
+    return result;
+}
+
+AST::TopLevel Parser::parse_toplevel(void) {
+    if (is_type<Tok::Fn>(lexer.get_tok())) {
+        return parse_function();
+    } else if (is_type<Tok::Struct>(lexer.get_tok())) {
+        return parse_struct_declaration();
+    } else if (is_type<Tok::Type>(lexer.get_tok())) {
+        return parse_type_declaration();
+    } else {
+        throw "Expected function or type declaration at top level.";
+    }
 }
 
 /*****************************************************************************
@@ -130,10 +161,7 @@ AST::Expression Parser::parse_binop(int prec, AST::Expression lhs) {
 std::unique_ptr<AST::Cast> Parser::parse_cast(void) {
 
     auto start = lexer.get_pos();
-    auto tname = boost::get<Tok::TypeName>(lexer.get_tok());
-
-    // Shift the typename.
-    lexer.shift();
+    auto type = std::make_unique<AST::Type>(parse_type());
 
     // No closing parenthesis.
     if (!is_type<Tok::CloseParen>(lexer.get_tok())) {
@@ -145,9 +173,8 @@ std::unique_ptr<AST::Cast> Parser::parse_cast(void) {
 
     auto expr = parse_expression();
 
-    auto t = std::make_unique<Type>(std::move(tname.name));
-
-    return std::make_unique<AST::Cast>(std::move(t), std::move(expr), start);
+    return std::make_unique<AST::Cast>(std::move(type), std::move(expr),
+                                       start);
 }
 
 AST::Expression Parser::parse_parens(void) {
@@ -203,6 +230,218 @@ AST::Expression Parser::parse_primary(void) {
     } else {
         throw "Expected expression.";
     }
+}
+
+AST::Type Parser::parse_type(void) {
+    /* TODO: Handle pointers, parentheses, array types, etc. */
+    auto tname = boost::get<Tok::TypeName>(lexer.get_tok()).name;
+
+    // Shift off the typename.
+    lexer.shift();
+
+    if (tname == "Double") {
+        return AST::Double();
+    } else if (tname == "Float") {
+        return AST::Float();
+    } else if (tname.size() == 3 && isdigit(tname[1]) && isdigit(tname[2])) {
+        int nbits = std::stoi(tname.substr(1, 2));
+        if (nbits <= 64) {
+            if      (tname[0] == 'I') return AST::IntType(nbits);
+            else if (tname[0] == 'U') return AST::UIntType(nbits);
+        }
+    }
+
+    return AST::UserType(tname);
+}
+
+AST::Statement Parser::parse_declaration(void) {
+    if (!is_type<Tok::TypeName>(lexer.get_tok())) {
+        throw "Expected type name in declaration.";
+    }
+
+    auto type = parse_type();
+
+    if (!is_type<Tok::Identifier>(lexer.get_tok())) {
+        throw "Expected identifier in declaration.";
+    }
+
+    auto ident = boost::get<Tok::Identifier>(lexer.get_tok());
+
+    auto var = AST::Variable(ident.name, lexer.get_pos());
+
+    lexer.shift();
+
+    if (is_type<Tok::Semicolon>(lexer.get_tok())) {
+        return std::make_unique<AST::Declaration>(std::move(type), var);
+    }
+
+    if (!is_type<Tok::Operator>(lexer.get_tok())) {
+        throw "Expected equals sign in compound assignment.";
+    }
+
+    auto op = boost::get<Tok::Operator>(lexer.get_tok());
+
+    if (op.op != "=") {
+        throw "Expected equals sign in compound assignment.";
+    }
+
+    // Shift the equals sign.
+    lexer.shift();
+
+    auto rhs = parse_expression();
+
+    return std::make_unique<AST::CompoundDeclaration>(std::move(type), var,
+                                                      std::move(rhs));
+}
+
+AST::TypeDeclaration Parser::parse_type_declaration(void) {
+    // Shift the `type`.
+    lexer.shift();
+
+    auto tok = lexer.get_tok();
+    auto *tname = boost::get<Tok::TypeName>(&tok);
+
+    if (!tname) {
+        throw "Expected type name in type declaration.";
+    }
+
+    // Shift the type name.
+    lexer.shift();
+
+    return AST::TypeDeclaration(tname->name);
+}
+
+AST::StructDeclaration Parser::parse_struct_declaration(void) {
+    // Shift the `struct`.
+    lexer.shift();
+
+    auto tok = lexer.get_tok();
+    auto *tname = boost::get<Tok::TypeName>(&tok);
+
+    if (!tname) {
+        throw "Expected type name in type declaration.";
+    }
+
+    // Shift the type name.
+    lexer.shift();
+
+    if (!is_type<Tok::OpenBrace>(lexer.get_tok())) {
+        throw "Expected open brace in struct definition.";
+    }
+
+    // Shift the brace.
+    lexer.shift();
+
+    std::vector<std::unique_ptr<AST::Declaration> > members;
+
+    // Until we get to the closing brace,
+    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
+        auto decl_tmp = parse_declaration();
+        auto *decl = boost::get<std::unique_ptr<AST::Declaration>>(&decl_tmp);
+
+        if (!decl) {
+            throw "Expected variable declaration in struct definition.";
+        }
+
+        if (!is_type<Tok::Semicolon>(lexer.get_tok())) {
+            throw "Expected semicolon after struct member declaration.";
+        }
+
+        members.push_back(std::move(*decl));
+
+        // Shift the semicolon.
+        lexer.shift();
+    }
+
+    // Shift the closing brace.
+    lexer.shift();
+
+    return AST::StructDeclaration(tname->name, std::move(members));
+}
+
+AST::TopLevel Parser::parse_function(void) {
+    // Shift the `fn`.
+    lexer.shift();
+
+    auto tok = lexer.get_tok();
+
+    auto *ident = boost::get<Tok::Identifier>(&tok);
+
+    if (!ident) {
+        throw "Expected identifier as function name.";
+    }
+
+    auto fname = std::move(ident->name);
+
+    // Shift the function name.
+    lexer.shift();
+
+    if (!is_type<Tok::OpenParen>(lexer.get_tok())) {
+        throw "Expected open parenthesis to start argument list.";
+    }
+
+    // Shift the open paren.
+    lexer.shift();
+
+    std::vector<std::unique_ptr<AST::Declaration> > args;
+
+    while (!is_type<Tok::CloseParen>(lexer.get_tok())) {
+        auto decl_tmp = parse_declaration();
+        auto *decl = boost::get<std::unique_ptr<AST::Declaration>>(&decl_tmp);
+
+        if (!decl) {
+            throw "Expected variable declaration in argument list.";
+        }
+
+        args.push_back(std::move(*decl));
+
+        if      (is_type<Tok::CloseParen>(lexer.get_tok())) break;
+        else if (is_type<Tok::Comma>(lexer.get_tok())) continue;
+        else    throw "Expected comma between arguments in declaration.";
+    }
+
+    // Shift the closing paren.
+    lexer.shift();
+
+    // Default to void type;
+    AST::Type ret_type = AST::Void();
+
+    // parse another return type if present.
+    if (is_type<Tok::Arrow>(lexer.get_tok())) {
+        lexer.shift();
+        ret_type = parse_type();
+    }
+
+    AST::FunctionDeclaration decl(fname,
+                                  std::move(args), std::move(ret_type));
+
+    // If semicolon, this is just a forward declaration.
+    if (is_type<Tok::Semicolon>(lexer.get_tok())) {
+        return std::move(decl);
+    }
+
+    if (!is_type<Tok::OpenBrace>(lexer.get_tok())) {
+        throw "Expected open brace before function body.";
+    }
+
+    // Shift off open brace.
+    lexer.shift();
+
+    std::vector<AST::Statement> body;
+
+    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
+        body.push_back(parse_statement());
+
+        if (!is_type<Tok::Semicolon>(lexer.get_tok())) {
+            throw "Expected semicolon after statement.";
+        }
+
+        // Shift off the semicolon.
+        lexer.shift();
+    }
+
+    return std::make_unique<AST::FunctionDefinition>(std::move(decl),
+                                                     std::move(body));
 }
 
 int Parser::get_token_precedence(void) const {

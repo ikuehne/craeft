@@ -113,8 +113,11 @@ struct CloseParen {};
 struct OpenBrace {};
 struct CloseBrace {};
 struct Comma {};
+struct Semicolon {};
+struct Arrow {};
 struct Fn {};
 struct Struct {};
+struct Type {};
 struct Return {};
 struct If {};
 struct Else {};
@@ -129,8 +132,9 @@ typedef boost::variant< TypeName,
                         Operator,
                         OpenParen, CloseParen,
                         OpenBrace, CloseBrace,
-                        Comma,
-                        Fn, Struct,
+                        Comma, Semicolon,
+                        Arrow,
+                        Fn, Struct, Type,
                         Return,
                         If, Else, While > Token;
 
