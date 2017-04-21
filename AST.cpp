@@ -156,6 +156,16 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
         out << "}";
     }
 
+    void operator()(const Return &ret) {
+        ExpressionPrintVisitor ev(out);
+
+        out << "Return {";
+
+        boost::apply_visitor(ev, *ret.retval);
+
+        out << "}";
+    }
+
     std::ostream &out;
 };
 

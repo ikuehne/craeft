@@ -50,6 +50,8 @@ AST::Statement Parser::parse_statement(void) {
     AST::Statement result;
     if (is_type<Tok::TypeName>(lexer.get_tok())) {
         result = parse_declaration();
+    } else if (is_type<Tok::Return>(lexer.get_tok())) {
+        result = parse_return();
     } else {
         result = std::make_unique<AST::Expression>(parse_expression());
     }
@@ -58,7 +60,7 @@ AST::Statement Parser::parse_statement(void) {
         throw "Expected ; after statement.";
     }
 
-    // Shif the semicolon.
+    // Shift the semicolon.
     lexer.shift();
 
     return result;
@@ -115,6 +117,8 @@ AST::Expression Parser::parse_variable(void) {
                        "function argument list.");
             }
 
+            std::cerr << "Shifting comma..." << std::endl;
+
             // Shift the comma.
             lexer.shift();
         }
@@ -137,7 +141,6 @@ AST::Expression Parser::parse_binop(int prec, AST::Expression lhs) {
 
         // Thing in expression was not an operator.
         if (!is_type<Tok::Operator>(lexer.get_tok())) {
-            assert(lexer.get_tok().which() != 5);
             throw "Expected operator in arithmetic expression";
         }
 
@@ -271,7 +274,9 @@ AST::Statement Parser::parse_declaration(void) {
 
     lexer.shift();
 
-    if (is_type<Tok::Semicolon>(lexer.get_tok())) {
+    if (is_type<Tok::Semicolon>(lexer.get_tok())
+     || is_type<Tok::CloseParen>(lexer.get_tok())
+     || is_type<Tok::Comma>(lexer.get_tok())) {
         return std::make_unique<AST::Declaration>(std::move(type), var);
     }
 
@@ -292,6 +297,19 @@ AST::Statement Parser::parse_declaration(void) {
 
     return std::make_unique<AST::CompoundDeclaration>(std::move(type), var,
                                                       std::move(rhs));
+}
+
+AST::Return Parser::parse_return(void) {
+    // Shift the return.
+    lexer.shift();
+
+    auto retval = std::make_unique<AST::Expression>(parse_expression());
+
+    if (!retval) {
+        throw "Something very bad happened.";
+    }
+
+    return AST::Return(std::move(retval));
 }
 
 AST::TypeDeclaration Parser::parse_type_declaration(void) {
@@ -396,7 +414,11 @@ AST::TopLevel Parser::parse_function(void) {
         args.push_back(std::move(*decl));
 
         if      (is_type<Tok::CloseParen>(lexer.get_tok())) break;
-        else if (is_type<Tok::Comma>(lexer.get_tok())) continue;
+        else if (is_type<Tok::Comma>(lexer.get_tok())) {
+            // Shift off the comma.
+            lexer.shift();
+            continue;
+        }
         else    throw "Expected comma between arguments in declaration.";
     }
 
@@ -431,13 +453,6 @@ AST::TopLevel Parser::parse_function(void) {
 
     while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
         body.push_back(parse_statement());
-
-        if (!is_type<Tok::Semicolon>(lexer.get_tok())) {
-            throw "Expected semicolon after statement.";
-        }
-
-        // Shift off the semicolon.
-        lexer.shift();
     }
 
     return std::make_unique<AST::FunctionDefinition>(std::move(decl),

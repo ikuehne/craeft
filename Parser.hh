@@ -91,6 +91,11 @@ private:
      * @brief Parse a variable declaration.
      */
     AST::Statement parse_declaration(void);
+
+    /**
+     * @brief Parse a return statement.
+     */
+    AST::Return parse_return(void);
     
     AST::TypeDeclaration parse_type_declaration(void);
 

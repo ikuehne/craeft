@@ -203,6 +203,9 @@ void Lexer::shift(void) {
     } else if (c == ';') {
         tok = Tok::Semicolon();
         get();
+    } else if (c == ',') {
+        tok = Tok::Comma();
+        get();
     } else throw "Character not recognized";
 }
 

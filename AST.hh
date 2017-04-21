@@ -250,6 +250,15 @@ typedef boost::variant < Variable > LValue;
  */
 
 /**
+ * @brief Return statements.
+ */
+struct Return {
+    std::unique_ptr<Expression> retval;
+
+    Return(std::unique_ptr<Expression> retval): retval(std::move(retval)) {}
+};
+
+/**
  * @brief Variable declarations.
  */
 struct Declaration {
@@ -275,6 +284,7 @@ struct CompoundDeclaration {
 };
 
 typedef boost::variant< std::unique_ptr<Expression>,
+                        Return,
                         std::unique_ptr<Declaration>,
                         std::unique_ptr<CompoundDeclaration> >
     Statement;

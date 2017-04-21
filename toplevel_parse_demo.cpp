@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
     auto parser = Craeft::Parser(fname);
 
     try {
-        Craeft::AST::print_toplevel(parser.parse_toplevel(), std::cout);
+        auto tl = parser.parse_toplevel();
+        Craeft::AST::print_toplevel(tl, std::cout);
         std::cout << std::endl;
     } catch (const char *msg) {
         std::cerr << "Error: " << msg << std::endl;
