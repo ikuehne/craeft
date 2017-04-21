@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['double',['Double',['../struct_craeft_1_1_double.html',1,'Craeft']]]
+  ['declaration',['Declaration',['../struct_craeft_1_1_a_s_t_1_1_declaration.html',1,'Craeft::AST']]],
+  ['double',['Double',['../struct_craeft_1_1_a_s_t_1_1_double.html',1,'Craeft::AST']]]
 ];

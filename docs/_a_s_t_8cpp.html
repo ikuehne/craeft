@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.12"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Cræft: Expression.cpp File Reference</title>
+<title>Cræft: AST.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -64,16 +64,24 @@ $(function() {
 <a href="#namespaces">Namespaces</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">Expression.cpp File Reference</div>  </div>
+<div class="title">AST.cpp File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="_expression_8hh_source.html">Expression.hh</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="_a_s_t_8hh_source.html">AST.hh</a>&quot;</code><br />
 </div>
-<p><a href="_expression_8cpp_source.html">Go to the source code of this file.</a></p>
+<p><a href="_a_s_t_8cpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_craeft_1_1_a_s_t_1_1_type_print_visitor.html">Craeft::AST::TypePrintVisitor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visitor for printing AST::Types.  <a href="struct_craeft_1_1_a_s_t_1_1_type_print_visitor.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_craeft_1_1_a_s_t_1_1_expression_print_visitor.html">Craeft::AST::ExpressionPrintVisitor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visitor for printing <code><a class="el" href="group___expressions.html#gaef28cabf6d8e7cb8324232e27e69606d" title="Expressions. ">AST::Expression</a></code>s.  <a href="struct_craeft_1_1_a_s_t_1_1_expression_print_visitor.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_craeft_1_1_a_s_t_1_1_statement_print_visitor.html">Craeft::AST::StatementPrintVisitor</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_craeft_1_1_a_s_t_1_1_toplevel_print_visitor.html">Craeft::AST::ToplevelPrintVisitor</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
@@ -87,14 +95,20 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aa685c19f15521a85a802b0b0a7fd9ffb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_craeft_1_1_a_s_t.html#aa685c19f15521a85a802b0b0a7fd9ffb">Craeft::AST::print_expr</a> (const Expression &amp;, std::ostream &amp;)</td></tr>
-<tr class="memdesc:aa685c19f15521a85a802b0b0a7fd9ffb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print a representation of the expression to the given stream.  <a href="namespace_craeft_1_1_a_s_t.html#aa685c19f15521a85a802b0b0a7fd9ffb">More...</a><br /></td></tr>
-<tr class="separator:aa685c19f15521a85a802b0b0a7fd9ffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa685c19f15521a85a802b0b0a7fd9ffb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___expressions.html#gaa685c19f15521a85a802b0b0a7fd9ffb">Craeft::AST::print_expr</a> (const Expression &amp;, std::ostream &amp;)</td></tr>
+<tr class="memdesc:gaa685c19f15521a85a802b0b0a7fd9ffb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print a representation of the expression to the given stream.  <a href="group___expressions.html#gaa685c19f15521a85a802b0b0a7fd9ffb">More...</a><br /></td></tr>
+<tr class="separator:gaa685c19f15521a85a802b0b0a7fd9ffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga34f97d1083c9c0d88c397eed6eebe5e4"><td class="memItemLeft" align="right" valign="top">
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::AST::print_statement</b> (const Statement &amp;stmt, std::ostream &amp;out)</td></tr>
+<tr class="separator:ga34f97d1083c9c0d88c397eed6eebe5e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0753ffc7fff25ddcb848c9d48e52393e"><td class="memItemLeft" align="right" valign="top">
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::AST::print_toplevel</b> (const TopLevel &amp;top, std::ostream &amp;out)</td></tr>
+<tr class="separator:ga0753ffc7fff25ddcb848c9d48e52393e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Implementations for operations on AST expression nodes. </p>
+<div class="textblock"><p>Implementations for operations on AST nodes. </p>
 
-<p>Definition in file <a class="el" href="_expression_8cpp_source.html">Expression.cpp</a>.</p>
+<p>Definition in file <a class="el" href="_a_s_t_8cpp_source.html">AST.cpp</a>.</p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

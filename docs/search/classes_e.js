@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['while',['While',['../struct_craeft_1_1_tok_1_1_while.html',1,'Craeft::Tok']]]
+  ['variable',['Variable',['../struct_craeft_1_1_a_s_t_1_1_variable.html',1,'Craeft::AST']]],
+  ['void',['Void',['../struct_craeft_1_1_a_s_t_1_1_void.html',1,'Craeft::AST']]]
 ];

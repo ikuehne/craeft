@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['binop',['Binop',['../struct_craeft_1_1_a_s_t_1_1_binop.html',1,'Craeft::AST']]]
+  ['arrow',['Arrow',['../struct_craeft_1_1_tok_1_1_arrow.html',1,'Craeft::Tok']]]
 ];
