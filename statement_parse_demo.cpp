@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     try {
         Craeft::AST::print_statement(parser.parse_statement(), std::cout);
         std::cout << std::endl;
-    } catch (const char *msg) {
+    } catch (std::string msg) {
         std::cerr << "Error: " << msg << std::endl;
     }
 }

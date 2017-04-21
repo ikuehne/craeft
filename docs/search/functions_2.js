@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['is_5ftype',['is_type',['../_variant_utils_8hh.html#a028885bc69ad44b9ff431ad164b503da',1,'VariantUtils.hh']]]
+  ['get_5fpos',['get_pos',['../class_craeft_1_1_lexer.html#ae63a7e1707391ab861ed9195a2b1cca6',1,'Craeft::Lexer']]],
+  ['get_5ftok',['get_tok',['../class_craeft_1_1_lexer.html#a92ce6b920fff270ac55c9542207c0d4d',1,'Craeft::Lexer']]]
 ];

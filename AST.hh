@@ -255,7 +255,10 @@ typedef boost::variant < Variable > LValue;
 struct Return {
     std::unique_ptr<Expression> retval;
 
-    Return(std::unique_ptr<Expression> retval): retval(std::move(retval)) {}
+    SourcePos pos;
+
+    Return(std::unique_ptr<Expression> retval, SourcePos pos)
+        : retval(std::move(retval)), pos(pos) {}
 };
 
 /**
@@ -265,8 +268,10 @@ struct Declaration {
     Type type;
     Variable name;
 
-    Declaration(Type type, Variable name)
-        : type(std::move(type)), name(name) {}
+    SourcePos pos;
+
+    Declaration(Type type, Variable name, SourcePos pos)
+        : type(std::move(type)), name(name), pos(pos) {}
 };
 
 /**
@@ -279,8 +284,12 @@ struct CompoundDeclaration {
     Variable name;
     Expression rhs;
 
-    CompoundDeclaration(Type type, Variable name, Expression rhs)
-        : type(std::move(type)), name(name), rhs(std::move(rhs)) {}
+    SourcePos pos;
+
+    CompoundDeclaration(Type type, Variable name, Expression rhs,
+                        SourcePos pos)
+        : type(std::move(type)), name(name),
+          rhs(std::move(rhs)), pos(pos) {}
 };
 
 struct IfStatement;
@@ -297,12 +306,16 @@ struct IfStatement {
     std::vector<Statement> if_block;
     std::vector<Statement> else_block;
 
+    SourcePos pos;
+
     IfStatement(Expression cond,
                 std::vector<Statement> if_block,
-                std::vector<Statement> else_block)
+                std::vector<Statement> else_block,
+                SourcePos pos)
         : condition(std::move(cond)),
           if_block(std::move(if_block)),
-          else_block(std::move(else_block)) {}
+          else_block(std::move(else_block)),
+          pos(pos) {}
 };
 
 void print_statement(const Statement &, std::ostream &out);
@@ -323,7 +336,9 @@ void print_statement(const Statement &, std::ostream &out);
 struct TypeDeclaration {
     std::string name;
 
-    TypeDeclaration(std::string name): name(name) {}
+    SourcePos pos;
+
+    TypeDeclaration(std::string name, SourcePos pos): name(name), pos(pos) {}
 };
 
 /**
@@ -332,10 +347,12 @@ struct TypeDeclaration {
 struct StructDeclaration {
     std::string name;
     std::vector<std::unique_ptr<Declaration>> members;
+    SourcePos pos;
 
     StructDeclaration(std::string name,
-                      std::vector<std::unique_ptr<Declaration> > members)
-        : name(name), members(std::move(members)) {}
+                      std::vector<std::unique_ptr<Declaration> > members,
+                      SourcePos pos)
+        : name(name), members(std::move(members)), pos(pos) {}
 };
 
 /**
@@ -346,11 +363,13 @@ struct FunctionDeclaration {
     std::vector<std::unique_ptr<Declaration> > args;
     Type ret_type;
 
+    SourcePos pos;
+
     FunctionDeclaration(std::string name,
                         std::vector<std::unique_ptr<Declaration> > args,
-                        Type ret_type)
+                        Type ret_type, SourcePos pos)
         : name(std::move(name)), args(std::move(args)),
-          ret_type(std::move(ret_type)) {}
+          ret_type(std::move(ret_type)), pos(pos) {}
 };
 
 /**
@@ -360,9 +379,13 @@ struct FunctionDefinition {
     FunctionDeclaration signature;
     std::vector<Statement> block;
 
+    SourcePos pos;
+
     FunctionDefinition(FunctionDeclaration signature,
-                       std::vector<Statement> block)
-        : signature(std::move(signature)), block(std::move(block)) {}
+                       std::vector<Statement> block,
+                       SourcePos pos)
+        : signature(std::move(signature)), block(std::move(block)),
+          pos(pos) {}
 };
 
 typedef boost::variant< TypeDeclaration, StructDeclaration,

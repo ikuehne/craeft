@@ -113,6 +113,11 @@ private:
      */
     int get_token_precedence(void) const;
 
+    template<typename T>
+    inline void find_and_shift(std::string at_place);
+
+    [[noreturn]] inline void _throw(std::string message);
+
     /**
      * @brief The held lexer.
      */
@@ -129,6 +134,11 @@ private:
         {"*", 40},
         {"/", 40},
     };
+
+    /**
+     * @brief The name of the file being parsed.
+     */
+    std::string fname;
 };
 
 }

@@ -108,20 +108,48 @@ struct Operator {
  * @defgroup Empty Tokens with no meaning other than disambiguating syntax.
  */
 
-struct OpenParen {};
-struct CloseParen {};
-struct OpenBrace {};
-struct CloseBrace {};
-struct Comma {};
-struct Semicolon {};
-struct Arrow {};
-struct Fn {};
-struct Struct {};
-struct Type {};
-struct Return {};
-struct If {};
-struct Else {};
-struct While {};
+struct OpenParen {
+    static inline std::string repr(void) { return "("; }
+};
+struct CloseParen {
+    static inline std::string repr(void) { return ")"; }
+};
+struct OpenBrace {
+    static inline std::string repr(void) { return "{"; }
+};
+struct CloseBrace {
+    static inline std::string repr(void) { return "}"; }
+};
+struct Comma {
+    static inline std::string repr(void) { return ","; }
+};
+struct Semicolon {
+    static inline std::string repr(void) { return ";"; }
+};
+struct Arrow {
+    static inline std::string repr(void) { return "->"; }
+};
+struct Fn {
+    static inline std::string repr(void) { return "fn"; }
+};
+struct Struct {
+    static inline std::string repr(void) { return "struct"; }
+};
+struct Type {
+    static inline std::string repr(void) { return "type"; }
+};
+struct Return {
+    static inline std::string repr(void) { return "return"; }
+};
+struct If {
+    static inline std::string repr(void) { return "if"; }
+};
+struct Else {
+    static inline std::string repr(void) { return "else"; }
+};
+struct While {
+    static inline std::string repr(void) { return "while"; }
+};
 
 /** @} */
 

@@ -25,6 +25,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace Craeft {
 
@@ -41,6 +42,34 @@ struct SourcePos {
 
     SourcePos(uint16_t charno, uint16_t lineno): charno(charno),
                                                  lineno(lineno) {}
+};
+
+/**
+ * @brief A basic Craeft error, containing a message and a source position.
+ */
+class Error {
+public:
+    /**
+     * @brief Create a new Error.
+     *
+     * @param header A header which describes the type of error, e.g. "Parser
+     *               error".
+     * @param message The message to print.  Should briefly explain the error,
+     *                and should not be a complete sentence.
+     * @param filename The file in which the error occured.
+     * @param pos The position in the source where the error occured.
+     */
+    Error(std::string header, std::string message, std::string filename, SourcePos pos);
+
+    /**
+     * @brief Print the error to the given stream.
+     */
+    void emit(std::ostream &);
+private:
+    std::string header;
+    std::string msg;
+    std::string fname;
+    SourcePos pos;
 };
 
 }

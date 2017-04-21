@@ -18,7 +18,14 @@ int main(int argc, char **argv) {
         auto tl = parser.parse_toplevel();
         Craeft::AST::print_toplevel(tl, std::cout);
         std::cout << std::endl;
+        return 0;
     } catch (const char *msg) {
         std::cerr << "Error: " << msg << std::endl;
+    } catch (std::string msg) {
+        std::cerr << "Error: " << msg << std::endl;
+    } catch (Craeft::Error err) {
+        err.emit(std::cerr);
     }
+
+    return 1;
 }
