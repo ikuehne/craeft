@@ -93,6 +93,11 @@ private:
     AST::Statement parse_declaration(void);
 
     /**
+     * @brief Parse an if statement.
+     */
+    std::unique_ptr<AST::IfStatement> parse_if_statement(void);
+
+    /**
      * @brief Parse a return statement.
      */
     AST::Return parse_return(void);

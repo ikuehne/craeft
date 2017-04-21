@@ -52,6 +52,8 @@ AST::Statement Parser::parse_statement(void) {
         result = parse_declaration();
     } else if (is_type<Tok::Return>(lexer.get_tok())) {
         result = parse_return();
+    } else if (is_type<Tok::If>(lexer.get_tok())) {
+        return parse_if_statement();
     } else {
         result = std::make_unique<AST::Expression>(parse_expression());
     }
@@ -297,6 +299,59 @@ AST::Statement Parser::parse_declaration(void) {
 
     return std::make_unique<AST::CompoundDeclaration>(std::move(type), var,
                                                       std::move(rhs));
+}
+
+std::unique_ptr<AST::IfStatement> Parser::parse_if_statement(void) {
+    // Shift the "if".
+    lexer.shift();
+
+    auto cond = parse_expression();
+
+    if (!is_type<Tok::OpenBrace>(lexer.get_tok())) {
+        throw "Expected open brace after if condition.";
+    }
+
+    // Shift the {.
+    lexer.shift();
+
+    std::vector<AST::Statement> if_block;
+
+    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
+        if_block.push_back(parse_statement());
+    }
+
+    // Shift the }.
+    lexer.shift();
+
+    std::vector<AST::Statement> else_block;
+
+    if (!is_type<Tok::Else>(lexer.get_tok())) {
+        // No else block.
+        return std::make_unique<AST::IfStatement>(std::move(cond),
+                                                  std::move(if_block),
+                                                  std::move(else_block));
+    }
+
+    // Otherwise, shift the "else".
+    lexer.shift();
+
+    if (!is_type<Tok::OpenBrace>(lexer.get_tok())) {
+        throw "Expected open brace after \"else\".";
+    }
+
+    // Shift the {.
+    lexer.shift();
+
+    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
+        else_block.push_back(parse_statement());
+    }
+
+    // Shift the }.
+    lexer.shift();
+
+    return std::make_unique<AST::IfStatement>(std::move(cond),
+                                              std::move(if_block),
+                                              std::move(else_block));
 }
 
 AST::Return Parser::parse_return(void) {

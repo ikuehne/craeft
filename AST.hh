@@ -283,11 +283,27 @@ struct CompoundDeclaration {
         : type(std::move(type)), name(name), rhs(std::move(rhs)) {}
 };
 
+struct IfStatement;
+
 typedef boost::variant< std::unique_ptr<Expression>,
                         Return,
                         std::unique_ptr<Declaration>,
-                        std::unique_ptr<CompoundDeclaration> >
+                        std::unique_ptr<CompoundDeclaration>,
+                        std::unique_ptr<IfStatement> >
     Statement;
+
+struct IfStatement {
+    Expression condition;
+    std::vector<Statement> if_block;
+    std::vector<Statement> else_block;
+
+    IfStatement(Expression cond,
+                std::vector<Statement> if_block,
+                std::vector<Statement> else_block)
+        : condition(std::move(cond)),
+          if_block(std::move(if_block)),
+          else_block(std::move(else_block)) {}
+};
 
 void print_statement(const Statement &, std::ostream &out);
 

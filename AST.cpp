@@ -22,6 +22,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/type_index.hpp>
+
 #include "AST.hh"
 
 namespace Craeft {
@@ -73,7 +75,8 @@ struct ExpressionPrintVisitor: boost::static_visitor<void> {
 
     template<typename T>
     void operator()(const T &lit) {
-        out << typeid(T).name() << " {" << lit.value << "}";
+        out << boost::typeindex::type_id<T>().pretty_name()
+            << " {" << lit.value << "}";
     }
 
     void operator()(const Variable &var) {
@@ -164,6 +167,40 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
         boost::apply_visitor(ev, *ret.retval);
 
         out << "}";
+    }
+
+    void operator()(const std::unique_ptr<IfStatement> &ifstmt) {
+        ExpressionPrintVisitor ev(out);
+
+        out << "IfStatement {";
+
+        boost::apply_visitor(ev, ifstmt->condition);
+
+        out << ", ";
+
+        out << "IfTrue {";
+
+        if (ifstmt->if_block.size()) {
+            boost::apply_visitor(*this, *ifstmt->if_block.begin());
+            for (auto iter = ifstmt->if_block.begin() + 1;
+                 iter != ifstmt->if_block.end(); ++iter) {
+                out << ", ";
+                boost::apply_visitor(*this, *iter);
+            }
+        }
+
+        out << "}, Else {";
+
+        if (ifstmt->else_block.size()) {
+            boost::apply_visitor(*this, *ifstmt->else_block.begin());
+            for (auto iter = ifstmt->else_block.begin() + 1;
+                 iter != ifstmt->else_block.end(); ++iter) {
+                out << ", ";
+                boost::apply_visitor(*this, *iter);
+            }
+        }
+
+        out << "}}";
     }
 
     std::ostream &out;
