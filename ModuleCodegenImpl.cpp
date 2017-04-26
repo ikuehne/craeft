@@ -500,7 +500,22 @@ void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
 }
 
 void ModuleCodegenImpl::operator()(const AST::FunctionDeclaration &fd) {
-    // TODO
+    std::vector<llvm::Type *> arg_types;
+    TypeCodegen tg(context, builder, *module, env, fname);
+
+    for (const auto &decl: fd.args) {
+        arg_types.push_back(tg.codegen(decl->type));
+    }
+
+    auto *ret_type = tg.codegen(fd.ret_type);
+
+    llvm::FunctionType *ft = llvm::FunctionType::get(ret_type, arg_types,
+                                                     false);
+
+    auto *result = llvm::Function::Create(ft, llvm::Function::ExternalLinkage,
+                                          fd.name, module.get());
+
+    env[fd.name] = IdentBinding(result);
 }
 
 void ModuleCodegenImpl::operator()(

@@ -1,3 +1,9 @@
+# Scratchwork
+scratch/
+
+# Compiler
+craeftc
+
 # Compiled Object files
 *.slo
 *.lo

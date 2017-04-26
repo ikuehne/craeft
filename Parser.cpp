@@ -569,6 +569,8 @@ AST::TopLevel Parser::parse_function(void) {
 
     // If semicolon, this is just a forward declaration.
     if (is_type<Tok::Semicolon>(lexer.get_tok())) {
+        // Shift the semicolon.
+        lexer.shift();
         return std::move(decl);
     }
 
