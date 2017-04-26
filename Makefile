@@ -6,13 +6,13 @@ CPPFLAGS=-g $(shell llvm-config --cxxflags) -Wall -Wpedantic -std=c++14 -UNDEBUG
 LDFLAGS=$(shell llvm-config --ldflags --system-libs --libs all) $(BOOST_OPT)
 COMPILER_OBJS=Parser.o AST.o Lexer.o Error.o ModuleCodegen.o ModuleCodegenImpl.o
 
-all: expr_parse_demo statement_parse_demo toplevel_parse_demo codegen_demo
+all: craeftc
 
 .PHONY: docs
 docs:
 	doxygen
 
-codegen_demo: $(COMPILER_OBJS) codegen_demo.o
+craeftc: $(COMPILER_OBJS) craeftc.o
 expr_parse_demo: $(COMPILER_OBJS) expr_parse_demo.o
 statement_parse_demo: $(COMPILER_OBJS) statement_parse_demo.o
 toplevel_parse_demo: $(COMPILER_OBJS) toplevel_parse_demo.o

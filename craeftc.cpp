@@ -39,13 +39,13 @@ int main(int argc, char **argv) {
     opt::options_description desc("Craeft Compiler Options");
     desc.add_options()
         ("help", "print usage information")
-        ("obj", opt::value<std::string>(),
+        ("obj,c", opt::value<std::string>(),
             "select output file to emit object code")
         ("ll", opt::value<std::string>(),
             "select output file to emit LLVM IR")
-        ("asm", opt::value<std::string>(),
+        ("asm,s", opt::value<std::string>(),
             "select output file to emit target-specific assembly")
-        ("O", opt::value<int>(),
+        ("opt,O", opt::value<int>(),
             "select optimization level (default 0)")
         ("in", opt::value<std::string>(), "select input file");
     opt::positional_options_description pos;
@@ -53,9 +53,12 @@ int main(int argc, char **argv) {
 
     opt::variables_map opt_map;
     try {
-        opt::store(opt::command_line_parser(argc, argv).options(desc)
-                                                       .positional(pos)
-                                                       .run(),
+        opt::store(opt::command_line_parser(argc, argv)
+                      .options(desc)
+                      .style(boost::program_options::command_line_style
+                                  ::unix_style)
+                      .positional(pos)
+                      .run(),
                    opt_map);
     } catch (opt::error) {
         std::cerr << desc << std::endl;
@@ -65,7 +68,7 @@ int main(int argc, char **argv) {
 
     int opt_level = 0;
 
-    if (opt_map.count("O")) opt_level = opt_map["O"].as<int>();
+    if (opt_map.count("opt")) opt_level = opt_map["opt"].as<int>();
 
     /* If the user did good, */
     if (!opt_map.count("help")
