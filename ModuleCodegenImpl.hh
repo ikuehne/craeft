@@ -68,15 +68,18 @@ private:
     std::string &fname;
 };
 
+class ExpressionCodegen;
+
 class LValueCodegen: public boost::static_visitor<llvm::Value *> {
 public:
     LValueCodegen(llvm::LLVMContext &context,
                   llvm::IRBuilder<> &builder,
                   llvm::Module &module,
                   Environment &env,
-                  std::string &fname)
+                  std::string &fname,
+                  ExpressionCodegen &eg)
         : context(context), builder(builder), module(module), env(env),
-          fname(fname) {}
+          fname(fname), eg(eg) {}
     /**
      * @brief Generate an instruction yielding an address to the given
      *        l-value.
@@ -84,6 +87,7 @@ public:
     llvm::Value *codegen(const AST::LValue &);
 
     llvm::Value *operator()(const AST::Variable &);
+    llvm::Value *operator()(const std::unique_ptr<AST::Dereference> &);
 
 private:
     llvm::LLVMContext &context;
@@ -91,7 +95,7 @@ private:
     llvm::Module &module;
     Environment &env;
     std::string &fname;
-
+    ExpressionCodegen &eg;
 };
 
 class ExpressionCodegen: public boost::static_visitor<llvm::Value *> {
@@ -114,6 +118,8 @@ public:
     llvm::Value *operator()(const AST::UIntLiteral &);
     llvm::Value *operator()(const AST::FloatLiteral &);
     llvm::Value *operator()(const AST::Variable &);
+    llvm::Value *operator()(const std::unique_ptr<AST::Reference> &);
+    llvm::Value *operator()(const std::unique_ptr<AST::Dereference> &);
     llvm::Value *operator()(const std::unique_ptr<AST::Binop> &);
     llvm::Value *operator()(const std::unique_ptr<AST::FunctionCall> &);
     llvm::Value *operator()(const std::unique_ptr<AST::Cast> &);
@@ -153,6 +159,7 @@ public:
 
     // Visitors of different AST statement types.
     void operator()(const AST::Expression &);
+    void operator()(const AST::VoidReturn &);
     void operator()(const AST::Return &);
     void operator()(const std::unique_ptr<AST::Assignment> &assignment);
     void operator()(const std::unique_ptr<AST::Declaration> &);

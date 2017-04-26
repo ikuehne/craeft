@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['expression',['Expression',['../group___expressions.html#gaef28cabf6d8e7cb8324232e27e69606d',1,'Craeft::AST']]]
+  ['expression',['Expression',['../group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30',1,'Craeft::AST']]]
 ];

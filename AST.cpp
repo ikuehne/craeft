@@ -83,6 +83,18 @@ struct ExpressionPrintVisitor: boost::static_visitor<void> {
         out << "Variable {" << var.name << "}";
     }
 
+    void operator()(const std::unique_ptr<Reference> &ref) {
+        out << "Reference {";
+        boost::apply_visitor(*this, ref->referand);
+        out << "}";
+    }
+
+    void operator()(const std::unique_ptr<Dereference> &deref) {
+        out << "Dereference {";
+        boost::apply_visitor(*this, deref->referand);
+        out << "}";
+    }
+
     void operator()(const std::unique_ptr<Binop> &bin) {
         out << "Binop {" << bin->op << ", ";
         boost::apply_visitor(*this, bin->lhs);
@@ -177,6 +189,10 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
         boost::apply_visitor(ev, *ret.retval);
 
         out << "}";
+    }
+
+    void operator()(const VoidReturn &_) {
+        out << "VoidReturn {}";
     }
 
     void operator()(const std::unique_ptr<IfStatement> &ifstmt) {

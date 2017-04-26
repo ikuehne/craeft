@@ -60,7 +60,7 @@ public:
      * AST-handling utilities.
      */
     inline void verify_expression(const AST::Expression &) const;
-    inline AST::LValue to_lvalue(const AST::Expression &) const;
+    inline AST::LValue to_lvalue(AST::Expression, SourcePos pos) const;
     inline AST::Statement extract_assignments(AST::Expression &) const;
 
 private:
@@ -68,6 +68,11 @@ private:
      * @brief Parse a variable or a function call.
      */
     AST::Expression parse_variable(void);
+
+    /**
+     * @brief Parse a unary operator invocation.
+     */
+    AST::Expression parse_unary(void);
 
     /**
      * @brief Parse a series of binops, given the first one.
@@ -112,7 +117,7 @@ private:
     /**
      * @brief Parse a return statement.
      */
-    AST::Return parse_return(void);
+    AST::Statement parse_return(void);
     
     AST::TypeDeclaration parse_type_declaration(void);
 

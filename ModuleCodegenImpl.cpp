@@ -93,6 +93,12 @@ llvm::Value *LValueCodegen::operator()(const AST::Variable &var) {
     return env[var.name].inst;
 }
 
+llvm::Value *LValueCodegen::operator()(
+        const std::unique_ptr<AST::Dereference> &deref) {
+    /* If the dereference is an l-value, return just the referand. */
+    return eg.codegen(deref->referand);
+}
+
 /*****************************************************************************
  * Code generation for expressions.
  */
@@ -109,6 +115,22 @@ llvm::Value *ExpressionCodegen::operator()(const AST::UIntLiteral &lit) {
 
 llvm::Value *ExpressionCodegen::operator()(const AST::FloatLiteral &lit) {
     return llvm::ConstantFP::get(context, llvm::APFloat(lit.value));
+}
+
+llvm::Value *ExpressionCodegen::operator()(
+        const std::unique_ptr<AST::Dereference> &deref) {
+    /* Get the address the dereference dereferences, */
+    auto *addr = codegen(deref->referand);
+    /* and load from it. */
+    return builder.CreateLoad(addr);
+}
+
+llvm::Value *ExpressionCodegen::operator()(
+        const std::unique_ptr<AST::Reference> &ref) {
+    /* LValue codegenerators return addresses to the l-value. */
+    LValueCodegen lc(context, builder, module, env, fname, *this);
+    /* So just use one of those to codegen the referand. */
+    return lc.codegen(ref->referand);
 }
 
 llvm::Value *ExpressionCodegen::operator()(const AST::Variable &var) {
@@ -311,7 +333,7 @@ void StatementCodegen::operator()(const AST::Expression &expr) {
 
 void StatementCodegen::operator()(
         const std::unique_ptr<AST::Assignment> &assignment) {
-    LValueCodegen lc(context, builder, module, env, fname);
+    LValueCodegen lc(context, builder, module, env, fname, expr_codegen);
     /* TODO: codegen for LValues. */
     auto *addr = lc.codegen(assignment->lhs);
     auto *rhs  = expr_codegen.codegen(assignment->rhs);
@@ -328,6 +350,16 @@ void StatementCodegen::operator()(const AST::Return &ret) {
     }
 
     builder.CreateRet(res);
+}
+
+void StatementCodegen::operator()(const AST::VoidReturn &ret) {
+    if (!ret_type->isVoidTy()) {
+        throw Error("type error", "cannot have void return in non-void"
+                                  "function",
+                                  fname, ret.pos);
+    }
+
+    builder.CreateRetVoid();
 }
 
 void StatementCodegen::operator()(

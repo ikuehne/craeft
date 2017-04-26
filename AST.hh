@@ -107,6 +107,8 @@ typedef boost::variant< IntType, UIntType, Float, Double, Void, UserType,
  */
 struct Pointer {
     Type pointed;
+
+    Pointer(Type pointed): pointed(std::move(pointed)) {}
 };
 
 /** @} */
@@ -159,6 +161,8 @@ struct Variable {
 };
 
 /* Forward declarations. */
+struct Dereference;
+struct Reference;
 struct Binop;
 struct FunctionCall;
 struct Cast;
@@ -172,9 +176,26 @@ typedef boost::variant< IntLiteral,
                         UIntLiteral,
                         FloatLiteral,
                         Variable,
+                        std::unique_ptr<Reference>,
+                        std::unique_ptr<Dereference>,
                         std::unique_ptr<Binop>,
                         std::unique_ptr<FunctionCall>,
                         std::unique_ptr<Cast> > Expression;
+
+/**
+ * @brief Application of the dereference operator "*".
+ */
+struct Dereference {
+    /**
+     * @brief Expression being dereferenced.
+     */
+    Expression referand;
+    SourcePos pos;
+
+    Dereference(Expression referand, SourcePos pos)
+        : referand(std::move(referand)), pos(pos) {}
+};
+
 
 /**
  * @brief Binary operator application.
@@ -239,7 +260,22 @@ void print_expr(const Expression &, std::ostream &);
  */
 
 /* TODO: Expand to include dereferences of expressions. */
-typedef boost::variant < Variable > LValue;
+typedef boost::variant < Variable,
+                         std::unique_ptr<Dereference> > LValue;
+
+/**
+ * @brief Application of the address-of operator.
+ */
+struct Reference {
+    /**
+     * @brief L-value having its address taken.
+     */
+    LValue referand;
+    SourcePos pos;
+
+    Reference(LValue referand, SourcePos pos)
+        : referand(std::move(referand)), pos(pos) {}
+};
 
 /** @} */
 
@@ -259,6 +295,15 @@ struct Return {
 
     Return(std::unique_ptr<Expression> retval, SourcePos pos)
         : retval(std::move(retval)), pos(pos) {}
+};
+
+/**
+ * @brief Empty return statements.
+ */
+struct VoidReturn {
+    SourcePos pos;
+
+    VoidReturn(SourcePos pos): pos(pos) {}
 };
 
 /**
@@ -309,6 +354,7 @@ struct IfStatement;
 
 typedef boost::variant< Expression,
                         Return,
+                        VoidReturn,
                         std::unique_ptr<Assignment>,
                         std::unique_ptr<Declaration>,
                         std::unique_ptr<CompoundDeclaration>,

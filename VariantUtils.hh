@@ -34,6 +34,6 @@
  * parameter.
  */
 template<typename QueryFor, typename VariantType>
-inline bool is_type(VariantType v) {
+inline bool is_type(const VariantType &v) {
     return typeid(QueryFor) == v.type();
 }

@@ -82,6 +82,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">Craeft::AST::Variable</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Variables.  <a href="struct_craeft_1_1_a_s_t_1_1_variable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_craeft_1_1_a_s_t_1_1_dereference.html">Craeft::AST::Dereference</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Application of the dereference operator "*".  <a href="struct_craeft_1_1_a_s_t_1_1_dereference.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_craeft_1_1_a_s_t_1_1_binop.html">Craeft::AST::Binop</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Binary operator application.  <a href="struct_craeft_1_1_a_s_t_1_1_binop.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -94,26 +97,26 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:gaef28cabf6d8e7cb8324232e27e69606d"><td class="memItemLeft" align="right" valign="top">typedef boost::variant&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_int_literal.html">IntLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_u_int_literal.html">UIntLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_float_literal.html">FloatLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">Variable</a>, std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_binop.html">Binop</a> &gt;, std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_function_call.html">FunctionCall</a> &gt;, std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_cast.html">Cast</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___expressions.html#gaef28cabf6d8e7cb8324232e27e69606d">Craeft::AST::Expression</a></td></tr>
-<tr class="memdesc:gaef28cabf6d8e7cb8324232e27e69606d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Expressions.  <a href="group___expressions.html#gaef28cabf6d8e7cb8324232e27e69606d">More...</a><br /></td></tr>
-<tr class="separator:gaef28cabf6d8e7cb8324232e27e69606d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad5bdc5a209a97b167dc068ecab4d8a30"><td class="memItemLeft" align="right" valign="top">typedef boost::variant&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_int_literal.html">IntLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_u_int_literal.html">UIntLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_float_literal.html">FloatLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">Variable</a>, std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_reference.html">Reference</a> &gt;, std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_dereference.html">Dereference</a> &gt;, std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_binop.html">Binop</a> &gt;, std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_function_call.html">FunctionCall</a> &gt;, std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_cast.html">Cast</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">Craeft::AST::Expression</a></td></tr>
+<tr class="memdesc:gad5bdc5a209a97b167dc068ecab4d8a30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Expressions.  <a href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">More...</a><br /></td></tr>
+<tr class="separator:gad5bdc5a209a97b167dc068ecab4d8a30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:gaa685c19f15521a85a802b0b0a7fd9ffb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___expressions.html#gaa685c19f15521a85a802b0b0a7fd9ffb">Craeft::AST::print_expr</a> (const <a class="el" href="group___expressions.html#gaef28cabf6d8e7cb8324232e27e69606d">Expression</a> &amp;, std::ostream &amp;)</td></tr>
+<tr class="memitem:gaa685c19f15521a85a802b0b0a7fd9ffb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___expressions.html#gaa685c19f15521a85a802b0b0a7fd9ffb">Craeft::AST::print_expr</a> (const <a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">Expression</a> &amp;, std::ostream &amp;)</td></tr>
 <tr class="memdesc:gaa685c19f15521a85a802b0b0a7fd9ffb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print a representation of the expression to the given stream.  <a href="group___expressions.html#gaa685c19f15521a85a802b0b0a7fd9ffb">More...</a><br /></td></tr>
 <tr class="separator:gaa685c19f15521a85a802b0b0a7fd9ffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2 class="groupheader">Typedef Documentation</h2>
-<a id="gaef28cabf6d8e7cb8324232e27e69606d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaef28cabf6d8e7cb8324232e27e69606d">&sect;&nbsp;</a></span>Expression</h2>
+<a id="gad5bdc5a209a97b167dc068ecab4d8a30"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad5bdc5a209a97b167dc068ecab4d8a30">&sect;&nbsp;</a></span>Expression</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef boost::variant&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_int_literal.html">IntLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_u_int_literal.html">UIntLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_float_literal.html">FloatLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">Variable</a>, std::unique_ptr&lt;<a class="el" href="struct_craeft_1_1_a_s_t_1_1_binop.html">Binop</a>&gt;, std::unique_ptr&lt;<a class="el" href="struct_craeft_1_1_a_s_t_1_1_function_call.html">FunctionCall</a>&gt;, std::unique_ptr&lt;<a class="el" href="struct_craeft_1_1_a_s_t_1_1_cast.html">Cast</a>&gt; &gt; <a class="el" href="group___expressions.html#gaef28cabf6d8e7cb8324232e27e69606d">Craeft::AST::Expression</a></td>
+          <td class="memname">typedef boost::variant&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_int_literal.html">IntLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_u_int_literal.html">UIntLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_float_literal.html">FloatLiteral</a>, <a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">Variable</a>, std::unique_ptr&lt;<a class="el" href="struct_craeft_1_1_a_s_t_1_1_reference.html">Reference</a>&gt;, std::unique_ptr&lt;<a class="el" href="struct_craeft_1_1_a_s_t_1_1_dereference.html">Dereference</a>&gt;, std::unique_ptr&lt;<a class="el" href="struct_craeft_1_1_a_s_t_1_1_binop.html">Binop</a>&gt;, std::unique_ptr&lt;<a class="el" href="struct_craeft_1_1_a_s_t_1_1_function_call.html">FunctionCall</a>&gt;, std::unique_ptr&lt;<a class="el" href="struct_craeft_1_1_a_s_t_1_1_cast.html">Cast</a>&gt; &gt; <a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">Craeft::AST::Expression</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -121,7 +124,7 @@ Functions</h2></td></tr>
 <p>Expressions. </p>
 <p>Use move semantics. </p>
 
-<p>Definition at line <a class="el" href="_a_s_t_8hh_source.html#l00164">164</a> of file <a class="el" href="_a_s_t_8hh_source.html">AST.hh</a>.</p>
+<p>Definition at line <a class="el" href="_a_s_t_8hh_source.html#l00168">168</a> of file <a class="el" href="_a_s_t_8hh_source.html">AST.hh</a>.</p>
 
 </div>
 </div>
@@ -135,7 +138,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void Craeft::AST::print_expr </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="group___expressions.html#gaef28cabf6d8e7cb8324232e27e69606d">Expression</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">Expression</a> &amp;&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
@@ -155,7 +158,7 @@ Functions</h2></td></tr>
 <p>Print a representation of the expression to the given stream. </p>
 <p>Intended for debugging. </p>
 
-<p>Definition at line <a class="el" href="_a_s_t_8cpp_source.html#l00272">272</a> of file <a class="el" href="_a_s_t_8cpp_source.html">AST.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_a_s_t_8cpp_source.html#l00288">288</a> of file <a class="el" href="_a_s_t_8cpp_source.html">AST.cpp</a>.</p>
 
 </div>
 </div>

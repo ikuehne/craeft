@@ -81,9 +81,9 @@ Inheritance diagram for Craeft::LValueCodegen:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6c1dac9d821275a0d514819f536a2f04"><td class="memItemLeft" align="right" valign="top"><a id="a6c1dac9d821275a0d514819f536a2f04"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>LValueCodegen</b> (llvm::LLVMContext &amp;context, llvm::IRBuilder&lt;&gt; &amp;builder, llvm::Module &amp;module, <a class="el" href="class_craeft_1_1_environment.html">Environment</a> &amp;env, std::string &amp;fname)</td></tr>
-<tr class="separator:a6c1dac9d821275a0d514819f536a2f04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1915c37d51593af2a35f3c94320e219"><td class="memItemLeft" align="right" valign="top"><a id="af1915c37d51593af2a35f3c94320e219"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LValueCodegen</b> (llvm::LLVMContext &amp;context, llvm::IRBuilder&lt;&gt; &amp;builder, llvm::Module &amp;module, <a class="el" href="class_craeft_1_1_environment.html">Environment</a> &amp;env, std::string &amp;fname, <a class="el" href="class_craeft_1_1_expression_codegen.html">ExpressionCodegen</a> &amp;eg)</td></tr>
+<tr class="separator:af1915c37d51593af2a35f3c94320e219"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cece0a57274d245d436f3aede88fa27"><td class="memItemLeft" align="right" valign="top"><a id="a2cece0a57274d245d436f3aede88fa27"></a>
 llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_l_value_codegen.html#a2cece0a57274d245d436f3aede88fa27">codegen</a> (const AST::LValue &amp;)</td></tr>
 <tr class="memdesc:a2cece0a57274d245d436f3aede88fa27"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate an instruction yielding an address to the given l-value. <br /></td></tr>
@@ -91,10 +91,13 @@ llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" h
 <tr class="memitem:aaa6752535b13f482d6f933418c4241bc"><td class="memItemLeft" align="right" valign="top"><a id="aaa6752535b13f482d6f933418c4241bc"></a>
 llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">AST::Variable</a> &amp;)</td></tr>
 <tr class="separator:aaa6752535b13f482d6f933418c4241bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4748a4220217c1601f6c0ceef91d534"><td class="memItemLeft" align="right" valign="top"><a id="ae4748a4220217c1601f6c0ceef91d534"></a>
+llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_dereference.html">AST::Dereference</a> &gt; &amp;)</td></tr>
+<tr class="separator:ae4748a4220217c1601f6c0ceef91d534"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00071">71</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
+<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00073">73</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a></li>
 <li><a class="el" href="_module_codegen_impl_8cpp_source.html">ModuleCodegenImpl.cpp</a></li>

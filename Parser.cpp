@@ -56,6 +56,9 @@ public:
     template<typename T>
     void operator()(const T &_) const {}
 
+    /* On a binop, check if it is an `=`.  `=` are returned by the expression
+     * parser, but they are not actually part of an expression, so this
+     * results in an error. */
     void operator()(const std::unique_ptr<AST::Binop> &op) const {
         if (op->op == "=") {
             throw Error("parse error",
@@ -67,6 +70,7 @@ public:
         boost::apply_visitor(*this, op->rhs);
     }
 
+    /* For other nodes, just visit their children. */
     void operator()(const std::unique_ptr<AST::FunctionCall> &fc) const {
         std::for_each(fc->args.begin(), fc->args.end(), [&](const auto &arg) {
                           boost::apply_visitor(*this, arg);
@@ -82,33 +86,20 @@ private:
 };
 
 inline void Parser::verify_expression(const AST::Expression &expr) const {
+    /* Just a thin wrapper over the ExpressionVerifier visitor. */
     boost::apply_visitor(ExpressionVerifier(fname), expr);
 }
 
-class LValueFactorizer: public boost::static_visitor<AST::LValue> {
-public:
-    LValueFactorizer(const std::string &fname): fname(fname) {}
-
-    template<typename T>
-    AST::LValue operator()(const T &expr) const {
-        throw Error("parser error", "expected l-value", fname, expr.pos);
+inline AST::LValue Parser::to_lvalue(AST::Expression expr, SourcePos pos)
+        const {
+    if (is_type<AST::Variable>(expr)) {
+        return std::move(boost::get<AST::Variable>(expr));
+    } else if (is_type<std::unique_ptr<AST::Dereference> >(expr)) {
+        return std::move(boost::get<std::unique_ptr<AST::Dereference> >
+                                   (expr));
     }
 
-    template<typename T>
-    AST::LValue operator()(const std::unique_ptr<T> &expr) const {
-        throw Error("parser error", "expected l-value", fname, expr->pos);
-    }
-
-    AST::LValue operator()(const AST::Variable var) const {
-        return var;
-    }
-
-private:
-    const std::string &fname;
-};
-
-inline AST::LValue Parser::to_lvalue(const AST::Expression &expr) const {
-    return boost::apply_visitor(LValueFactorizer(fname), expr);
+    throw Error("parser error", "expected l-value", fname, pos);
 }
 
 class AssignmentFactorizer: public boost::static_visitor<AST::Statement> {
@@ -126,8 +117,8 @@ public:
             parser->verify_expression(op->lhs);
             parser->verify_expression(op->rhs);
             return std::make_unique<AST::Assignment>(
-                    parser->to_lvalue(std::move(op->lhs)), std::move(op->rhs),
-                                      op->pos);
+                    parser->to_lvalue(std::move(op->lhs), op->pos),
+                                      std::move(op->rhs), op->pos);
         }
 
         return std::move(op);
@@ -150,7 +141,7 @@ inline AST::Statement Parser::extract_assignments(
 Parser::Parser(std::string fname): lexer(fname), fname(fname) {}
 
 AST::Expression Parser::parse_expression(void) {
-    return parse_binop(0, parse_primary());
+    return parse_binop(0, parse_unary());
 }
 
 AST::Statement Parser::parse_statement(void) {
@@ -161,7 +152,7 @@ AST::Statement Parser::parse_statement(void) {
     } else if (is_type<Tok::Return>(lexer.get_tok())) {
         auto result = parse_return();
         find_and_shift<Tok::Semicolon>("after return statement");
-        return std::move(result);
+        return result;
     } else if (is_type<Tok::If>(lexer.get_tok())) {
         return parse_if_statement();
     } else {
@@ -232,6 +223,31 @@ AST::Expression Parser::parse_variable(void) {
             std::move(id), std::move(args), lexer.get_pos());
 }
 
+AST::Expression Parser::parse_unary(void) {
+    auto start = lexer.get_pos();
+
+    if (!is_type<Tok::Operator>(lexer.get_tok())) {
+        return parse_primary();
+    }
+
+    // Save and shift the operator.
+    auto op = boost::get<Tok::Operator>(lexer.get_tok());
+    lexer.shift();
+
+    // Parse the operand.
+    auto operand = parse_unary();
+
+    if (op.op == "*") {
+        return std::make_unique<AST::Dereference>(std::move(operand), start);
+    } else if (op.op == "&") {
+        return std::make_unique<AST::Reference>(
+                to_lvalue(std::move(operand), start), start);
+    }
+
+    throw Error("parser error", "unrecognized operator \"" + op.op
+                              + "\"", fname, start);
+}
+
 AST::Expression Parser::parse_binop(int prec, AST::Expression lhs) {
     auto start = lexer.get_pos();
 
@@ -249,7 +265,7 @@ AST::Expression Parser::parse_binop(int prec, AST::Expression lhs) {
 
         lexer.shift();
 
-        auto rhs = parse_primary();
+        auto rhs = parse_unary();
         
         int new_prec = get_token_precedence();
 
@@ -326,29 +342,39 @@ AST::Expression Parser::parse_primary(void) {
 }
 
 AST::Type Parser::parse_type(void) {
-    /* TODO: Handle pointers, parentheses, array types, etc. */
+    /* TODO: Handle parentheses, array types, etc. */
     auto tname = boost::get<Tok::TypeName>(lexer.get_tok()).name;
 
     // Shift off the typename.
     lexer.shift();
 
+    AST::Type result = AST::UserType(tname);
+
     if (tname == "Double") {
-        return AST::Double();
+        result = AST::Double();
     } else if (tname == "Float") {
-        return AST::Float();
+        result = AST::Float();
     } else if (tname.size() == 3 && isdigit(tname[1]) && isdigit(tname[2])) {
         int nbits = std::stoi(tname.substr(1, 2));
         if (nbits <= 64) {
-            if      (tname[0] == 'I') return AST::IntType(nbits);
-            else if (tname[0] == 'U') return AST::UIntType(nbits);
+            if      (tname[0] == 'I') result = AST::IntType(nbits);
+            else if (tname[0] == 'U') result = AST::UIntType(nbits);
         }
     } else if ((tname.size() == 2 && isdigit(tname[1]))) {
         int nbits = std::stoi(tname.substr(1, 1));
-        if      (tname[0] == 'I') return AST::IntType(nbits);
-        else if (tname[0] == 'U') return AST::UIntType(nbits);
+        if      (tname[0] == 'I') result = AST::IntType(nbits);
+        else if (tname[0] == 'U') result = AST::UIntType(nbits);
     }
 
-    return AST::UserType(tname);
+    while (is_type<Tok::Operator>(lexer.get_tok())) {
+        auto op = boost::get<Tok::Operator>(lexer.get_tok());
+        if (op.op != "*") break;
+
+        result = std::make_unique<AST::Pointer>(std::move(result));
+        lexer.shift();
+    }
+
+    return result;
 }
 
 AST::Statement Parser::parse_declaration(void) {
@@ -442,10 +468,14 @@ std::unique_ptr<AST::IfStatement> Parser::parse_if_statement(void) {
                                               start);
 }
 
-AST::Return Parser::parse_return(void) {
+AST::Statement Parser::parse_return(void) {
     auto start = lexer.get_pos();
     // Shift the return.
     lexer.shift();
+
+    if (is_type<Tok::Semicolon>(lexer.get_tok())) {
+        return AST::VoidReturn(start);
+    }
 
     auto retval = std::make_unique<AST::Expression>(parse_expression());
 

@@ -85,7 +85,7 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ExpressionCodegen</b> (llvm::LLVMContext &amp;context, llvm::IRBuilder&lt;&gt; &amp;builder, llvm::Module &amp;module, <a class="el" href="class_craeft_1_1_environment.html">Environment</a> &amp;env, std::string &amp;fname)</td></tr>
 <tr class="separator:a190394bb870b34e0b7a0d84963931d15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a789c77ba1bad18aa6465faae0205c56d"><td class="memItemLeft" align="right" valign="top"><a id="a789c77ba1bad18aa6465faae0205c56d"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_expression_codegen.html#a789c77ba1bad18aa6465faae0205c56d">codegen</a> (const <a class="el" href="group___expressions.html#gaef28cabf6d8e7cb8324232e27e69606d">AST::Expression</a> &amp;expr)</td></tr>
+llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_expression_codegen.html#a789c77ba1bad18aa6465faae0205c56d">codegen</a> (const <a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">AST::Expression</a> &amp;expr)</td></tr>
 <tr class="memdesc:a789c77ba1bad18aa6465faae0205c56d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate code for the given statement. <br /></td></tr>
 <tr class="separator:a789c77ba1bad18aa6465faae0205c56d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d298648b5ba95cd5223ea19cf59dddc"><td class="memItemLeft" align="right" valign="top"><a id="a5d298648b5ba95cd5223ea19cf59dddc"></a>
@@ -100,6 +100,12 @@ llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</
 <tr class="memitem:a9cfe552a25ba7af8c069bd69ba9ef072"><td class="memItemLeft" align="right" valign="top"><a id="a9cfe552a25ba7af8c069bd69ba9ef072"></a>
 llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">AST::Variable</a> &amp;)</td></tr>
 <tr class="separator:a9cfe552a25ba7af8c069bd69ba9ef072"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a859b5655b50f9e62f3a4d54cef7371c1"><td class="memItemLeft" align="right" valign="top"><a id="a859b5655b50f9e62f3a4d54cef7371c1"></a>
+llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_reference.html">AST::Reference</a> &gt; &amp;)</td></tr>
+<tr class="separator:a859b5655b50f9e62f3a4d54cef7371c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a122447369542441c02e8f407d1c15d6c"><td class="memItemLeft" align="right" valign="top"><a id="a122447369542441c02e8f407d1c15d6c"></a>
+llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_dereference.html">AST::Dereference</a> &gt; &amp;)</td></tr>
+<tr class="separator:a122447369542441c02e8f407d1c15d6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae80170a774d26af6f270c39ff0c54203"><td class="memItemLeft" align="right" valign="top"><a id="ae80170a774d26af6f270c39ff0c54203"></a>
 llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_binop.html">AST::Binop</a> &gt; &amp;)</td></tr>
 <tr class="separator:ae80170a774d26af6f270c39ff0c54203"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -112,7 +118,7 @@ llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00097">97</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
+<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00101">101</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a></li>
 <li><a class="el" href="_module_codegen_impl_8cpp_source.html">ModuleCodegenImpl.cpp</a></li>
