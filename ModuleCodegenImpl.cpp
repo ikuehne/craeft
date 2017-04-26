@@ -246,6 +246,9 @@ llvm::Value *ExpressionCodegen::operator()(
             throw Error("error", "bitwise operation not permitted between"
                                  "floating-point values", fname, binop->pos);
         }
+    // Case pointer arithmetic.
+    } else if (lhs_ty->isPointerTy() && rhs_ty->isIntegerTy()) {
+        return builder.CreateGEP(lhs, rhs);
     }
 
     // TODO: support more types.
@@ -312,6 +315,8 @@ llvm::Value *ExpressionCodegen::operator()(
     // Floating-point extension.
     } else if (dest_ty->isDoubleTy() && source_ty->isFloatTy()) {
         return builder.CreateFPExt(cast_instr, dest_ty);
+    } else if (dest_ty->isPointerTy() && source_ty->isPointerTy()) {
+        return builder.CreateBitCast(cast_instr, dest_ty);
     // TODO: add more.
     }
 
