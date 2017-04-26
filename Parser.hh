@@ -1,7 +1,7 @@
 /**
  * @file Parser.hh
  *
- * @brief The parser.
+ * @brief The interface to the parser.
  */
 
 /* Craeft: a new systems programming language.
@@ -24,12 +24,14 @@
 
 #pragma once
 
-#include <map>
+#include <memory>
+#include <string>
 
 #include "AST.hh"
-#include "Lexer.hh"
 
 namespace Craeft {
+
+class ParserImpl;
 
 class Parser {
 public:
@@ -40,143 +42,31 @@ public:
      */
     Parser(std::string fname);
 
+    /* Explicitly declared because PImpl. */
+    ~Parser();
+
     /**
-     * @brief Parse the next expression from the lexer.
-     *
-     * Start at the token the lexer is *currently* on.
+     * @brief Parse the next expression from the stream.
      */
     AST::Expression parse_expression(void);
 
+    /**
+     * @brief Parse the next statement from the stream.
+     */
     AST::Statement parse_statement(void);
 
+    /**
+     * @brief Parse the next top-level AST node from the stream.
+     */
     AST::TopLevel parse_toplevel(void);
 
     /**
-     * @brief Return whether the parser has reached the end of stream.
+     * @brief Return whether the parser has reached the end of the stream.
      */
-    bool at_eof(void) const;
-
-    /*************************************************************************
-     * AST-handling utilities.
-     */
-    inline void verify_expression(const AST::Expression &) const;
-    inline AST::LValue to_lvalue(AST::Expression, SourcePos pos) const;
-    inline AST::Statement extract_assignments(AST::Expression &) const;
+    bool at_eof(void);
 
 private:
-    /**
-     * @brief Parse a variable or a function call.
-     */
-    AST::Expression parse_variable(void);
-
-    /**
-     * @brief Parse a unary operator invocation.
-     */
-    AST::Expression parse_unary(void);
-
-    /**
-     * @brief Parse a series of binops, given the first one.
-     */
-    AST::Expression parse_binop(int prec, AST::Expression lhs);
-
-    /**
-     * @brief Parse a cast.
-     *
-     * Current token should be at the typename, e.g.
-     *
-     * (Double)5
-     *  ^
-     */
-    std::unique_ptr<AST::Cast> parse_cast(void);
-
-    /**
-     * @brief Parse a parenthesized expression.
-     */
-    AST::Expression parse_parens(void);
-
-    /**
-     * @brief Parse anything but an operator application.
-     */
-    AST::Expression parse_primary(void);
-
-    /**
-     * @brief Parse a type.
-     */
-    AST::Type parse_type(void);
-
-    /**
-     * @brief Parse a variable declaration.
-     */
-    AST::Statement parse_declaration(void);
-
-    /**
-     * @brief Parse an if statement.
-     */
-    std::unique_ptr<AST::IfStatement> parse_if_statement(void);
-
-    /**
-     * @brief Parse a return statement.
-     */
-    AST::Statement parse_return(void);
-    
-    AST::TypeDeclaration parse_type_declaration(void);
-
-    AST::StructDeclaration parse_struct_declaration(void);
-
-    AST::TopLevel parse_function(void);
-
-    /**
-     * @brief Look up the precedence of an operator.
-     */
-    int get_token_precedence(void) const;
-
-    /*************************************************************************
-     * Error-handling utilities.
-     */
-
-    template<typename T>
-    inline void find_and_shift(std::string at_place);
-
-    [[noreturn]] inline void _throw(std::string message);
-
-    /**
-     * @brief The held lexer.
-     */
-    Lexer lexer;
-
-    /**
-     * @brief The map of operator precedences.
-     */
-    std::map<std::string, int> precedences {
-        {"=", 200},
-        {"||", 300},
-        {"&&", 400},
-        {"|", 500},
-        {"^", 600},
-        {"&", 700},
-        {"==", 800},
-        {"!=", 800},
-
-        {"<", 900},
-        {"<=", 900},
-        {">", 900},
-        {">=", 900},
-
-        {"<<", 1000},
-        {">>", 1000},
-
-        {"+", 1100},
-        {"-", 1100},
-
-        {"*", 1200},
-        {"/", 1200},
-        {"%", 1200},
-    };
-
-    /**
-     * @brief The name of the file being parsed.
-     */
-    std::string fname;
+    std::unique_ptr<ParserImpl> pimpl;
 };
 
 }
