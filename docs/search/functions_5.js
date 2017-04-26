@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['parse_5fexpression',['parse_expression',['../class_craeft_1_1_parser.html#ae991d774fc82c09ec4a4223b883580a9',1,'Craeft::Parser']]],
-  ['parser',['Parser',['../class_craeft_1_1_parser.html#a584edbe348c503996ad4f0583b843520',1,'Craeft::Parser']]],
-  ['print_5fexpr',['print_expr',['../group___expressions.html#gaa685c19f15521a85a802b0b0a7fd9ffb',1,'Craeft::AST']]]
+  ['identbinding',['IdentBinding',['../struct_craeft_1_1_ident_binding.html#a9997ef54c81bd0c987ddbc0ff1e7ddaa',1,'Craeft::IdentBinding']]],
+  ['is_5ftype',['is_type',['../_variant_utils_8hh.html#a028885bc69ad44b9ff431ad164b503da',1,'VariantUtils.hh']]]
 ];

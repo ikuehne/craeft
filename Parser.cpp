@@ -232,6 +232,10 @@ AST::Type Parser::parse_type(void) {
             if      (tname[0] == 'I') return AST::IntType(nbits);
             else if (tname[0] == 'U') return AST::UIntType(nbits);
         }
+    } else if ((tname.size() == 2 && isdigit(tname[1]))) {
+        int nbits = std::stoi(tname.substr(1, 1));
+        if      (tname[0] == 'I') return AST::IntType(nbits);
+        else if (tname[0] == 'U') return AST::UIntType(nbits);
     }
 
     return AST::UserType(tname);

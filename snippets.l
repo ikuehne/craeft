@@ -149,7 +149,7 @@ fn qsort(I64 *arr, U64 size, (I64, I64) -> U1 comp);
 // Conditionals.
 //
 
-// Conditionals take the form `if (expression) { statement ... }`.
+// Conditionals take the form `if expression { statement ... }`.
 fn double_if_odd(I64 x) -> I64 {
     if (x % 2 == 1) {
         return x * 2;
