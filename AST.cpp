@@ -115,12 +115,22 @@ struct ExpressionPrintVisitor: boost::static_visitor<void> {
 struct StatementPrintVisitor: boost::static_visitor<void> {
     StatementPrintVisitor(std::ostream &out): out(out) {}
 
-    void operator()(const std::unique_ptr<Expression> &expr) {
+    void operator()(const std::unique_ptr<AST::Assignment> &assgnt) {
+        ExpressionPrintVisitor ev(out);
+
+        out << "Assignment {";
+        boost::apply_visitor(ev, assgnt->lhs);
+        out << ", ";
+        boost::apply_visitor(ev, assgnt->rhs);
+        out << "}";
+    }
+
+    void operator()(const Expression &expr) {
         ExpressionPrintVisitor ev(out);
 
         out << "Statement {";
 
-        boost::apply_visitor(ev, *expr);
+        boost::apply_visitor(ev, expr);
 
         out << "}";
     }

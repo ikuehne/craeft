@@ -56,6 +56,13 @@ public:
      */
     bool at_eof(void) const;
 
+    /*************************************************************************
+     * AST-handling utilities.
+     */
+    inline void verify_expression(const AST::Expression &) const;
+    inline AST::LValue to_lvalue(const AST::Expression &) const;
+    inline AST::Statement extract_assignments(AST::Expression &) const;
+
 private:
     /**
      * @brief Parse a variable or a function call.
@@ -117,6 +124,10 @@ private:
      * @brief Look up the precedence of an operator.
      */
     int get_token_precedence(void) const;
+
+    /*************************************************************************
+     * Error-handling utilities.
+     */
 
     template<typename T>
     inline void find_and_shift(std::string at_place);

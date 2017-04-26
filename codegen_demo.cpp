@@ -78,10 +78,9 @@ int main(int argc, char **argv) {
         Craeft::Parser parser(in_file);
         bool successful = true;
         /* Pull ASTs out of the parser */
-        unsigned i = 0;
         while (successful) {
             /* until we hit EOF. */
-            if (/* TODO: EOF */i++) break;
+            if (parser.at_eof()) break;
             if (!handle_input(parser, codegen)) successful = false;
         }
 

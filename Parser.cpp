@@ -39,6 +39,111 @@ static inline AstLiteral get_literal(TokLiteral tok, SourcePos pos) {
 }
 
 /*****************************************************************************
+ * Utilities for transforming the AST.
+ */
+
+/**
+ * @brief Visitor for verifying that expressions are not actually assignments.
+ *
+ * The parser cannot distinguish between the two at parse-time, so expressions
+ * must be verified after the fact.
+ */
+class ExpressionVerifier: public boost::static_visitor<void> {
+public:
+    ExpressionVerifier(const std::string &fname): fname(fname) {}
+
+    /* By default, do nothing. */
+    template<typename T>
+    void operator()(const T &_) const {}
+
+    void operator()(const std::unique_ptr<AST::Binop> &op) const {
+        if (op->op == "=") {
+            throw Error("parse error",
+                        "\"=\" may not appear in an expression",
+                        fname, op->pos);
+        }
+
+        boost::apply_visitor(*this, op->lhs);
+        boost::apply_visitor(*this, op->rhs);
+    }
+
+    void operator()(const std::unique_ptr<AST::FunctionCall> &fc) const {
+        std::for_each(fc->args.begin(), fc->args.end(), [&](const auto &arg) {
+                          boost::apply_visitor(*this, arg);
+                      });
+    }
+
+    void operator()(const std::unique_ptr<AST::Cast> &cast) const {
+        boost::apply_visitor(*this, cast->arg);
+    }
+
+private:
+    const std::string &fname;
+};
+
+inline void Parser::verify_expression(const AST::Expression &expr) const {
+    boost::apply_visitor(ExpressionVerifier(fname), expr);
+}
+
+class LValueFactorizer: public boost::static_visitor<AST::LValue> {
+public:
+    LValueFactorizer(const std::string &fname): fname(fname) {}
+
+    template<typename T>
+    AST::LValue operator()(const T &expr) const {
+        throw Error("parser error", "expected l-value", fname, expr.pos);
+    }
+
+    template<typename T>
+    AST::LValue operator()(const std::unique_ptr<T> &expr) const {
+        throw Error("parser error", "expected l-value", fname, expr->pos);
+    }
+
+    AST::LValue operator()(const AST::Variable var) const {
+        return var;
+    }
+
+private:
+    const std::string &fname;
+};
+
+inline AST::LValue Parser::to_lvalue(const AST::Expression &expr) const {
+    return boost::apply_visitor(LValueFactorizer(fname), expr);
+}
+
+class AssignmentFactorizer: public boost::static_visitor<AST::Statement> {
+public:
+    AssignmentFactorizer(const Parser *p): parser(p) {}
+
+    /* By default, do nothing. */
+    template<typename T>
+    AST::Statement operator()(T &expr) const {
+        return std::move(expr);
+    }
+
+    AST::Statement operator()(std::unique_ptr<AST::Binop> &op) const {
+        if (op->op == "=") {
+            parser->verify_expression(op->lhs);
+            parser->verify_expression(op->rhs);
+            return std::make_unique<AST::Assignment>(
+                    parser->to_lvalue(std::move(op->lhs)), std::move(op->rhs),
+                                      op->pos);
+        }
+
+        return std::move(op);
+    }
+
+private:
+    const Parser *parser;
+};
+
+inline AST::Statement Parser::extract_assignments(
+        AST::Expression &expr) const {
+    AssignmentFactorizer af(this);
+    return boost::apply_visitor(af, expr);
+}
+
+/*****************************************************************************
  * Parser public methods.
  */
 
@@ -49,20 +154,21 @@ AST::Expression Parser::parse_expression(void) {
 }
 
 AST::Statement Parser::parse_statement(void) {
-    AST::Statement result;
     if (is_type<Tok::TypeName>(lexer.get_tok())) {
-        result = parse_declaration();
+        auto result = parse_declaration();
+        find_and_shift<Tok::Semicolon>("after declaration");
+        return result;
     } else if (is_type<Tok::Return>(lexer.get_tok())) {
-        result = parse_return();
+        auto result = parse_return();
+        find_and_shift<Tok::Semicolon>("after return statement");
+        return std::move(result);
     } else if (is_type<Tok::If>(lexer.get_tok())) {
         return parse_if_statement();
     } else {
-        result = std::make_unique<AST::Expression>(parse_expression());
+        auto result = parse_expression();
+        find_and_shift<Tok::Semicolon>("after top-level expression");
+        return extract_assignments(result);
     }
-
-    find_and_shift<Tok::Semicolon>("after statement");
-
-    return result;
 }
 
 AST::TopLevel Parser::parse_toplevel(void) {

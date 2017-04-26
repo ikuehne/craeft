@@ -275,6 +275,19 @@ struct Declaration {
 };
 
 /**
+ * @brief Assignments.
+ */
+struct Assignment {
+    LValue lhs;
+    Expression rhs;
+
+    SourcePos pos;
+
+    Assignment(LValue lhs, Expression rhs, SourcePos pos)
+        : lhs(std::move(lhs)), rhs(std::move(rhs)), pos(pos) {}
+};
+
+/**
  * @brief Compound variable declarations.
  *
  * I.e. Typename varname = expression;
@@ -294,8 +307,9 @@ struct CompoundDeclaration {
 
 struct IfStatement;
 
-typedef boost::variant< std::unique_ptr<Expression>,
+typedef boost::variant< Expression,
                         Return,
+                        std::unique_ptr<Assignment>,
                         std::unique_ptr<Declaration>,
                         std::unique_ptr<CompoundDeclaration>,
                         std::unique_ptr<IfStatement> >

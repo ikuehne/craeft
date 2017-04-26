@@ -82,6 +82,18 @@ llvm::Type *TypeCodegen::operator()(const std::unique_ptr<AST::Pointer> &ut) {
 }
 
 /*****************************************************************************
+ * Code generation for L-Values.
+ */
+
+llvm::Value *LValueCodegen::codegen(const AST::LValue &val){
+    return boost::apply_visitor(*this, val);
+}
+
+llvm::Value *LValueCodegen::operator()(const AST::Variable &var) {
+    return env[var.name].inst;
+}
+
+/*****************************************************************************
  * Code generation for expressions.
  */
 
@@ -293,9 +305,18 @@ void StatementCodegen::codegen(const AST::Statement &stmt) {
     boost::apply_visitor(*this, stmt);
 }
 
+void StatementCodegen::operator()(const AST::Expression &expr) {
+    expr_codegen.codegen(expr);
+}
+
 void StatementCodegen::operator()(
-        const std::unique_ptr<AST::Expression> &expr) {
-    expr_codegen.codegen(*expr);
+        const std::unique_ptr<AST::Assignment> &assignment) {
+    LValueCodegen lc(context, builder, module, env, fname);
+    /* TODO: codegen for LValues. */
+    auto *addr = lc.codegen(assignment->lhs);
+    auto *rhs  = expr_codegen.codegen(assignment->rhs);
+
+    builder.CreateStore(rhs, addr);
 }
 
 void StatementCodegen::operator()(const AST::Return &ret) {

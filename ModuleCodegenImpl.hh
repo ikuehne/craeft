@@ -68,6 +68,32 @@ private:
     std::string &fname;
 };
 
+class LValueCodegen: public boost::static_visitor<llvm::Value *> {
+public:
+    LValueCodegen(llvm::LLVMContext &context,
+                  llvm::IRBuilder<> &builder,
+                  llvm::Module &module,
+                  Environment &env,
+                  std::string &fname)
+        : context(context), builder(builder), module(module), env(env),
+          fname(fname) {}
+    /**
+     * @brief Generate an instruction yielding an address to the given
+     *        l-value.
+     */
+    llvm::Value *codegen(const AST::LValue &);
+
+    llvm::Value *operator()(const AST::Variable &);
+
+private:
+    llvm::LLVMContext &context;
+    llvm::IRBuilder<> &builder;
+    llvm::Module &module;
+    Environment &env;
+    std::string &fname;
+
+};
+
 class ExpressionCodegen: public boost::static_visitor<llvm::Value *> {
 public:
     ExpressionCodegen(llvm::LLVMContext &context,
@@ -126,8 +152,9 @@ public:
     bool can_continue(void);
 
     // Visitors of different AST statement types.
-    void operator()(const std::unique_ptr<AST::Expression> &);
+    void operator()(const AST::Expression &);
     void operator()(const AST::Return &);
+    void operator()(const std::unique_ptr<AST::Assignment> &assignment);
     void operator()(const std::unique_ptr<AST::Declaration> &);
     void operator()(const std::unique_ptr<AST::CompoundDeclaration> &);
     void operator()(const std::unique_ptr<AST::IfStatement> &);
