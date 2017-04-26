@@ -82,15 +82,15 @@ Error::Error(std::string header, std::string msg,
     : header(header), msg(msg), fname(fname), pos(pos) {}
 
 void Error::emit(std::ostream &out) {
-    /*const std::vector<std::string> &lines = get_lines(fname);*/
+    const std::vector<std::string> &lines = get_lines(fname);
 
     out << fname
         << ":" << pos.lineno << ":" << pos.charno + 1
         << ": " << TERM_ERR << header << ": " << TERM_RESET
         << msg << "\n\t"
-/*        << lines[pos.lineno] << "\n\t"
+        << lines[pos.lineno] << "\n\t"
         << std::string(pos.charno, ' ')
-        << TERM_IND << "^" << TERM_RESET */<< std::endl;
+        << TERM_IND << "^" << TERM_RESET << std::endl;
 }
 
 }
