@@ -126,6 +126,10 @@ boost::variant<double, uint64_t> Lexer::lex_number(void) {
     }
 }
 
+bool Lexer::at_eof(void) const {
+    return eof;
+}
+
 void Lexer::shift(void) {
     while (std::isspace(c)) {
         get();

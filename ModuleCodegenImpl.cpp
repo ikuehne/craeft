@@ -127,12 +127,15 @@ llvm::Value *ExpressionCodegen::operator()(
 
     // Case integer types.
     if (lhs_ty->isIntegerTy() && rhs_ty->isIntegerTy()) {
-        if (lhs_ty->getIntegerBitWidth() < rhs_ty->getIntegerBitWidth()) {
+        unsigned lhs_bw = lhs_ty->getIntegerBitWidth();
+        unsigned rhs_bw = rhs_ty->getIntegerBitWidth();
+        if (lhs_bw < rhs_bw) {
             lhs = builder.CreateZExt(lhs, rhs_ty);
-        } else if
-              (rhs_ty->getIntegerBitWidth() < lhs_ty->getIntegerBitWidth()) {
+        } else if (rhs_bw < lhs_bw) {
             rhs = builder.CreateZExt(rhs, lhs_ty);
         }
+
+        bool is_u1 = lhs_bw == 1;
 
         // TODO: add unsigned stuff.
         if (binop->op == "+") {
@@ -153,6 +156,32 @@ llvm::Value *ExpressionCodegen::operator()(
             return builder.CreateAShr(lhs, rhs);
         } else if (binop->op == "<<") {
             return builder.CreateShl(lhs, rhs);
+        } else if (binop->op == "==") {
+            return builder.CreateICmpEQ(lhs, rhs);
+        } else if (binop->op == "!=") {
+            return builder.CreateICmpNE(lhs, rhs);
+        } else if (binop->op == "<") {
+            return builder.CreateICmpSLT(lhs, rhs);
+        } else if (binop->op == ">") {
+            return builder.CreateICmpSGT(lhs, rhs);
+        } else if (binop->op == "<=") {
+            return builder.CreateICmpSLE(lhs, rhs);
+        } else if (binop->op == ">=") {
+            return builder.CreateICmpSGE(lhs, rhs);
+        } else if (binop->op == "!=") {
+            return builder.CreateICmpNE(lhs, rhs);
+        } else if (binop->op == "&&") {
+            if (!is_u1) {
+                throw Error("error", "&& not permitted between integers of "
+                                     "multiple bits", fname, binop->pos);
+            }
+            return builder.CreateAnd(lhs, rhs);
+        } else if (binop->op == "||") {
+            if (!is_u1) {
+                throw Error("error", "|| not permitted between integers of "
+                                     "multiple bits", fname, binop->pos);
+            }
+            return builder.CreateOr(lhs, rhs);
         } else {
             throw Error("error", "operation \"" + binop->op
                                + "\" not permitted between integers",
@@ -508,6 +537,8 @@ void ModuleCodegenImpl::optimize(int opt_level) {
         fpm->add(llvm::createGVNPass());
         // Simplify the control flow graph.
         fpm->add(llvm::createCFGSimplificationPass());
+        // Tail call elimination.
+        fpm->add(llvm::createTailCallEliminationPass());
     }
 
     fpm->run(*module);

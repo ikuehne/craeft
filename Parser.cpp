@@ -77,6 +77,10 @@ AST::TopLevel Parser::parse_toplevel(void) {
     }
 }
 
+bool Parser::at_eof(void) const {
+    return lexer.at_eof();
+}
+
 /*****************************************************************************
  * Parser methods for dealing with particular forms.
  */
@@ -469,6 +473,9 @@ AST::TopLevel Parser::parse_function(void) {
     while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
         body.push_back(parse_statement());
     }
+
+    // Shift the closing brace.
+    lexer.shift();
 
     return std::make_unique<AST::FunctionDefinition>(std::move(decl),
                                                      std::move(body),

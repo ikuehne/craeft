@@ -51,6 +51,11 @@ public:
 
     AST::TopLevel parse_toplevel(void);
 
+    /**
+     * @brief Return whether the parser has reached the end of stream.
+     */
+    bool at_eof(void) const;
+
 private:
     /**
      * @brief Parse a variable or a function call.
@@ -127,12 +132,29 @@ private:
      * @brief The map of operator precedences.
      */
     std::map<std::string, int> precedences {
-        {"=", 2},
-        {"<", 10},
-        {"+", 20},
-        {"-", 20},
-        {"*", 40},
-        {"/", 40},
+        {"=", 200},
+        {"||", 300},
+        {"&&", 400},
+        {"|", 500},
+        {"^", 600},
+        {"&", 700},
+        {"==", 800},
+        {"!=", 800},
+
+        {"<", 900},
+        {"<=", 900},
+        {">", 900},
+        {">=", 900},
+
+        {"<<", 1000},
+        {">>", 1000},
+
+        {"+", 1100},
+        {"-", 1100},
+
+        {"*", 1200},
+        {"/", 1200},
+        {"%", 1200},
     };
 
     /**
