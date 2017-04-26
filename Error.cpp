@@ -55,11 +55,11 @@ static std::vector<std::string> &get_lines(std::string f) {
         auto v = std::make_unique<std::vector<std::string>>();
         std::ifstream file(f);
         char buf[81];
-        while (!file.eof()) {
+        while (!(file.eof() || file.fail())) {
             unsigned i;
             char c;
             for (i = 0; i < 80; ++i) {
-                if (file.eof()) break;
+                if (file.eof() || file.fail()) break;
                 c = file.get();
                 if (c == '\n') {
                     break;
@@ -67,7 +67,7 @@ static std::vector<std::string> &get_lines(std::string f) {
                 buf[i] = c;
             }
             if (c != '\n') {
-                while (!file.eof() && file.get() != '\n');
+                while (!(file.eof() || file.fail()) && file.get() != '\n');
             }
             buf[i] = '\0';
             v->push_back(std::string(buf));
@@ -83,6 +83,7 @@ Error::Error(std::string header, std::string msg,
 
 void Error::emit(std::ostream &out) {
     const std::vector<std::string> &lines = get_lines(fname);
+    if (pos.charno > 0) pos.charno--;
 
     out << fname
         << ":" << pos.lineno << ":" << pos.charno + 1
