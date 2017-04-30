@@ -31,6 +31,11 @@
 
 namespace Craeft {
 
+/**
+ * @brief Actual implementation of Parser functionality.
+ *
+ * See Parser.hh for documentation of public methods.
+ */
 class ParserImpl {
 public:
     ParserImpl(std::string fname);
@@ -46,12 +51,7 @@ public:
      * Note: starts at the token the lexer is *currently* on.
      */
     AST::Statement parse_statement(void);
-
     AST::TopLevel parse_toplevel(void);
-
-    /**
-     * @brief Return whether the parser has reached the end of stream.
-     */
     bool at_eof(void) const;
 
     /*************************************************************************
