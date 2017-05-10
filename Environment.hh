@@ -3,7 +3,7 @@
  *
  * @brief The Environment class, used for variable/type mappings.
  *
- * Contains convenience structs for holding information about named Craeft
+ * Contains a convenience struct for holding information about named Craeft
  * objects (variables and functions, for instance).  Also contains a class for
  * pushing and popping scopes.
  */
@@ -39,52 +39,55 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
 
+#include "Error.hh"
+#include "Type.hh"
+#include "Value.hh"
+#include "VariantUtils.hh"
+
 namespace Craeft {
 
 /**
  * @brief Information to be associated with a variable in an environment.
  */
-struct IdentBinding {
-    IdentBinding(void) {}
-
+struct Variable {
     /**
-     * @brief Create a new `IdentBinding` based on the given instruction.
+     * @brief Create a new `Variable` based on the given instruction.
      */
-    IdentBinding(llvm::Value *inst): inst(inst) {}
-
-    /**
-     * @brief A value corresponding to an LLVM pointer to this variable.
-     *
-     * For example, to get an instruction refering to the current value of
-     * this variable, one would issue a "load" on this value.
-     */
-    llvm::Value *inst = NULL;
-
-    llvm::Type *get_type(void) {
-        // TODO: Explicitly handle case where this is not a pointer.  Should
-        // never happen according to the current codegen design.
-        return ((llvm::PointerType *)inst->getType())->getElementType();
+    Variable(Value val): val(val) {
+        /* Must be a pointer type.  All variables live in memory during
+         * translation. */
+        assert(is_type<Pointer>(val.get_type()));
     }
-};
-
-/**
- * @brief Information to be associated with a type environment.
- */
-struct TypeBinding {
-    TypeBinding(void) {}
 
     /**
-     * @brief An LLVM type corresponding to the given type.
+     * @brief Get the type of this binding.
      */
-    llvm::Type *type = NULL;
+    Type *get_type(void) {
+        /* We actually only hold a *pointer* to the value, so we have to get
+         * the pointed type. */
+        return boost::get<Pointer>(val.get_type()).get_pointed();
+    }
 
-    TypeBinding(llvm::Type *type): type(type) {}
+    /**
+     * @brief Get the value of this variable.
+     *
+     * Note that the returned value corresponds to a *pointer* to the actual
+     * contents of the variable.
+     */
+    Value get_val(void) { return val; }
 
+private:
+    /**
+     * @brief A value corresponding to a pointer to this variable.
+     *
+     * To get an instruction refering to the current value of this variable,
+     * one would issue a "load" on this value.
+     */
+    Value val;
 };
 
-
-typedef std::vector<std::pair<std::string, IdentBinding> > IdentScope;
-typedef std::vector<std::pair<std::string, TypeBinding> >  TypeScope;
+typedef std::vector<std::pair<std::string, Variable> > IdentScope;
+typedef std::vector<std::pair<std::string, Type> >  TypeScope;
 
 class Environment {
 public:
@@ -141,16 +144,19 @@ public:
     }
 
     /**
-     * @brief Find the given name in the map, or insert it if not found.
+     * @brief Find the given name in the map.
+     *
+     * Throw an Error if not found.
      *
      * @param name Must be a valid identifier.
      */
-    IdentBinding &operator[](const std::string &name) {
+    Variable lookup_identifier(const std::string &name,
+                               SourcePos pos, std::string &fname) {
         assert(islower(name[0]));
 
         // First try to find the result,
         for (auto &vec: boost::adaptors::reverse(ident_map)) {
-            for (auto &pair: *vec) {
+            for (auto &pair: *boost::adaptors::reverse(vec)) {
                 if (pair.first == name) {
                     // returning it if possible.
                     return pair.second;
@@ -158,18 +164,25 @@ public:
             }
         }
 
-        ident_map.back()->push_back(std::pair<std::string, IdentBinding>(
-                    name, IdentBinding()));
+        throw Error("error", "variable \"" + name + "\" not found.",
+                    fname, pos);
+    }
 
-        return ident_map.back()->back().second;
+    Variable add_identifier(std::string name, Value val) {
+        Variable result(val);
+        ident_map.back()->push_back(std::pair<std::string, Variable>
+                                             (name, result));
+        return result;
     }
 
     /**
-     * @brief Find the given type name in the map, or insert it if not found.
+     * @brief Find the given type name in the map.
      *
      * @param tname Must be a valid type name.
      */
-    TypeBinding &operator()(const std::string &tname) {
+    const Type &lookup_type(const std::string &tname,
+                      SourcePos pos,
+                      std::string &fname) {
         assert(isupper(tname[0]));
 
         // First try to find the result,
@@ -182,14 +195,12 @@ public:
             }
         }
 
-        type_map.back()->push_back(std::pair<std::string, TypeBinding>(
-                    tname, TypeBinding()));
-
-        return type_map.back()->back().second;
+        throw Error("error", "type \"" + tname + "\" not found.",
+                    fname, pos);
     }
 
 private:
-    std::vector < std::unique_ptr <IdentScope> >ident_map;
+    std::vector < std::unique_ptr <IdentScope> > ident_map;
     std::vector < std::unique_ptr <TypeScope> > type_map;
 };
 
