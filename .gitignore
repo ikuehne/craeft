@@ -1,6 +1,9 @@
 # Scratchwork
 scratch/
 
+# CMake's scratchwork.
+build/
+
 # Compiler
 craeftc
 
