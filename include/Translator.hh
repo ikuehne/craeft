@@ -24,15 +24,36 @@
 
 #pragma once
 
+#include <memory>
+
 #include "llvm/Support/Host.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 
+#include "Block.hh"
 #include "Environment.hh"
 #include "Value.hh"
 #include "Type.hh"
 
 namespace Craeft {
+
+/**
+ * @brief Abstract implementation of `IfThenElse`.
+ */
+struct IfThenElseImpl;
+
+/**
+ * @brief Abstract representation of a Craeft if/then/else structure.
+ *
+ * Should only be used through `Translator`'s methods on it.
+ */
+class IfThenElse {
+public:
+    IfThenElse(std::unique_ptr<IfThenElseImpl> pimpl);
+    IfThenElse(IfThenElse &&other);
+    ~IfThenElse(void);
+    std::unique_ptr<IfThenElseImpl> pimpl;
+};
 
 class TranslatorImpl;
 
@@ -189,6 +210,35 @@ public:
     /**
      * @defgroup Control structures.
      *
+     * @{
+     */
+
+    /**
+     * @brief Create and return an IfThenElse structure.
+     *
+     * Opens a new namespace; new instructions are added in the "then" block.
+     *
+     * @param cond The condition of the "if".
+     */
+    IfThenElse create_ifthenelse(Value cond, SourcePos pos);
+
+    /**
+     * @brief Terminates the "then" and starts emitting instructions at the
+     *        "else".
+     */
+    void point_to_else(IfThenElse &structure);
+
+    /**
+     * @brief Exit the if/then/else and start emitting instructions outside
+     *        the structure.
+     */
+    void end_ifthenelse(IfThenElse structure);
+
+    /** @} */
+
+    /**
+     * @defgroup Control structures.
+     *
      * Again, fairly thin abstractions over LLVM's primitives.
      *
      * @{
@@ -226,7 +276,6 @@ public:
     llvm::IRBuilder<> &get_builder(void);
     Environment &get_env(void);
     llvm::LLVMContext &get_ctx(void);
-
 
 private:
     std::unique_ptr<TranslatorImpl> pimpl;

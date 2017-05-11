@@ -27,11 +27,12 @@
 #include <functional>
 
 #include "llvm/IR/InstrTypes.h"
-#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
 
+#include "Block.hh"
 #include "Environment.hh"
 #include "Error.hh"
+#include "Translator.hh"
 #include "Type.hh"
 #include "Value.hh"
 
@@ -76,6 +77,9 @@ public:
     void assign(const std::string &varname, Value val, SourcePos pos);
     void return_(Value val, SourcePos pos);
 
+    IfThenElse create_ifthenelse(Value cond, SourcePos pos);
+    void point_to_else(IfThenElse &structure);
+    void end_ifthenelse(IfThenElse structure);
     void create_function_prototype(Function f, std::string name);
     void create_and_start_function(Function f, std::vector<std::string> args,
                                    std::string name);
@@ -103,6 +107,11 @@ private:
                      llvm::CmpInst::Predicate sip,
                      llvm::CmpInst::Predicate uip,
                      llvm::CmpInst::Predicate fp);
+
+    /**
+     * @brief Move to the other block.
+     */
+    void point(Block other);
 
     /**
      * @brief The name of the file this is generating code for.
@@ -137,6 +146,11 @@ private:
      * @brief The target machine (target triple + CPU information).
      */
 	llvm::TargetMachine *target;
+
+    /**
+     * @brief The block currently writing to.
+     */
+    std::unique_ptr<Block> current;
 };
 
 }

@@ -272,57 +272,24 @@ void StatementCodegen::operator()(
 
 void StatementCodegen::operator()(
         const std::unique_ptr<AST::IfStatement> &if_stmt) {
+
     /* Generate code for the condition. */
     auto cond = expr_codegen.codegen(if_stmt->condition);
 
-    // TODO: add appropriate abstraction to translator.
-    auto &builder = translator.get_builder();
-    auto &context = translator.get_ctx();
-    auto &env     = translator.get_env();
+    auto structure = translator.create_ifthenelse(cond, if_stmt->pos);
 
-    llvm::Function *parent = builder.GetInsertBlock()->getParent();
-
-    auto *then_bb = llvm::BasicBlock::Create(context, "then", parent);
-    auto *else_bb = llvm::BasicBlock::Create(context, "else");
-    auto *merge_bb = llvm::BasicBlock::Create(context, "merge");
-
-    assert(then_bb);
-    assert(else_bb);
-    assert(merge_bb);
-
-    builder.CreateCondBr(cond.to_llvm(), then_bb, else_bb);
-
-    // Generate "then" code.
-    builder.SetInsertPoint(then_bb);
-    // In a scope...
-    env.push();
     for (const auto &arg: if_stmt->if_block) {
         codegen(arg);
     }
-    // which we forget after exiting.
-    env.pop();
 
-    if (builder.GetInsertBlock()->getTerminator() == nullptr) {
-        builder.CreateBr(merge_bb);
-    }
-
-    then_bb = builder.GetInsertBlock();
+    translator.point_to_else(structure);
 
     // Generate "else" code.
-    parent->getBasicBlockList().push_back(else_bb);
-    builder.SetInsertPoint(else_bb);
-    env.push();
     for (const auto &arg: if_stmt->else_block) {
         codegen(arg);
     }
-    env.pop();
-    if (builder.GetInsertBlock()->getTerminator() == nullptr) {
-        builder.CreateBr(merge_bb);
-    }
 
-    // Start again at "merge".
-    parent->getBasicBlockList().push_back(merge_bb);
-    builder.SetInsertPoint(merge_bb);
+    translator.end_ifthenelse(std::move(structure));
 }
 
 /*****************************************************************************

@@ -37,6 +37,23 @@ using namespace std::placeholders;
 
 namespace Craeft {
 
+struct IfThenElseImpl {
+    Block then_b;
+    Block else_b;
+    Block merge_b;
+
+    IfThenElseImpl(Block then_b, Block else_b, Block merge_b)
+        : then_b(then_b), else_b(else_b), merge_b(merge_b) {}
+};
+
+IfThenElse::IfThenElse(std::unique_ptr<IfThenElseImpl> pimpl)
+    : pimpl(std::move(pimpl)) {}
+
+IfThenElse::IfThenElse(IfThenElse &&other)
+    : pimpl(std::move(other.pimpl)) {}
+
+IfThenElse::~IfThenElse(void) {}
+
 TranslatorImpl::TranslatorImpl(std::string module_name, std::string filename,
                                std::string triple)
     : fname(filename),
@@ -1187,12 +1204,10 @@ void TranslatorImpl::create_and_start_function(Function f,
     env.add_identifier(name, Value(result, f));
 
     // Create the first block in the function.
-    llvm::BasicBlock *bb = llvm::BasicBlock::Create(context, "entry", result);
+    point(Block(result, "entry"));
 
     // Push a new namespace for the function.
     env.push();
-
-    builder.SetInsertPoint(bb);
 
     unsigned i = 0;
     
@@ -1213,7 +1228,56 @@ void TranslatorImpl::end_function(void) {
 }
 
 void TranslatorImpl::return_(Value val, SourcePos pos) {
-    builder.CreateRet(val.to_llvm());
+    current->return_(val);
+}
+
+IfThenElse TranslatorImpl::create_ifthenelse(Value cond, SourcePos pos) {
+    auto *f = builder.GetInsertBlock()->getParent();
+
+    auto result = std::make_unique<IfThenElseImpl>(Block(f, "then"),
+                                                   Block(context, "else"),
+                                                   Block(context, "merge"));
+
+    current->cond_jump(cond, result->then_b, result->else_b);
+
+    // Push a new namespace.
+    env.push();
+
+    // Start emitting at "then".
+    point(result->then_b);
+
+    return IfThenElse(std::move(result));
+}
+
+void TranslatorImpl::point_to_else(IfThenElse &structure) {
+    auto &pimpl = structure.pimpl;
+
+    // Pop the "then" namespace.
+    env.pop();
+
+    if (!current->is_terminated()) {
+        current->jump_to(pimpl->else_b);
+    }
+
+    pimpl->else_b.associate(pimpl->then_b.get_parent());
+
+    // Push a namespace for "else".
+    env.push();
+    point(pimpl->else_b);
+}
+
+void TranslatorImpl::end_ifthenelse(IfThenElse structure) {
+    auto pimpl = std::move(structure.pimpl);
+    // Pop the "else" namespace.
+    env.pop();
+
+    if (!current->is_terminated()) {
+        current->jump_to(pimpl->merge_b);
+    }
+
+    pimpl->merge_b.associate(pimpl->then_b.get_parent());
+
+    point(pimpl->merge_b);
 }
 
 void TranslatorImpl::validate(std::ostream &out) {
@@ -1270,6 +1334,14 @@ void TranslatorImpl::emit_obj(int fd) {
 
     pass.run(*module);
     llvm_out.flush();
+}
+
+void TranslatorImpl::point(Block b) {
+    current.reset(new Block(b));
+
+    // TODO: Maybe associate the block with the current function?
+
+    current->point_builder(builder);
 }
 
 // TODO: Get rid of these once translator can replace builder.
