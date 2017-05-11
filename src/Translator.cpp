@@ -51,7 +51,7 @@ Value Translator::add(Value lhs, Value rhs, SourcePos pos) {
 }
 
 Value Translator::sub(Value lhs, Value rhs, SourcePos pos) {
-    return pimpl->add(lhs, rhs, pos);
+    return pimpl->sub(lhs, rhs, pos);
 }
 
 Value Translator::mul(Value lhs, Value rhs, SourcePos pos) {
@@ -113,6 +113,18 @@ void Translator::assign(const std::string &varname, Value val,
 
 void Translator::return_(Value val, SourcePos pos) {
     return pimpl->return_(val, pos);
+}
+
+IfThenElse Translator::create_ifthenelse(Value cond, SourcePos pos) {
+    return pimpl->create_ifthenelse(cond, pos);
+}
+
+void Translator::point_to_else(IfThenElse &structure) {
+    pimpl->point_to_else(structure);
+}
+
+void Translator::end_ifthenelse(IfThenElse structure) {
+    pimpl->end_ifthenelse(std::move(structure));
 }
 
 void Translator::create_function_prototype(Function f, std::string name) {
