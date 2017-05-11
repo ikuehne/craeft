@@ -5,7 +5,8 @@ BOOST_OPT=/usr/local/Cellar/boost/1.62.0/lib/libboost_program_options.a
 CPPFLAGS=-g $(shell llvm-config --cxxflags) -Wall -Wpedantic -std=c++14 -UNDEBUG
 LDFLAGS=$(shell llvm-config --ldflags --system-libs --libs all) $(BOOST_OPT)
 COMPILER_OBJS = AST.o Lexer.o Error.o ModuleCodegen.o ModuleCodegenImpl.o
-COMPILER_OBJS += Parser.o ParserImpl.o
+COMPILER_OBJS += Parser.o ParserImpl.o Translator.o TranslatorImpl.o
+COMPILER_OBJS += Type.o Value.o
 
 all: craeftc
 

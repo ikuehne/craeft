@@ -25,11 +25,11 @@
 
 namespace Craeft {
 
-Value::Value(llvm::Value *inst, Type ty): inst(inst), ty(std::move(ty)) {
-    assert(inst->getType() == to_llvm(ty));
+Value::Value(llvm::Value *inst, Type ty): inst(inst), ty(ty) {
+    //assert(inst->getType() == to_llvm_type(ty));
 }
 
-bool Value::is_integral(void) {
+bool Value::is_integral(void) const {
     return is_type<SignedInt>(ty) || is_type<UnsignedInt>(ty);
 }
 

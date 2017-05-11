@@ -81,44 +81,44 @@ Inheritance diagram for Craeft::ExpressionCodegen:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a190394bb870b34e0b7a0d84963931d15"><td class="memItemLeft" align="right" valign="top"><a id="a190394bb870b34e0b7a0d84963931d15"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ExpressionCodegen</b> (llvm::LLVMContext &amp;context, llvm::IRBuilder&lt;&gt; &amp;builder, llvm::Module &amp;module, <a class="el" href="class_craeft_1_1_environment.html">Environment</a> &amp;env, std::string &amp;fname)</td></tr>
-<tr class="separator:a190394bb870b34e0b7a0d84963931d15"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a789c77ba1bad18aa6465faae0205c56d"><td class="memItemLeft" align="right" valign="top"><a id="a789c77ba1bad18aa6465faae0205c56d"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_expression_codegen.html#a789c77ba1bad18aa6465faae0205c56d">codegen</a> (const <a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">AST::Expression</a> &amp;expr)</td></tr>
-<tr class="memdesc:a789c77ba1bad18aa6465faae0205c56d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate code for the given statement. <br /></td></tr>
-<tr class="separator:a789c77ba1bad18aa6465faae0205c56d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d298648b5ba95cd5223ea19cf59dddc"><td class="memItemLeft" align="right" valign="top"><a id="a5d298648b5ba95cd5223ea19cf59dddc"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_int_literal.html">AST::IntLiteral</a> &amp;)</td></tr>
-<tr class="separator:a5d298648b5ba95cd5223ea19cf59dddc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1e806236f0be68c8b9c93e6fdb3f056"><td class="memItemLeft" align="right" valign="top"><a id="ab1e806236f0be68c8b9c93e6fdb3f056"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_u_int_literal.html">AST::UIntLiteral</a> &amp;)</td></tr>
-<tr class="separator:ab1e806236f0be68c8b9c93e6fdb3f056"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee032522bd0c1dc319926c87e7c4e2a8"><td class="memItemLeft" align="right" valign="top"><a id="aee032522bd0c1dc319926c87e7c4e2a8"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_float_literal.html">AST::FloatLiteral</a> &amp;)</td></tr>
-<tr class="separator:aee032522bd0c1dc319926c87e7c4e2a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9cfe552a25ba7af8c069bd69ba9ef072"><td class="memItemLeft" align="right" valign="top"><a id="a9cfe552a25ba7af8c069bd69ba9ef072"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">AST::Variable</a> &amp;)</td></tr>
-<tr class="separator:a9cfe552a25ba7af8c069bd69ba9ef072"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a859b5655b50f9e62f3a4d54cef7371c1"><td class="memItemLeft" align="right" valign="top"><a id="a859b5655b50f9e62f3a4d54cef7371c1"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_reference.html">AST::Reference</a> &gt; &amp;)</td></tr>
-<tr class="separator:a859b5655b50f9e62f3a4d54cef7371c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a122447369542441c02e8f407d1c15d6c"><td class="memItemLeft" align="right" valign="top"><a id="a122447369542441c02e8f407d1c15d6c"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_dereference.html">AST::Dereference</a> &gt; &amp;)</td></tr>
-<tr class="separator:a122447369542441c02e8f407d1c15d6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae80170a774d26af6f270c39ff0c54203"><td class="memItemLeft" align="right" valign="top"><a id="ae80170a774d26af6f270c39ff0c54203"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_binop.html">AST::Binop</a> &gt; &amp;)</td></tr>
-<tr class="separator:ae80170a774d26af6f270c39ff0c54203"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a49bfd584289927c38339e55e68d13932"><td class="memItemLeft" align="right" valign="top"><a id="a49bfd584289927c38339e55e68d13932"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_function_call.html">AST::FunctionCall</a> &gt; &amp;)</td></tr>
-<tr class="separator:a49bfd584289927c38339e55e68d13932"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe5ccdbe73e15b5e5cfd641caf1db36d"><td class="memItemLeft" align="right" valign="top"><a id="afe5ccdbe73e15b5e5cfd641caf1db36d"></a>
-llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_cast.html">AST::Cast</a> &gt; &amp;)</td></tr>
-<tr class="separator:afe5ccdbe73e15b5e5cfd641caf1db36d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a084999e197cffaf10adb9cc51c438dca"><td class="memItemLeft" align="right" valign="top"><a id="a084999e197cffaf10adb9cc51c438dca"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ExpressionCodegen</b> (<a class="el" href="class_craeft_1_1_translator.html">Translator</a> &amp;translator, std::string &amp;fname)</td></tr>
+<tr class="separator:a084999e197cffaf10adb9cc51c438dca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a7a373edfa7034dc452dca7fb6efd8f"><td class="memItemLeft" align="right" valign="top"><a id="a6a7a373edfa7034dc452dca7fb6efd8f"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_expression_codegen.html#a6a7a373edfa7034dc452dca7fb6efd8f">codegen</a> (const <a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">AST::Expression</a> &amp;expr)</td></tr>
+<tr class="memdesc:a6a7a373edfa7034dc452dca7fb6efd8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate code for the given statement. <br /></td></tr>
+<tr class="separator:a6a7a373edfa7034dc452dca7fb6efd8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae10e7a9d36367a73f333db35d3c0319a"><td class="memItemLeft" align="right" valign="top"><a id="ae10e7a9d36367a73f333db35d3c0319a"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_int_literal.html">AST::IntLiteral</a> &amp;)</td></tr>
+<tr class="separator:ae10e7a9d36367a73f333db35d3c0319a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace1dd28b4a3f16a7d31c31489f4913e7"><td class="memItemLeft" align="right" valign="top"><a id="ace1dd28b4a3f16a7d31c31489f4913e7"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_u_int_literal.html">AST::UIntLiteral</a> &amp;)</td></tr>
+<tr class="separator:ace1dd28b4a3f16a7d31c31489f4913e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c61f74aee192d994b3b2bf868724be9"><td class="memItemLeft" align="right" valign="top"><a id="a2c61f74aee192d994b3b2bf868724be9"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_float_literal.html">AST::FloatLiteral</a> &amp;)</td></tr>
+<tr class="separator:a2c61f74aee192d994b3b2bf868724be9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e54d79acc82ecc35ea55f2523c0bb8a"><td class="memItemLeft" align="right" valign="top"><a id="a4e54d79acc82ecc35ea55f2523c0bb8a"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_variable.html">AST::Variable</a> &amp;)</td></tr>
+<tr class="separator:a4e54d79acc82ecc35ea55f2523c0bb8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b999efd334cd46ee63fa66d85ce5b9d"><td class="memItemLeft" align="right" valign="top"><a id="a8b999efd334cd46ee63fa66d85ce5b9d"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_reference.html">AST::Reference</a> &gt; &amp;)</td></tr>
+<tr class="separator:a8b999efd334cd46ee63fa66d85ce5b9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a925b28c06f31e7c7eda9d9d64db2ca9f"><td class="memItemLeft" align="right" valign="top"><a id="a925b28c06f31e7c7eda9d9d64db2ca9f"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_dereference.html">AST::Dereference</a> &gt; &amp;)</td></tr>
+<tr class="separator:a925b28c06f31e7c7eda9d9d64db2ca9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa666185ae8d2d5ab74b02fdf4734854a"><td class="memItemLeft" align="right" valign="top"><a id="aa666185ae8d2d5ab74b02fdf4734854a"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_binop.html">AST::Binop</a> &gt; &amp;)</td></tr>
+<tr class="separator:aa666185ae8d2d5ab74b02fdf4734854a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a6af1e48a92f097700fab9abc5dda7e"><td class="memItemLeft" align="right" valign="top"><a id="a1a6af1e48a92f097700fab9abc5dda7e"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_function_call.html">AST::FunctionCall</a> &gt; &amp;)</td></tr>
+<tr class="separator:a1a6af1e48a92f097700fab9abc5dda7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a2eeb80b015ccc207617bf870c30204"><td class="memItemLeft" align="right" valign="top"><a id="a8a2eeb80b015ccc207617bf870c30204"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_cast.html">AST::Cast</a> &gt; &amp;)</td></tr>
+<tr class="separator:a8a2eeb80b015ccc207617bf870c30204"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00101">101</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
+<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00092">92</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a></li>
 <li><a class="el" href="_module_codegen_impl_8cpp_source.html">ModuleCodegenImpl.cpp</a></li>

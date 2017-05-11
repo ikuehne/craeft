@@ -81,38 +81,38 @@ Inheritance diagram for Craeft::TypeCodegen:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aa4740bd133725a3a72b3c2e15d2de665"><td class="memItemLeft" align="right" valign="top"><a id="aa4740bd133725a3a72b3c2e15d2de665"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TypeCodegen</b> (llvm::LLVMContext &amp;context, llvm::IRBuilder&lt;&gt; &amp;builder, llvm::Module &amp;module, <a class="el" href="class_craeft_1_1_environment.html">Environment</a> &amp;env, std::string &amp;fname)</td></tr>
-<tr class="separator:aa4740bd133725a3a72b3c2e15d2de665"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40c84dffa6ef0d6e015b1f09e3089c0a"><td class="memItemLeft" align="right" valign="top"><a id="a40c84dffa6ef0d6e015b1f09e3089c0a"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_type_codegen.html#a40c84dffa6ef0d6e015b1f09e3089c0a">codegen</a> (const AST::Type &amp;)</td></tr>
-<tr class="memdesc:a40c84dffa6ef0d6e015b1f09e3089c0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the LLVM type corresponding to the given <a class="el" href="namespace_craeft.html" title="Contains all interfaces internal to the compiler. ">Craeft</a> type. <br /></td></tr>
-<tr class="separator:a40c84dffa6ef0d6e015b1f09e3089c0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab397546d31a960a06430d1bd713dc71c"><td class="memItemLeft" align="right" valign="top"><a id="ab397546d31a960a06430d1bd713dc71c"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_int_type.html">AST::IntType</a> &amp;)</td></tr>
-<tr class="separator:ab397546d31a960a06430d1bd713dc71c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09d4567e32686ee917762179cc79009a"><td class="memItemLeft" align="right" valign="top"><a id="a09d4567e32686ee917762179cc79009a"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_u_int_type.html">AST::UIntType</a> &amp;)</td></tr>
-<tr class="separator:a09d4567e32686ee917762179cc79009a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00b53f3beb642ed44803e1b741cfcc89"><td class="memItemLeft" align="right" valign="top"><a id="a00b53f3beb642ed44803e1b741cfcc89"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_float.html">AST::Float</a> &amp;)</td></tr>
-<tr class="separator:a00b53f3beb642ed44803e1b741cfcc89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af8e99a0f955303877e1715678ae9b51a"><td class="memItemLeft" align="right" valign="top"><a id="af8e99a0f955303877e1715678ae9b51a"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_double.html">AST::Double</a> &amp;)</td></tr>
-<tr class="separator:af8e99a0f955303877e1715678ae9b51a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab99a3029c18520ed23a5f09666fb0803"><td class="memItemLeft" align="right" valign="top"><a id="ab99a3029c18520ed23a5f09666fb0803"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_void.html">AST::Void</a> &amp;)</td></tr>
-<tr class="separator:ab99a3029c18520ed23a5f09666fb0803"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04cc289ded47f9084a64a8b612866be4"><td class="memItemLeft" align="right" valign="top"><a id="a04cc289ded47f9084a64a8b612866be4"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_user_type.html">AST::UserType</a> &amp;)</td></tr>
-<tr class="separator:a04cc289ded47f9084a64a8b612866be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69c1dc6f97b07c8c159235ac8d58bca3"><td class="memItemLeft" align="right" valign="top"><a id="a69c1dc6f97b07c8c159235ac8d58bca3"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_pointer.html">AST::Pointer</a> &gt; &amp;)</td></tr>
-<tr class="separator:a69c1dc6f97b07c8c159235ac8d58bca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ec1cc37f0dda8405f025b1136649ab5"><td class="memItemLeft" align="right" valign="top"><a id="a9ec1cc37f0dda8405f025b1136649ab5"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>TypeCodegen</b> (<a class="el" href="class_craeft_1_1_translator.html">Translator</a> &amp;translator, std::string &amp;fname)</td></tr>
+<tr class="separator:a9ec1cc37f0dda8405f025b1136649ab5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0e3ed0d88106f7073cc439e41ea11ef"><td class="memItemLeft" align="right" valign="top"><a id="ae0e3ed0d88106f7073cc439e41ea11ef"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_type_codegen.html#ae0e3ed0d88106f7073cc439e41ea11ef">codegen</a> (const AST::Type &amp;)</td></tr>
+<tr class="memdesc:ae0e3ed0d88106f7073cc439e41ea11ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the LLVM type corresponding to the given <a class="el" href="namespace_craeft.html" title="Contains all interfaces internal to the compiler. ">Craeft</a> type. <br /></td></tr>
+<tr class="separator:ae0e3ed0d88106f7073cc439e41ea11ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cf11277e45fe457240098d13bf1a5ab"><td class="memItemLeft" align="right" valign="top"><a id="a7cf11277e45fe457240098d13bf1a5ab"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_int_type.html">AST::IntType</a> &amp;)</td></tr>
+<tr class="separator:a7cf11277e45fe457240098d13bf1a5ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a38856196f4d93a2d492be28c03e0f4"><td class="memItemLeft" align="right" valign="top"><a id="a0a38856196f4d93a2d492be28c03e0f4"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_u_int_type.html">AST::UIntType</a> &amp;)</td></tr>
+<tr class="separator:a0a38856196f4d93a2d492be28c03e0f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28b175f7257047e69078da0216a26f8b"><td class="memItemLeft" align="right" valign="top"><a id="a28b175f7257047e69078da0216a26f8b"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_float.html">AST::Float</a> &amp;)</td></tr>
+<tr class="separator:a28b175f7257047e69078da0216a26f8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6224f1187401e5566e56059ad5cff121"><td class="memItemLeft" align="right" valign="top"><a id="a6224f1187401e5566e56059ad5cff121"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_double.html">AST::Double</a> &amp;)</td></tr>
+<tr class="separator:a6224f1187401e5566e56059ad5cff121"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc8b0e6669d6d861209926a945dc6b68"><td class="memItemLeft" align="right" valign="top"><a id="abc8b0e6669d6d861209926a945dc6b68"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_void.html">AST::Void</a> &amp;)</td></tr>
+<tr class="separator:abc8b0e6669d6d861209926a945dc6b68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc63bc2db725a80dab9990b413c62097"><td class="memItemLeft" align="right" valign="top"><a id="adc63bc2db725a80dab9990b413c62097"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="struct_craeft_1_1_a_s_t_1_1_user_type.html">AST::UserType</a> &amp;)</td></tr>
+<tr class="separator:adc63bc2db725a80dab9990b413c62097"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f99ca5f2fb7de3cd6f9cd43209da51a"><td class="memItemLeft" align="right" valign="top"><a id="a9f99ca5f2fb7de3cd6f9cd43209da51a"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const std::unique_ptr&lt; <a class="el" href="struct_craeft_1_1_a_s_t_1_1_pointer.html">AST::Pointer</a> &gt; &amp;)</td></tr>
+<tr class="separator:a9f99ca5f2fb7de3cd6f9cd43209da51a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00043">43</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
+<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00044">44</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a></li>
 <li><a class="el" href="_module_codegen_impl_8cpp_source.html">ModuleCodegenImpl.cpp</a></li>

@@ -22,10 +22,14 @@
 
 #include "llvm/ADT/Triple.h"
 #include "llvm/IR/InstrTypes.h"
-#include "llvm/IR/Module.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/raw_os_ostream.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/Transforms/Scalar.h"
 
 #include "TranslatorImpl.hh"
 
@@ -221,6 +225,16 @@ Value TranslatorImpl::add_load(Value pointer, SourcePos pos) {
     return Value(inst, *pointed);
 }
 
+void TranslatorImpl::add_store(Value pointer, Value new_val, SourcePos pos) {
+    // Make sure value is actually a pointer.
+    if (!is_type<Pointer>(pointer.get_type())) {
+        throw Error("type error", "cannot dereference non-pointer value",
+                    fname, pos);
+    }
+
+    builder.CreateStore(pointer.to_llvm(), new_val.to_llvm());
+}
+
 Value TranslatorImpl::left_shift(Value val, Value nbits, SourcePos pos) {
     if (!nbits.is_integral()) {
         throw Error("type error", "cannot shift by non-integer value",
@@ -263,7 +277,7 @@ public:
              llvm::IRBuilder<> &builder)
         : lhs(lhs), rhs(rhs), pos(pos), fname(fname), builder(builder) {}
 
-    virtual ~Operator() = 0;
+    virtual ~Operator() {};
 
     virtual std::string get_op(void) const = 0;
 
@@ -371,8 +385,8 @@ static const Type &get_wider(const Value &lhs, const Value &rhs) {
     auto &lty = lhs.get_type();
     auto &rty = rhs.get_type();
 
-    assert(lty.is_integral());
-    assert(rty.is_integral());
+    assert(lhs.is_integral());
+    assert(rhs.is_integral());
 
     int lhs_nbits = get_width(lty);
     int rhs_nbits = get_width(rty);
@@ -390,6 +404,8 @@ public:
                     const SourcePos pos, const std::string &fname,
                     llvm::IRBuilder<> &builder)
         : Operator(lhs, rhs, pos, fname, builder) {}
+
+	virtual ~BitwiseOperator() override {};
 
     virtual llvm::Value *perform(llvm::Value *, llvm::Value *)
         = 0;
@@ -445,6 +461,7 @@ public:
                   const SourcePos pos, const std::string &fname,\
                   llvm::IRBuilder<> &builder)\
             : BitwiseOperator(lhs, rhs, pos, fname, builder) {}\
+		virtual ~classname() override {}\
         virtual std::string get_op() const override { return (op); }\
         llvm::Value *perform(llvm::Value *l, llvm::Value *r) override {\
             return get_builder().method(l, r);\
@@ -572,6 +589,8 @@ public:
                 llvm::IRBuilder<> &builder)
         : Operator(lhs, rhs, pos, fname, builder) {}
 
+	~AddOperator() override {}
+
     Value sint_int_op(const Value &l, const Value &r) override {
         auto *lty = to_llvm_type(l.get_type());
         auto *rty = to_llvm_type(r.get_type());
@@ -655,6 +674,8 @@ public:
                 const SourcePos pos, const std::string &fname,
                 llvm::IRBuilder<> &builder)
         : Operator(lhs, rhs, pos, fname, builder) {}
+
+	~SubOperator() override {}
 
     Value sint_int_op(const Value &l, const Value &r) override {
         auto *lty = to_llvm_type(l.get_type());
@@ -751,6 +772,8 @@ public:
                 llvm::IRBuilder<> &builder)
         : Operator(lhs, rhs, pos, fname, builder) {}
 
+	~MulOperator() {}
+
     Value sint_int_op(const Value &l, const Value &r) override {
         auto *lty = to_llvm_type(l.get_type());
         auto *rty = to_llvm_type(r.get_type());
@@ -826,6 +849,8 @@ public:
                 llvm::IRBuilder<> &builder)
         : Operator(lhs, rhs, pos, fname, builder) {}
 
+	~DivOperator() override {}
+
     Value sint_int_op(const Value &l, const Value &r) override {
         auto *lty = to_llvm_type(l.get_type());
         auto *rty = to_llvm_type(r.get_type());
@@ -892,6 +917,59 @@ public:
 
 Value TranslatorImpl::div(Value lhs, Value rhs, SourcePos pos) {
     return DivOperator(lhs, rhs, pos, fname, builder).apply();
+}
+
+Value TranslatorImpl::apply_to_wider_integer(
+        Value lhs, Value rhs, SourcePos pos,
+        std::function<llvm::Value *(llvm::Value *, llvm::Value *)>f) {
+    assert(lhs.is_integral());
+    assert(rhs.is_integral());
+
+    Type lt = lhs.get_type();
+    Type rt = rhs.get_type();
+
+    llvm::Type *llt = to_llvm_type(lt);
+    llvm::Type *lrt = to_llvm_type(rt);
+
+    int lbits = llt->getIntegerBitWidth();
+    int rbits = lrt->getIntegerBitWidth();
+
+    bool signed_op;
+
+    if (is_type<SignedInt>(lt) && is_type<SignedInt>(rt)) {
+        signed_op = true;
+    } else if (is_type<UnsignedInt>(lt) && is_type<UnsignedInt>(rt)) {
+        signed_op = false;
+    } else {
+        throw Error("type error", "cannot perform operation between signed "
+                                  "and unsigned integers", fname, pos);
+    }
+
+    if (lbits > rbits) {
+        llvm::Value *r;
+
+        if (signed_op) {
+            r = builder.CreateSExtOrTrunc(rhs.to_llvm(), llt);
+        } else {
+            r = builder.CreateZExtOrTrunc(rhs.to_llvm(), llt);
+        }
+
+        auto *result = f(lhs.to_llvm(), r);
+
+        return Value(result, lt);
+    } else {
+        llvm::Value *l;
+
+        if (signed_op) {
+            l = builder.CreateSExtOrTrunc(lhs.to_llvm(), lrt);
+        } else {
+            l = builder.CreateZExtOrTrunc(lhs.to_llvm(), lrt);
+        }
+
+        auto *result = f(l, rhs.to_llvm());
+
+        return Value(result, rt);
+    }
 }
 
 Value TranslatorImpl::build_comp(Value lhs, Value rhs, SourcePos pos,
@@ -1051,7 +1129,8 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
     }
 
     auto fbinding = env.lookup_identifier(func, pos, fname);
-    auto *ftype = boost::get<Function>(fbinding.get_type());
+	auto ty = fbinding.get_type();
+    auto *ftype = boost::get<Function>(&ty);
 
     if (!ftype) {
         throw Error("type error", "cannot call non-function value",
@@ -1078,7 +1157,7 @@ void TranslatorImpl::assign(const std::string &varname, Value val,
                             SourcePos pos) {
     auto var = env.lookup_identifier(varname, pos, fname);
 
-    if (!(val.get_type() == *var.get_type())) {
+    if (!(val.get_type() == var.get_type())) {
         throw Error("type error",
                     "cannot assign to variable of different type",
                     fname, pos);
@@ -1100,6 +1179,7 @@ void TranslatorImpl::create_function_prototype(Function f, std::string name) {
 }
 
 void TranslatorImpl::create_and_start_function(Function f,
+                                               std::vector<std::string> args,
                                                std::string name) {
     auto *result = llvm::Function::Create(f.to_llvm(),
                                           llvm::Function::ExternalLinkage,
@@ -1112,8 +1192,18 @@ void TranslatorImpl::create_and_start_function(Function f,
     // Push a new namespace for the function.
     env.push();
 
-    // TODO: keep track of return type for current function.
     builder.SetInsertPoint(bb);
+
+    unsigned i = 0;
+    
+    for (auto &arg: result->args()) {
+        auto &ty = f.get_args()[i];
+        auto arg_addr = builder.CreateAlloca(to_llvm_type(*ty));
+        builder.CreateStore(&arg, arg_addr);
+        env.add_identifier(args[i++], Value(arg_addr, Pointer(ty)));
+    }
+
+    // TODO: Set return type here.
 }
 
 void TranslatorImpl::end_function(void) {
@@ -1126,9 +1216,69 @@ void TranslatorImpl::return_(Value val, SourcePos pos) {
     builder.CreateRet(val.to_llvm());
 }
 
-// TODO: Get rid of this once translator can replace builder.
+void TranslatorImpl::validate(std::ostream &out) {
+    llvm::raw_os_ostream ll_out(out);
+    llvm::verifyModule(*module, &ll_out);
+}
+
+void TranslatorImpl::optimize(int opt_level) {
+    auto fpm = std::make_unique<llvm::legacy::PassManager>();
+    if (opt_level >= 1) {
+        // Iterated dominance frontier to convert most `alloca`s to SSA
+        // register accesses.
+        fpm->add(llvm::createPromoteMemoryToRegisterPass());
+        fpm->add(llvm::createInstructionCombiningPass());
+        // Reassociate expressions.
+        fpm->add(llvm::createReassociatePass());
+        // Eliminate common sub-expressions.
+        fpm->add(llvm::createGVNPass());
+        // Simplify the control flow graph.
+        fpm->add(llvm::createCFGSimplificationPass());
+        // Tail call elimination.
+        fpm->add(llvm::createTailCallEliminationPass());
+    }
+
+    fpm->run(*module);
+}
+
+void TranslatorImpl::emit_ir(std::ostream &out) {
+   llvm::raw_os_ostream llvm_out(out);
+   module->print(llvm_out, nullptr);
+}
+
+void TranslatorImpl::emit_asm(int fd) {
+    llvm::raw_fd_ostream llvm_out(fd, false);
+    llvm::legacy::PassManager pass;
+    auto ft = llvm::TargetMachine::CGFT_AssemblyFile;
+
+    if (target->addPassesToEmitFile(pass, llvm_out, ft)) {
+        llvm::errs() << "TargetMachine can't emit a file of this type";
+    }
+
+    pass.run(*module);
+    llvm_out.flush();
+}
+
+void TranslatorImpl::emit_obj(int fd) {
+    llvm::raw_fd_ostream llvm_out(fd, false);
+    llvm::legacy::PassManager pass;
+    auto ft = llvm::TargetMachine::CGFT_ObjectFile;
+
+    if (target->addPassesToEmitFile(pass, llvm_out, ft)) {
+        llvm::errs() << "TargetMachine can't emit a file of this type";
+    }
+
+    pass.run(*module);
+    llvm_out.flush();
+}
+
+// TODO: Get rid of these once translator can replace builder.
 llvm::IRBuilder<> &TranslatorImpl::get_builder(void) {
     return builder;
+}
+
+Environment &TranslatorImpl::get_env(void) {
+    return env;
 }
 
 }

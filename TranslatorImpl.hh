@@ -28,6 +28,7 @@
 
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Module.h"
 
 #include "Environment.hh"
 #include "Error.hh"
@@ -48,6 +49,8 @@ public:
 
     Value cast(Value val, const Type &t, SourcePos pos);
     Value add_load(Value pointer, SourcePos pos);
+    void add_store(Value pointer, Value, SourcePos pos);
+
     Value left_shift(Value val, Value nbits, SourcePos pos);
     Value right_shift(Value val, Value nbits, SourcePos pos);
     Value bit_and(Value lhs, Value rhs, SourcePos pos);
@@ -74,11 +77,22 @@ public:
     void return_(Value val, SourcePos pos);
 
     void create_function_prototype(Function f, std::string name);
-    void create_and_start_function(Function f, std::string name);
+    void create_and_start_function(Function f, std::vector<std::string> args,
+                                   std::string name);
 
     void end_function(void);
 
+    void validate(std::ostream &);
+    void optimize(int opt_level);
+    void emit_ir(std::ostream &);
+    void emit_obj(int fd);
+    void emit_asm(int fd);
+
     llvm::IRBuilder<> &get_builder(void);
+    Environment &get_env(void);
+    llvm::LLVMContext &get_ctx(void) {
+        return context;
+    }
 
 private:
     Value apply_to_wider_integer(Value lhs, Value rhs, SourcePos pos,

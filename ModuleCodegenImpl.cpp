@@ -40,60 +40,52 @@ namespace Craeft {
  * Code generation for types.
  */
 
-llvm::Type *TypeCodegen::codegen(const AST::Type &ty) {
+Type TypeCodegen::codegen(const AST::Type &ty) {
     return boost::apply_visitor(*this, ty);
 }
 
-llvm::Type *TypeCodegen::operator()(const AST::IntType &it) {
-    return llvm::IntegerType::get(context, it.nbits);
+Type TypeCodegen::operator()(const AST::IntType &it) {
+    return SignedInt(it.nbits, translator.get_ctx());
 }
 
-llvm::Type *TypeCodegen::operator()(const AST::UIntType &ut) {
-    return llvm::IntegerType::get(context, ut.nbits);
+Type TypeCodegen::operator()(const AST::UIntType &ut) {
+    return UnsignedInt(ut.nbits, translator.get_ctx());
 }
 
-llvm::Type *TypeCodegen::operator()(const AST::Float &_) {
-    return llvm::Type::getFloatTy(context);
+Type TypeCodegen::operator()(const AST::Float &_) {
+    return Float(SinglePrecision, translator.get_ctx());
 }
 
-llvm::Type *TypeCodegen::operator()(const AST::Double &_) {
-    return llvm::Type::getDoubleTy(context);
+Type TypeCodegen::operator()(const AST::Double &_) {
+    return Float(DoublePrecision, translator.get_ctx());
 }
 
-llvm::Type *TypeCodegen::operator()(const AST::Void &_) {
-    return llvm::Type::getVoidTy(context);
+Type TypeCodegen::operator()(const AST::Void &_) {
+    return Void(translator.get_ctx());
 }
 
-llvm::Type *TypeCodegen::operator()(const AST::UserType &ut) {
-    auto binding = env(ut.name);
-
-    // Check that the binding is real.
-    if (!binding.type) {
-        // TODO: get source location for this error.
-        throw Error("error", "no such type (\"" + ut.name + "\")",
-                    fname, SourcePos(0, 0));
-    }
-
-    return env(ut.name).type;
+Type TypeCodegen::operator()(const AST::UserType &ut) {
+    throw Error("error", "not implemented!", fname, SourcePos(0, 0));
 }
 
-llvm::Type *TypeCodegen::operator()(const std::unique_ptr<AST::Pointer> &ut) {
-    return llvm::PointerType::get(codegen(ut->pointed), 0);
+Type TypeCodegen::operator()(const std::unique_ptr<AST::Pointer> &ut) {
+    return Pointer(codegen(ut->pointed));
 }
 
 /*****************************************************************************
  * Code generation for L-Values.
  */
 
-llvm::Value *LValueCodegen::codegen(const AST::LValue &val){
+Value LValueCodegen::codegen(const AST::LValue &val){
     return boost::apply_visitor(*this, val);
 }
 
-llvm::Value *LValueCodegen::operator()(const AST::Variable &var) {
-    return env[var.name].inst;
+Value LValueCodegen::operator()(const AST::Variable &var) {
+    return translator.get_env().lookup_identifier(var.name, var.pos, fname)
+                               .get_val();
 }
 
-llvm::Value *LValueCodegen::operator()(
+Value LValueCodegen::operator()(
         const std::unique_ptr<AST::Dereference> &deref) {
     /* If the dereference is an l-value, return just the referand. */
     return eg.codegen(deref->referand);
@@ -103,225 +95,123 @@ llvm::Value *LValueCodegen::operator()(
  * Code generation for expressions.
  */
 
-llvm::Value *ExpressionCodegen::operator()(const AST::IntLiteral &lit) {
-    auto *type = llvm::IntegerType::get(context, 64);
-    return llvm::ConstantInt::get(type, lit.value, true);
+Value ExpressionCodegen::operator()(const AST::IntLiteral &lit) {
+    SignedInt type(64, translator.get_ctx());
+    return Value(llvm::ConstantInt::get(type.to_llvm(), lit.value, true),
+                 type);
 }
 
-llvm::Value *ExpressionCodegen::operator()(const AST::UIntLiteral &lit) {
-    auto *type = llvm::IntegerType::get(context, 64);
-    return llvm::ConstantInt::get(type, lit.value, false);
+Value ExpressionCodegen::operator()(const AST::UIntLiteral &lit) {
+    UnsignedInt type(64, translator.get_ctx());
+    return Value(llvm::ConstantInt::get(type.to_llvm(), lit.value, true),
+                 type);
 }
 
-llvm::Value *ExpressionCodegen::operator()(const AST::FloatLiteral &lit) {
-    return llvm::ConstantFP::get(context, llvm::APFloat(lit.value));
+Value ExpressionCodegen::operator()(const AST::FloatLiteral &lit) {
+    Float type(DoublePrecision, translator.get_ctx());
+    return Value(llvm::ConstantFP::get(translator.get_ctx(),
+                                       llvm::APFloat(lit.value)),
+                 type);
 }
 
-llvm::Value *ExpressionCodegen::operator()(
+Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::Dereference> &deref) {
-    /* Get the address the dereference dereferences, */
-    auto *addr = codegen(deref->referand);
-    /* and load from it. */
-    return builder.CreateLoad(addr);
+    return translator.add_load(codegen(deref->referand), deref->pos);
 }
 
-llvm::Value *ExpressionCodegen::operator()(
+Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::Reference> &ref) {
     /* LValue codegenerators return addresses to the l-value. */
-    LValueCodegen lc(context, builder, module, env, fname, *this);
+    LValueCodegen lc(translator, fname, *this);
     /* So just use one of those to codegen the referand. */
     return lc.codegen(ref->referand);
 }
 
-llvm::Value *ExpressionCodegen::operator()(const AST::Variable &var) {
-    auto &binding = env[var.name];
+Value ExpressionCodegen::operator()(const AST::Variable &var) {
+    auto binding = translator.get_env()
+                             .lookup_identifier(var.name, var.pos, fname);
 
-    if (!binding.inst) {
-        throw Error("error", "variable name (" + var.name + ") not found",
-                    fname, var.pos);
-    }
+    auto v = binding.get_val();
 
-    return builder.CreateLoad(binding.inst, var.name.c_str());
+    return translator.add_load(v, var.pos);
 }
 
 /*****************************************************************************
  * Arithmetic expressions.
  */
 
-llvm::Value *ExpressionCodegen::codegen(const AST::Expression &expr) {
+Value ExpressionCodegen::codegen(const AST::Expression &expr) {
     return boost::apply_visitor(*this, expr);
 }
 
-llvm::Value *ExpressionCodegen::operator()(
+Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::Binop> &binop) {
-    auto *lhs = codegen(binop->lhs);
-    auto *rhs = codegen(binop->rhs);
-    auto *lhs_ty = lhs->getType();
-    auto *rhs_ty = rhs->getType();
+    auto lhs = codegen(binop->lhs);
+    auto rhs = codegen(binop->rhs);
 
-    // Case integer types.
-    if (lhs_ty->isIntegerTy() && rhs_ty->isIntegerTy()) {
-        unsigned lhs_bw = lhs_ty->getIntegerBitWidth();
-        unsigned rhs_bw = rhs_ty->getIntegerBitWidth();
-        if (lhs_bw < rhs_bw) {
-            lhs = builder.CreateZExt(lhs, rhs_ty);
-        } else if (rhs_bw < lhs_bw) {
-            rhs = builder.CreateZExt(rhs, lhs_ty);
-        }
+    auto pos = binop->pos;
 
-        bool is_u1 = lhs_bw == 1;
-
-        // TODO: add unsigned stuff.
-        if (binop->op == "+") {
-            return builder.CreateAdd(lhs, rhs);
-        } else if (binop->op == "-") {
-            return builder.CreateSub(lhs, rhs);
-        } else if (binop->op == "*") {
-            return builder.CreateMul(lhs, rhs);
-        } else if (binop->op == "/") {
-            return builder.CreateSDiv(lhs, rhs);
-        } else if (binop->op == "^") {
-            return builder.CreateXor(lhs, rhs);
-        } else if (binop->op == "&") {
-            return builder.CreateAnd(lhs, rhs);
-        } else if (binop->op == "|") {
-            return builder.CreateOr(lhs, rhs);
-        } else if (binop->op == ">>") {
-            return builder.CreateAShr(lhs, rhs);
-        } else if (binop->op == "<<") {
-            return builder.CreateShl(lhs, rhs);
-        } else if (binop->op == "==") {
-            return builder.CreateICmpEQ(lhs, rhs);
-        } else if (binop->op == "!=") {
-            return builder.CreateICmpNE(lhs, rhs);
-        } else if (binop->op == "<") {
-            return builder.CreateICmpSLT(lhs, rhs);
-        } else if (binop->op == ">") {
-            return builder.CreateICmpSGT(lhs, rhs);
-        } else if (binop->op == "<=") {
-            return builder.CreateICmpSLE(lhs, rhs);
-        } else if (binop->op == ">=") {
-            return builder.CreateICmpSGE(lhs, rhs);
-        } else if (binop->op == "!=") {
-            return builder.CreateICmpNE(lhs, rhs);
-        } else if (binop->op == "&&") {
-            if (!is_u1) {
-                throw Error("error", "&& not permitted between integers of "
-                                     "multiple bits", fname, binop->pos);
-            }
-            return builder.CreateAnd(lhs, rhs);
-        } else if (binop->op == "||") {
-            if (!is_u1) {
-                throw Error("error", "|| not permitted between integers of "
-                                     "multiple bits", fname, binop->pos);
-            }
-            return builder.CreateOr(lhs, rhs);
-        } else {
-            throw Error("error", "operation \"" + binop->op
-                               + "\" not permitted between integers",
-                        fname, binop->pos);
-        }
-    // Case float operation.
-    } else if ((lhs_ty->isFloatTy() || lhs_ty->isDoubleTy())
-            && (rhs_ty->isFloatTy() || rhs_ty->isDoubleTy())) {
-        // Deal with width mismatches by extending the smaller.
-        if (lhs_ty->isFloatTy() && rhs_ty->isDoubleTy()) {
-            lhs = builder.CreateFPExt(lhs, rhs_ty);
-        } else if (lhs_ty->isDoubleTy() && rhs_ty->isFloatTy()) {
-            rhs = builder.CreateFPExt(rhs, lhs_ty);
-        }
-
-        if (binop->op == "+") {
-            return builder.CreateFAdd(lhs, rhs);
-        } else if (binop->op == "-") {
-            return builder.CreateFSub(lhs, rhs);
-        } else if (binop->op == "*") {
-            return builder.CreateFMul(lhs, rhs);
-        } else if (binop->op == "/") {
-            return builder.CreateFDiv(lhs, rhs);
-        // Can't interpret a float as bits.
-        } else if (binop->op == "^" || binop->op == "&"
-                || binop->op == "|" || binop->op == ">>"
-                || binop->op == "<<") {
-            throw Error("error", "bitwise operation not permitted between"
-                                 "floating-point values", fname, binop->pos);
-        }
-    // Case pointer arithmetic.
-    } else if (lhs_ty->isPointerTy() && rhs_ty->isIntegerTy()) {
-        return builder.CreateGEP(lhs, rhs);
+    if (binop->op == "<<") {
+        return translator.left_shift(lhs, rhs, pos);
+    } else if (binop->op == ">>") {
+        return translator.right_shift(lhs, rhs, pos);
+    } else if (binop->op == "&") {
+        return translator.bit_and(lhs, rhs, pos);
+    } else if (binop->op == "|") {
+        return translator.bit_or(lhs, rhs, pos);
+    } else if (binop->op == "^") {
+        return translator.bit_xor(lhs, rhs, pos);
+    } else if (binop->op == "+") {
+        return translator.add(lhs, rhs, pos);
+    } else if (binop->op == "-") {
+        return translator.sub(lhs, rhs, pos);
+    } else if (binop->op == "*") {
+        return translator.mul(lhs, rhs, pos);
+    } else if (binop->op == "/") {
+        return translator.div(lhs, rhs, pos);
+    } else if (binop->op == "==") {
+        return translator.equal(lhs, rhs, pos);
+    } else if (binop->op == "!=") {
+        return translator.nequal(lhs, rhs, pos);
+    } else if (binop->op == "<") {
+        return translator.less(lhs, rhs, pos);
+    } else if (binop->op == "<=") {
+        return translator.lesseq(lhs, rhs, pos);
+    } else if (binop->op == ">") {
+        return translator.greater(lhs, rhs, pos);
+    } else if (binop->op == ">=") {
+        return translator.greatereq(lhs, rhs, pos);
+    } else if (binop->op == "&&") {
+        return translator.bool_and(lhs, rhs, pos);
+    } else if (binop->op == "||") {
+        return translator.bool_or(lhs, rhs, pos);
+    } else {
+        throw Error("internal error", "unrecognized operator \"" + binop->op
+                                                                 + "\"",
+                    fname, pos);
+                    
     }
-
-    // TODO: support more types.
-
-    throw Error("error", "binary operator not permitted between "
-                         "expressions of different types",
-                fname, binop->pos);
 }
 
-llvm::Value *ExpressionCodegen::operator()(
+Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::FunctionCall> &call) {
 
-    std::vector<llvm::Value *>llvm_args;
+    std::vector<Value> args;
 
     for (const auto &arg: call->args) {
-        llvm_args.push_back(codegen(arg));
+        args.push_back(codegen(arg));
     }
 
-    auto &fbinding = env[call->fname];
-
-    if (!fbinding.get_type()->isFunctionTy()) {
-        throw Error("error", "function \"" + call->fname + "\" not defined",
-                    fname, call->pos);
-    }
-
-    if (!fbinding.inst) {
-        throw Error("error", "function \"" + call->fname + "\" not defined",
-                    fname, call->pos);
-    }
-
-    return builder.CreateCall(fbinding.inst, llvm_args);
+    return translator.call(call->fname, args, call->pos);
 }
 
-llvm::Value *ExpressionCodegen::operator()(
+Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::Cast> &cast) {
-    auto *dest_ty = TypeCodegen(context, builder, module, env, fname)
-                        .codegen(*cast->t);
-    auto *cast_instr = codegen(cast->arg);
-    auto *source_ty = cast_instr->getType();
+    auto dest_ty = TypeCodegen(translator, fname).codegen(*cast->t);
 
-    if (source_ty == dest_ty) {
-        return cast_instr;
-    }
+    auto cast_val = codegen(cast->arg);
 
-    // Integer truncation/extension.
-    if (dest_ty->isIntegerTy() && source_ty->isIntegerTy()) {
-        auto dest_bits = dest_ty->getIntegerBitWidth();
-        auto src_bits = source_ty->getIntegerBitWidth();
-
-        if (dest_bits < src_bits) {
-            return builder.CreateTrunc(cast_instr, dest_ty);
-        } else if (dest_bits > src_bits) {
-            return builder.CreateSExt(cast_instr, dest_ty);
-        }
-    // Integer -> Float
-    } else if (dest_ty->isIntegerTy() && source_ty->isFloatingPointTy()) {
-        return builder.CreateFPToSI(cast_instr, dest_ty);
-    // Float -> Integer
-    } else if (dest_ty->isFloatingPointTy() && source_ty->isIntegerTy()) {
-        return builder.CreateSIToFP(cast_instr, dest_ty);
-    // Floating-point truncation.
-    } else if (dest_ty->isFloatTy() && source_ty->isDoubleTy()) {
-        return builder.CreateFPTrunc(cast_instr, dest_ty);
-    // Floating-point extension.
-    } else if (dest_ty->isDoubleTy() && source_ty->isFloatTy()) {
-        return builder.CreateFPExt(cast_instr, dest_ty);
-    } else if (dest_ty->isPointerTy() && source_ty->isPointerTy()) {
-        return builder.CreateBitCast(cast_instr, dest_ty);
-    // TODO: add more.
-    }
-
-    // TODO: add error-message representations for types.
-    throw Error("type error", "could not perform cast", fname, cast->pos);
+    return translator.cast(cast_val, dest_ty, cast->pos);
 }
 
 /*****************************************************************************
@@ -338,23 +228,17 @@ void StatementCodegen::operator()(const AST::Expression &expr) {
 
 void StatementCodegen::operator()(
         const std::unique_ptr<AST::Assignment> &assignment) {
-    LValueCodegen lc(context, builder, module, env, fname, expr_codegen);
-    /* TODO: codegen for LValues. */
-    auto *addr = lc.codegen(assignment->lhs);
-    auto *rhs  = expr_codegen.codegen(assignment->rhs);
 
-    builder.CreateStore(rhs, addr);
+    LValueCodegen lc(translator, fname, expr_codegen);
+
+    auto addr = lc.codegen(assignment->lhs);
+    auto rhs  = expr_codegen.codegen(assignment->rhs);
+
+    translator.add_store(addr, rhs, assignment->pos);
 }
 
 void StatementCodegen::operator()(const AST::Return &ret) {
-    auto *res = expr_codegen.codegen(*ret.retval);
-    if (res->getType() != ret_type) {
-        throw Error("type error", "return expression does not match "
-                                  "function's return type",
-                                  fname, ret.pos);
-    }
-
-    builder.CreateRet(res);
+    translator.return_(expr_codegen.codegen(*ret.retval), ret.pos);
 }
 
 void StatementCodegen::operator()(const AST::VoidReturn &ret) {
@@ -364,37 +248,37 @@ void StatementCodegen::operator()(const AST::VoidReturn &ret) {
                                   fname, ret.pos);
     }
 
-    builder.CreateRetVoid();
+    translator.get_builder().CreateRetVoid();
 }
 
 void StatementCodegen::operator()(
         const std::unique_ptr<AST::Declaration> &decl) {
-    auto tg = TypeCodegen(context, builder, module, env, fname);
-    auto *t = tg.codegen(decl->type);
-    auto *alloca = builder.CreateAlloca(t, nullptr, decl->name.name);
-    env[decl->name.name] = IdentBinding(alloca);
+
+    auto tg = TypeCodegen(translator, fname);
+    auto t = tg.codegen(decl->type);
+    translator.declare(decl->name.name, t);
 }
 
 void StatementCodegen::operator()(
         const std::unique_ptr<AST::CompoundDeclaration> &cdecl) {
-    auto tg = TypeCodegen(context, builder, module, env, fname);
-    auto *t = tg.codegen(cdecl->type);
-    auto *alloca = builder.CreateAlloca(t, nullptr, cdecl->name.name);
-    env[cdecl->name.name] = IdentBinding(alloca);
-
-    auto *val = expr_codegen.codegen(cdecl->rhs);
-    if (val->getType() != t) {
-        throw Error("type error", "type in compound declaration does not "
-                                  "match declared type", fname, cdecl->pos);
-    }
-
-    builder.CreateStore(val, alloca);
+    std::string name = cdecl->name.name;
+    auto tg = TypeCodegen(translator, fname);
+    auto t = tg.codegen(cdecl->type);
+    Variable result = translator.declare(name, t);
+    translator.add_store(result.get_val(),
+                         expr_codegen.codegen(cdecl->rhs),
+                         cdecl->pos);
 }
 
 void StatementCodegen::operator()(
         const std::unique_ptr<AST::IfStatement> &if_stmt) {
     /* Generate code for the condition. */
-    auto *cond = expr_codegen.codegen(if_stmt->condition);
+    auto cond = expr_codegen.codegen(if_stmt->condition);
+
+    // TODO: add appropriate abstraction to translator.
+    auto &builder = translator.get_builder();
+    auto &context = translator.get_ctx();
+    auto &env     = translator.get_env();
 
     llvm::Function *parent = builder.GetInsertBlock()->getParent();
 
@@ -406,7 +290,7 @@ void StatementCodegen::operator()(
     assert(else_bb);
     assert(merge_bb);
 
-    builder.CreateCondBr(cond, then_bb, else_bb);
+    builder.CreateCondBr(cond.to_llvm(), then_bb, else_bb);
 
     // Generate "then" code.
     builder.SetInsertPoint(then_bb);
@@ -418,7 +302,7 @@ void StatementCodegen::operator()(
     // which we forget after exiting.
     env.pop();
 
-    if (can_continue()) {
+    if (builder.GetInsertBlock()->getTerminator() == nullptr) {
         builder.CreateBr(merge_bb);
     }
 
@@ -432,7 +316,7 @@ void StatementCodegen::operator()(
         codegen(arg);
     }
     env.pop();
-    if (can_continue()) {
+    if (builder.GetInsertBlock()->getTerminator() == nullptr) {
         builder.CreateBr(merge_bb);
     }
 
@@ -441,55 +325,14 @@ void StatementCodegen::operator()(
     builder.SetInsertPoint(merge_bb);
 }
 
-void StatementCodegen::set_rettype(llvm::Type *ret) {
-    ret_type = ret;
-}
-
-bool StatementCodegen::can_continue(void) {
-    return builder.GetInsertBlock()->getTerminator() == nullptr;
-}
-
 /*****************************************************************************
  * @brief Top-level codegen.
  */
 
 ModuleCodegenImpl::ModuleCodegenImpl(std::string name, std::string triple,
                                      std::string fname)
-    : builder(context),
-      module(llvm::make_unique<llvm::Module>(name, context)),
-      stmt_cg(context, builder, *module, env, fname, NULL)
-        {
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmParsers();
-    llvm::InitializeAllAsmPrinters();
-
-    std::string error;
-    auto target_triple = llvm::Triple(triple);
-    /* TODO: Allow target-specific information. */
-    auto llvm_target =
-        llvm::TargetRegistry::lookupTarget("", target_triple, error);
-
-    // Print an error and exit if we couldn't find the requested target.
-    // This generally occurs if we've forgotten to initialise the
-    // TargetRegistry or we have a bogus target triple.
-
-    /* TODO: fix this to properly handle the error. */
-    if (!llvm_target) {
-        llvm::errs() << error;
-    }
-
-    /* TODO: give a more specific CPU. */
-    auto cpu = "generic";
-    auto features = "";
-    llvm::TargetOptions options;
-    auto reloc_model = llvm::Reloc::Model();
-
-    target = llvm_target->createTargetMachine(triple, cpu, features,
-                                              options, reloc_model);
-    module->setDataLayout(target->createDataLayout());
-    module->setTargetTriple(triple);
+    : translator(name, fname, triple), fname(fname),
+      stmt_cg(translator, fname) {
 }
 
 void ModuleCodegenImpl::codegen(const AST::TopLevel &tl) {
@@ -497,129 +340,73 @@ void ModuleCodegenImpl::codegen(const AST::TopLevel &tl) {
 }
 
 void ModuleCodegenImpl::emit_ir(std::ostream &out) {
-   llvm::raw_os_ostream llvm_out(out);
-   module->print(llvm_out, nullptr);
+    translator.emit_ir(out);
 }
 
 void ModuleCodegenImpl::emit_asm(int fd) {
-    llvm::raw_fd_ostream llvm_out(fd, false);
-    llvm::legacy::PassManager pass;
-    auto ft = llvm::TargetMachine::CGFT_AssemblyFile;
-
-    if (target->addPassesToEmitFile(pass, llvm_out, ft)) {
-        llvm::errs() << "TargetMachine can't emit a file of this type";
-    }
-
-    pass.run(*module);
-    llvm_out.flush();
+    translator.emit_asm(fd);
 }
 
 void ModuleCodegenImpl::emit_obj(int fd) {
-    llvm::raw_fd_ostream llvm_out(fd, false);
-    llvm::legacy::PassManager pass;
-    auto ft = llvm::TargetMachine::CGFT_ObjectFile;
-
-    if (target->addPassesToEmitFile(pass, llvm_out, ft)) {
-        llvm::errs() << "TargetMachine can't emit a file of this type";
-    }
-
-    pass.run(*module);
-    llvm_out.flush();
+    translator.emit_obj(fd);
 }
 
 void ModuleCodegenImpl::operator()(const AST::TypeDeclaration &td) {
-    auto *t = llvm::StructType::create(context, td.name);
-    env(td.name) = TypeBinding(t);
+    throw Error("error", "type declarations not implemented",
+                fname, td.pos);
 }
 
 void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
-    // TODO
+    throw Error("error", "struct declarations not implemented",
+                fname, sd.pos);
+}
+
+Function ModuleCodegenImpl::type_of_ast_decl(
+        const AST::FunctionDeclaration &fd) {
+    std::vector<std::shared_ptr<Type> > arg_types;
+    TypeCodegen tg(translator, fname);
+
+    for (const auto &decl: fd.args) {
+        arg_types.push_back(std::make_shared<Type>
+                                            (tg.codegen(decl->type)));
+    }
+
+    auto ret_type = std::make_shared<Type>
+                                    (tg.codegen(fd.ret_type));
+
+    return Function(ret_type, arg_types);
 }
 
 void ModuleCodegenImpl::operator()(const AST::FunctionDeclaration &fd) {
-    std::vector<llvm::Type *> arg_types;
-    TypeCodegen tg(context, builder, *module, env, fname);
-
-    for (const auto &decl: fd.args) {
-        arg_types.push_back(tg.codegen(decl->type));
-    }
-
-    auto *ret_type = tg.codegen(fd.ret_type);
-
-    llvm::FunctionType *ft = llvm::FunctionType::get(ret_type, arg_types,
-                                                     false);
-
-    auto *result = llvm::Function::Create(ft, llvm::Function::ExternalLinkage,
-                                          fd.name, module.get());
-
-    env[fd.name] = IdentBinding(result);
+    auto ty = type_of_ast_decl(fd);
+    translator.create_function_prototype(ty, fd.name);
 }
 
 void ModuleCodegenImpl::operator()(
         const std::unique_ptr<AST::FunctionDefinition> &fd) {
-    std::vector<llvm::Type *> arg_types;
-    TypeCodegen tg(context, builder, *module, env, fname);
+    auto ty = type_of_ast_decl(fd->signature);
 
-    for (const auto &decl: fd->signature.args) {
-        arg_types.push_back(tg.codegen(decl->type));
+    std::vector<std::string> arg_names;
+
+    for (auto &decl: fd->signature.args) {
+        arg_names.push_back(decl->name.name);
     }
 
-    auto *ret_type = tg.codegen(fd->signature.ret_type);
-
-    llvm::FunctionType *ft = llvm::FunctionType::get(ret_type, arg_types,
-                                                     false);
-
-    auto *result = llvm::Function::Create(ft, llvm::Function::ExternalLinkage,
-                                          fd->signature.name, module.get());
-
-    env[fd->signature.name] = IdentBinding(result);
-
-    env.push();
-
-    llvm::BasicBlock *bb = llvm::BasicBlock::Create(context, "entry", result);
-    builder.SetInsertPoint(bb);
-
-    unsigned i = 0;
-    for (auto &arg: result->args()) {
-        auto *ty = arg_types[i];
-        auto arg_addr = builder.CreateAlloca(ty);
-        builder.CreateStore(&arg, arg_addr);
-        env[fd->signature.args[i++]->name.name] = IdentBinding(arg_addr);
-    }
-
-    stmt_cg.set_rettype(ret_type);
+    translator.create_and_start_function(ty, arg_names, fd->signature.name);
 
     for (const auto &arg: fd->block) {
         stmt_cg.codegen(arg);
     }
 
-    stmt_cg.set_rettype(NULL);
-    env.pop();
+    translator.end_function();
 }
 
 void ModuleCodegenImpl::optimize(int opt_level) {
-    auto fpm = std::make_unique<llvm::legacy::PassManager>();
-    if (opt_level >= 1) {
-        // Iterated dominance frontier to convert most `alloca`s to SSA
-        // register accesses.
-        fpm->add(llvm::createPromoteMemoryToRegisterPass());
-        fpm->add(llvm::createInstructionCombiningPass());
-        // Reassociate expressions.
-        fpm->add(llvm::createReassociatePass());
-        // Eliminate common sub-expressions.
-        fpm->add(llvm::createGVNPass());
-        // Simplify the control flow graph.
-        fpm->add(llvm::createCFGSimplificationPass());
-        // Tail call elimination.
-        fpm->add(llvm::createTailCallEliminationPass());
-    }
-
-    fpm->run(*module);
+    translator.optimize(opt_level);
 }
 
 void ModuleCodegenImpl::validate(std::ostream &out) {
-    llvm::raw_os_ostream ll_out(out);
-    llvm::verifyModule(*module, &ll_out);
+    translator.validate(out);
 }
 
 }

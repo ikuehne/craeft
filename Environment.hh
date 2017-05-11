@@ -56,16 +56,20 @@ struct Variable {
     Variable(Value val): val(val) {
         /* Must be a pointer type.  All variables live in memory during
          * translation. */
-        assert(is_type<Pointer>(val.get_type()));
+        //assert(is_type<Pointer>(val.get_type()));
     }
 
     /**
      * @brief Get the type of this binding.
      */
-    Type *get_type(void) {
+    Type get_type(void) {
+        if (is_type<Function>(val.get_type())) {
+            return val.get_type();
+        }
+
         /* We actually only hold a *pointer* to the value, so we have to get
          * the pointed type. */
-        return boost::get<Pointer>(val.get_type()).get_pointed();
+        return *boost::get<Pointer>(val.get_type()).get_pointed();
     }
 
     /**
@@ -156,7 +160,7 @@ public:
 
         // First try to find the result,
         for (auto &vec: boost::adaptors::reverse(ident_map)) {
-            for (auto &pair: *boost::adaptors::reverse(vec)) {
+            for (auto &pair: boost::adaptors::reverse(*vec)) {
                 if (pair.first == name) {
                     // returning it if possible.
                     return pair.second;

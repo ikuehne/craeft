@@ -33,6 +33,7 @@
 namespace llvm {
     class Type;
     class LLVMContext;
+    class FunctionType;
 }
 
 namespace Craeft {
@@ -134,6 +135,26 @@ private:
     Precision prec;
 };
 
+class Void {
+public:
+    /**
+     * @brief Get the void type for the given LLVM context.
+     */
+    Void(llvm::LLVMContext &);
+
+    /**
+     * @brief For consistency: all void types are equal.
+     */
+    bool operator==(const Void &other) const { return true; }
+
+    llvm::Type *to_llvm(void) const {
+        return ty;
+    }
+
+private:
+    llvm::Type *ty;
+};
+
 struct Type;
 
 /**
@@ -145,6 +166,7 @@ public:
      * @brief Build a pointer type pointing to the given type.
      */
     Pointer(Type pointed);
+    Pointer(std::shared_ptr<Type> pointed): pointed(pointed) {}
 
     Type *get_pointed(void) const { return pointed.get(); }
 
@@ -172,7 +194,7 @@ private:
     std::vector<std::shared_ptr<Type> > args;
 };
 
-typedef boost::variant<SignedInt, UnsignedInt, Float, Pointer, Function>
+typedef boost::variant<SignedInt, UnsignedInt, Float, Void, Pointer, Function>
     _Type;
 
 /**

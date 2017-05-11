@@ -99,6 +99,12 @@ bool Float::operator==(const Float &other) const {
 }
 
 /*****************************************************************************
+ * Void types.
+ */
+
+Void::Void(llvm::LLVMContext &ctx): ty(llvm::Type::getVoidTy(ctx)) {}
+
+/*****************************************************************************
  * Pointer types.
  */
 
@@ -118,7 +124,9 @@ bool Pointer::operator==(const Pointer &other) const {
 
 Function::Function(std::shared_ptr<Type> rettype,
                    std::vector< std::shared_ptr<Type> >args)
-    : rettype(rettype), args(args) {}
+        : rettype(rettype), args(args) {
+    assert(rettype.get() != nullptr);
+}
 
 bool Function::operator==(const Function &other) const {
     // Check that return types are equal,

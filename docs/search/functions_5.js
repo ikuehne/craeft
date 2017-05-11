@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['identbinding',['IdentBinding',['../struct_craeft_1_1_ident_binding.html#a9997ef54c81bd0c987ddbc0ff1e7ddaa',1,'Craeft::IdentBinding']]],
-  ['is_5ftype',['is_type',['../_variant_utils_8hh.html#aff569c330b65251161df92cc1ebc4267',1,'VariantUtils.hh']]]
+  ['float',['Float',['../class_craeft_1_1_float.html#a4c102cddd92fb607fd21e827c1b641b9',1,'Craeft::Float::Float(llvm::Type *ty)'],['../class_craeft_1_1_float.html#a29dab180609622cd98442da3af1ff079',1,'Craeft::Float::Float(Precision, llvm::LLVMContext &amp;)']]]
 ];

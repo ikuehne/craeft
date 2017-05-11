@@ -85,16 +85,9 @@ Public Member Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_statement_codegen.html#ad912116188aec2d13e0f280d34c6e268">codegen</a> (const AST::Statement &amp;stmt)</td></tr>
 <tr class="memdesc:ad912116188aec2d13e0f280d34c6e268"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate code for the given statement. <br /></td></tr>
 <tr class="separator:ad912116188aec2d13e0f280d34c6e268"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada3abb30faaca24f5c7255170262e18b"><td class="memItemLeft" align="right" valign="top"><a id="ada3abb30faaca24f5c7255170262e18b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>StatementCodegen</b> (llvm::LLVMContext &amp;context, llvm::IRBuilder&lt;&gt; &amp;builder, llvm::Module &amp;module, <a class="el" href="class_craeft_1_1_environment.html">Environment</a> &amp;env, std::string &amp;fname, llvm::Type *ret_type=NULL)</td></tr>
-<tr class="separator:ada3abb30faaca24f5c7255170262e18b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff3705c5f5020f2da635dfb87e609a92"><td class="memItemLeft" align="right" valign="top"><a id="aff3705c5f5020f2da635dfb87e609a92"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set_rettype</b> (llvm::Type *ret)</td></tr>
-<tr class="separator:aff3705c5f5020f2da635dfb87e609a92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4f6ea87da262981d1b3bebbcf6126cb"><td class="memItemLeft" align="right" valign="top"><a id="ad4f6ea87da262981d1b3bebbcf6126cb"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_statement_codegen.html#ad4f6ea87da262981d1b3bebbcf6126cb">can_continue</a> (void)</td></tr>
-<tr class="memdesc:ad4f6ea87da262981d1b3bebbcf6126cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return whether the last statement in the current block is unterminated. <br /></td></tr>
-<tr class="separator:ad4f6ea87da262981d1b3bebbcf6126cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a819e3fcde76520cda71b5b22d1129e6b"><td class="memItemLeft" align="right" valign="top"><a id="a819e3fcde76520cda71b5b22d1129e6b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>StatementCodegen</b> (<a class="el" href="class_craeft_1_1_translator.html">Translator</a> &amp;translator, std::string &amp;fname)</td></tr>
+<tr class="separator:a819e3fcde76520cda71b5b22d1129e6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf68d22c4af8aeb9a3afd1dc67e7578f"><td class="memItemLeft" align="right" valign="top"><a id="adf68d22c4af8aeb9a3afd1dc67e7578f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">AST::Expression</a> &amp;)</td></tr>
 <tr class="separator:adf68d22c4af8aeb9a3afd1dc67e7578f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -119,7 +112,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00135">135</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
+<p>Definition at line <a class="el" href="_module_codegen_impl_8hh_source.html#l00119">119</a> of file <a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_module_codegen_impl_8hh_source.html">ModuleCodegenImpl.hh</a></li>
 <li><a class="el" href="_module_codegen_impl_8cpp_source.html">ModuleCodegenImpl.cpp</a></li>

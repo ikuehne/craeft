@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include "llvm/IR/Value.h"
+
 #include "Type.hh"
 
 // Forward-declare llvm::Value.
@@ -53,7 +55,7 @@ public:
      */
     llvm::Value *to_llvm(void) const { return inst; }
 
-    bool is_integral(void);
+    bool is_integral(void) const;
 
     /**
      * @brief Get the Craeft type of this value.

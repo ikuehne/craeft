@@ -37,98 +37,82 @@
 
 #include "AST.hh"
 #include "Environment.hh"
+#include "Translator.hh"
 
 namespace Craeft {
 
-class TypeCodegen: public boost::static_visitor<llvm::Type *> {
+class TypeCodegen: public boost::static_visitor<Type> {
 public:
-    TypeCodegen(llvm::LLVMContext &context,
-                llvm::IRBuilder<> &builder,
-                llvm::Module &module,
-                Environment &env,
+    TypeCodegen(Translator &translator,
                 std::string &fname)
-        : context(context), env(env), fname(fname) {}
+        : translator(translator), fname(fname) {}
     /**
      * @brief Get the LLVM type corresponding to the given Craeft type.
      */
-    llvm::Type *codegen(const AST::Type &);
+    Type codegen(const AST::Type &);
 
     // Visitors for Type nodes.
-    llvm::Type *operator()(const AST::IntType &);
-    llvm::Type *operator()(const AST::UIntType &);
-    llvm::Type *operator()(const AST::Float &);
-    llvm::Type *operator()(const AST::Double &);
-    llvm::Type *operator()(const AST::Void &);
-    llvm::Type *operator()(const AST::UserType &);
-    llvm::Type *operator()(const std::unique_ptr<AST::Pointer> &);
+    Type operator()(const AST::IntType &);
+    Type operator()(const AST::UIntType &);
+    Type operator()(const AST::Float &);
+    Type operator()(const AST::Double &);
+    Type operator()(const AST::Void &);
+    Type operator()(const AST::UserType &);
+    Type operator()(const std::unique_ptr<AST::Pointer> &);
 
 private:
-    llvm::LLVMContext &context;
-    Environment &env;
+    Translator &translator;
     std::string &fname;
 };
 
 class ExpressionCodegen;
 
-class LValueCodegen: public boost::static_visitor<llvm::Value *> {
+class LValueCodegen: public boost::static_visitor<Value> {
 public:
-    LValueCodegen(llvm::LLVMContext &context,
-                  llvm::IRBuilder<> &builder,
-                  llvm::Module &module,
-                  Environment &env,
+    LValueCodegen(Translator &translator,
                   std::string &fname,
                   ExpressionCodegen &eg)
-        : context(context), builder(builder), module(module), env(env),
+        : translator(translator),
           fname(fname), eg(eg) {}
     /**
      * @brief Generate an instruction yielding an address to the given
      *        l-value.
      */
-    llvm::Value *codegen(const AST::LValue &);
+    Value codegen(const AST::LValue &);
 
-    llvm::Value *operator()(const AST::Variable &);
-    llvm::Value *operator()(const std::unique_ptr<AST::Dereference> &);
+    Value operator()(const AST::Variable &);
+    Value operator()(const std::unique_ptr<AST::Dereference> &);
 
 private:
-    llvm::LLVMContext &context;
-    llvm::IRBuilder<> &builder;
-    llvm::Module &module;
-    Environment &env;
+    Translator &translator;
     std::string &fname;
     ExpressionCodegen &eg;
 };
 
-class ExpressionCodegen: public boost::static_visitor<llvm::Value *> {
+class ExpressionCodegen: public boost::static_visitor<Value> {
 public:
-    ExpressionCodegen(llvm::LLVMContext &context,
-                      llvm::IRBuilder<> &builder,
-                      llvm::Module &module,
-                      Environment &env,
+    ExpressionCodegen(Translator &translator,
                       std::string &fname)
-        : context(context), builder(builder), module(module), env(env),
-          fname(fname) {}
+        : translator(translator), fname(fname) {}
 
     /**
      * @brief Generate code for the given statement.
      */
-    llvm::Value *codegen(const AST::Expression &expr);
+    Value codegen(const AST::Expression &expr);
 
     // Visitors of different AST statement types.
-    llvm::Value *operator()(const AST::IntLiteral &);
-    llvm::Value *operator()(const AST::UIntLiteral &);
-    llvm::Value *operator()(const AST::FloatLiteral &);
-    llvm::Value *operator()(const AST::Variable &);
-    llvm::Value *operator()(const std::unique_ptr<AST::Reference> &);
-    llvm::Value *operator()(const std::unique_ptr<AST::Dereference> &);
-    llvm::Value *operator()(const std::unique_ptr<AST::Binop> &);
-    llvm::Value *operator()(const std::unique_ptr<AST::FunctionCall> &);
-    llvm::Value *operator()(const std::unique_ptr<AST::Cast> &);
+    Value operator()(const AST::IntLiteral &);
+    Value operator()(const AST::UIntLiteral &);
+    Value operator()(const AST::FloatLiteral &);
+    Value operator()(const AST::Variable &);
+    Value operator()(const std::unique_ptr<AST::Reference> &);
+    Value operator()(const std::unique_ptr<AST::Dereference> &);
+    Value operator()(const std::unique_ptr<AST::Binop> &);
+    Value operator()(const std::unique_ptr<AST::FunctionCall> &);
+    Value operator()(const std::unique_ptr<AST::Cast> &);
 
 private:
-    llvm::LLVMContext &context;
-    llvm::IRBuilder<> &builder;
-    llvm::Module &module;
-    Environment &env;
+    Translator &translator;
     std::string &fname;
 };
 
@@ -139,23 +123,11 @@ public:
      */
     void codegen(const AST::Statement &stmt);
 
-    StatementCodegen(llvm::LLVMContext &context,
-                     llvm::IRBuilder<> &builder,
-                     llvm::Module &module,
-                     Environment &env,
-                     std::string &fname,
-                     llvm::Type *ret_type = NULL)
-        : context(context), builder(builder), module(module), env(env),
-          fname(fname), ret_type(ret_type),
-          expr_codegen(context, builder, module, env, fname) {}
-
-    void set_rettype(llvm::Type *ret);
-
-    /**
-     * @brief Return whether the last statement in the current block is
-     *        unterminated.
-     */
-    bool can_continue(void);
+    StatementCodegen(Translator &translator,
+                     std::string &fname)
+        : translator(translator),
+          fname(fname),
+          expr_codegen(translator, fname) {}
 
     // Visitors of different AST statement types.
     void operator()(const AST::Expression &);
@@ -167,10 +139,8 @@ public:
     void operator()(const std::unique_ptr<AST::IfStatement> &);
 
 private:
-    llvm::LLVMContext &context;
-    llvm::IRBuilder<> &builder;
-    llvm::Module &module;
-    Environment &env;
+    Translator &translator;
+
     std::string &fname;
     llvm::Type *ret_type;
 
@@ -205,6 +175,7 @@ public:
     void operator()(const std::unique_ptr<AST::FunctionDefinition> &);
 
 private:
+    Translator translator;
 
     /**
      * @brief The name of the file this is generating code for.
@@ -214,36 +185,12 @@ private:
     std::string fname;
 
     /**
-     * @brief The compilation context.
-     *
-     * Essentially holds all LLVM state not particular to a module.
-     */
-    llvm::LLVMContext context;
-
-    /**
-     * @brief LLVM's helper for emitting IR.
-     */
-    llvm::IRBuilder<> builder;
-
-    /**
-     * @brief The module we are constructing.
-     */
-    std::unique_ptr<llvm::Module> module;
-
-    /**
-     * @brief Current namespace.
-     */
-    Environment env;
-
-    /**
-     * @brief The target machine (target triple + CPU information).
-     */
-	llvm::TargetMachine *target;
-
-    /**
      * @brief The code generator for statements.
      */
     StatementCodegen stmt_cg;
+
+    /* Utilities. */
+    Function type_of_ast_decl(const AST::FunctionDeclaration &fd);
 };
 
 }
