@@ -1,6 +1,9 @@
 # Scratchwork
 scratch/
 
+# HTML documentation.
+doc/html
+
 # CMake's scratchwork.
 build/
 
