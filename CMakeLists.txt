@@ -29,3 +29,33 @@ include_directories("include")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LDFLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LIBS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_SYS_LIBS}")
+
+# Documentation
+
+find_package(Doxygen)
+option(BUILD_DOCUMENTATION "Create and install the HTML based documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+
+if(BUILD_DOCUMENTATION)
+    if(NOT DOXYGEN_FOUND)
+        message(FATAL_ERROR "Doxygen is needed to build documentation.")
+    endif()
+
+    set(doxyfile_in doc/Doxyfile.in)
+    set(doxyfile doc/Doxyfile)
+
+    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+
+    add_custom_target(doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating Doxygen documentation"
+        VERBATIM)
+
+    set(DOC_INPUT ${CMAKE_PROJECT_BINARY_DIR}/doc/html)
+    set(DOC_OUTPUT ${CMAKE_PROJECT_SOURCE_DIR}/doc/html)
+
+    add_custom_command(TARGET doc POST_BUILD
+	    COMMAND ${CMAKE_COMMAND} -E remove_directory ../doc/html)
+    add_custom_command(TARGET doc POST_BUILD
+	    COMMAND ${CMAKE_COMMAND} -E rename doc/html ../doc/html)
+endif()
