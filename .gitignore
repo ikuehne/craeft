@@ -4,9 +4,6 @@ scratch/
 # CMake's scratchwork.
 build/
 
-# Don't track documentation in master.
-doc/
-
 # Compiler
 craeftc
 
