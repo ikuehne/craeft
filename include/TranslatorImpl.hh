@@ -76,6 +76,10 @@ public:
     Variable declare(const std::string &name, const Type &t);
     void assign(const std::string &varname, Value val, SourcePos pos);
     void return_(Value val, SourcePos pos);
+    void return_(SourcePos pos);
+
+    Value get_identifier_addr(std::string ident, SourcePos pos);
+    Value get_identifier_value(std::string ident, SourcePos pos);
 
     IfThenElse create_ifthenelse(Value cond, SourcePos pos);
     void point_to_else(IfThenElse &structure);
@@ -92,11 +96,7 @@ public:
     void emit_obj(int fd);
     void emit_asm(int fd);
 
-    llvm::IRBuilder<> &get_builder(void);
-    Environment &get_env(void);
-    llvm::LLVMContext &get_ctx(void) {
-        return context;
-    }
+    llvm::LLVMContext &get_ctx(void) { return context; }
 
 private:
     Value apply_to_wider_integer(Value lhs, Value rhs, SourcePos pos,

@@ -81,8 +81,7 @@ Value LValueCodegen::codegen(const AST::LValue &val){
 }
 
 Value LValueCodegen::operator()(const AST::Variable &var) {
-    return translator.get_env().lookup_identifier(var.name, var.pos, fname)
-                               .get_val();
+    return translator.get_identifier_addr(var.name, var.pos);
 }
 
 Value LValueCodegen::operator()(
@@ -128,12 +127,7 @@ Value ExpressionCodegen::operator()(
 }
 
 Value ExpressionCodegen::operator()(const AST::Variable &var) {
-    auto binding = translator.get_env()
-                             .lookup_identifier(var.name, var.pos, fname);
-
-    auto v = binding.get_val();
-
-    return translator.add_load(v, var.pos);
+    return translator.get_identifier_value(var.name, var.pos);
 }
 
 /*****************************************************************************
@@ -242,13 +236,7 @@ void StatementCodegen::operator()(const AST::Return &ret) {
 }
 
 void StatementCodegen::operator()(const AST::VoidReturn &ret) {
-    if (!ret_type->isVoidTy()) {
-        throw Error("type error", "cannot have void return in non-void"
-                                  "function",
-                                  fname, ret.pos);
-    }
-
-    translator.get_builder().CreateRetVoid();
+    translator.return_(ret.pos);
 }
 
 void StatementCodegen::operator()(

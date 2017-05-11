@@ -201,9 +201,32 @@ public:
     void assign(const std::string &varname, Value val, SourcePos pos);
 
     /**
-     * @brief Return the given value.
+     * @brief Return the given value, or void if none provided.
      */
     void return_(Value val, SourcePos pos);
+    void return_(SourcePos pos);
+
+    /** @} **/
+
+    /**
+     * @defgroup Symbols.
+     *
+     * @{
+     */
+
+    /**
+     * @brief Get the address of the given identifier on the stack.
+     *
+     * Raise an Error if not present.
+     */
+    Value get_identifier_addr(std::string ident, SourcePos pos);
+
+    /**
+     * @brief Get the value of the given identifier.
+     *
+     * Raise an Error if not present.
+     */
+    Value get_identifier_value(std::string ident, SourcePos pos);
 
     /** @} **/
 
@@ -270,11 +293,9 @@ public:
 
     /** @} */
 
-    /* This should just be a temporary shim until Translator abstracts away
-     * this stuff. */
-    
-    llvm::IRBuilder<> &get_builder(void);
-    Environment &get_env(void);
+    /**
+     * @brief Get the translator's LLVM context.
+     */
     llvm::LLVMContext &get_ctx(void);
 
 private:

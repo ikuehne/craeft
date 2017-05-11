@@ -115,6 +115,18 @@ void Translator::return_(Value val, SourcePos pos) {
     return pimpl->return_(val, pos);
 }
 
+void Translator::return_(SourcePos pos) {
+    return pimpl->return_(pos);
+}
+
+Value Translator::get_identifier_addr(std::string ident, SourcePos pos) {
+    return pimpl->get_identifier_addr(ident, pos);
+}
+
+Value Translator::get_identifier_value(std::string ident, SourcePos pos) {
+    return pimpl->get_identifier_value(ident, pos);
+}
+
 IfThenElse Translator::create_ifthenelse(Value cond, SourcePos pos) {
     return pimpl->create_ifthenelse(cond, pos);
 }
@@ -154,14 +166,6 @@ void Translator::emit_obj(int fd) {
 }
 void Translator::emit_asm(int fd) {
     pimpl->emit_asm(fd);
-}
-
-llvm::IRBuilder<> &Translator::get_builder(void) {
-    return pimpl->get_builder();
-}
-
-Environment &Translator::get_env(void) {
-    return pimpl->get_env();
 }
 
 llvm::LLVMContext &Translator::get_ctx(void) {

@@ -1231,6 +1231,22 @@ void TranslatorImpl::return_(Value val, SourcePos pos) {
     current->return_(val);
 }
 
+void TranslatorImpl::return_(SourcePos pos) {
+    current->return_();
+}
+
+Value TranslatorImpl::get_identifier_addr(std::string ident, SourcePos pos) {
+    return env.lookup_identifier(ident, pos, fname).get_val();
+}
+
+Value TranslatorImpl::get_identifier_value(std::string ident, SourcePos pos) {
+    Value addr = get_identifier_addr(ident, pos);
+
+    assert(is_type<Pointer>(addr.get_type()));
+
+    return add_load(addr, pos);
+}
+
 IfThenElse TranslatorImpl::create_ifthenelse(Value cond, SourcePos pos) {
     auto *f = builder.GetInsertBlock()->getParent();
 
@@ -1342,15 +1358,6 @@ void TranslatorImpl::point(Block b) {
     // TODO: Maybe associate the block with the current function?
 
     current->point_builder(builder);
-}
-
-// TODO: Get rid of these once translator can replace builder.
-llvm::IRBuilder<> &TranslatorImpl::get_builder(void) {
-    return builder;
-}
-
-Environment &TranslatorImpl::get_env(void) {
-    return env;
 }
 
 }
