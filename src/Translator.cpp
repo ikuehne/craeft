@@ -127,6 +127,10 @@ Value Translator::get_identifier_value(std::string ident, SourcePos pos) {
     return pimpl->get_identifier_value(ident, pos);
 }
 
+Type Translator::lookup_type(std::string tname, SourcePos pos) {
+    return pimpl->lookup_type(tname, pos);
+}
+
 IfThenElse Translator::create_ifthenelse(Value cond, SourcePos pos) {
     return pimpl->create_ifthenelse(cond, pos);
 }

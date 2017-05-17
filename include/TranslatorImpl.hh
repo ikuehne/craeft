@@ -80,6 +80,7 @@ public:
 
     Value get_identifier_addr(std::string ident, SourcePos pos);
     Value get_identifier_value(std::string ident, SourcePos pos);
+    Type lookup_type(std::string tname, SourcePos pos);
 
     IfThenElse create_ifthenelse(Value cond, SourcePos pos);
     void point_to_else(IfThenElse &structure);

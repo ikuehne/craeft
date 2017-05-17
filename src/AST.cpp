@@ -40,22 +40,10 @@ namespace AST {
 struct TypePrintVisitor: boost::static_visitor<void> {
     TypePrintVisitor(std::ostream &out): out(out) {}
 
-    void operator()(const IntType &var) {
-        out << "Type {I" << var.nbits << "}";
-    }
-
-    void operator()(const UIntType &var) {
-        out << "Type {U" << var.nbits << "}";
-    }
-
-    void operator()(const Float &_) { out << "Type {Float}"; }
-
-    void operator()(const Double &_) { out << "Type {Double}"; }
-
     void operator()(const Void &_) { out << "Type {Void}"; }
 
-    void operator()(const UserType &ut) {
-        out << "Type {" << ut.name << "}";
+    void operator()(const NamedType &nt) {
+        out << "Type {" << nt.name << "}";
     }
 
     void operator()(const std::unique_ptr<Pointer> &pt) {

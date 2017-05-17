@@ -51,55 +51,22 @@ namespace AST {
 
 /**
  * @defgroup Types Classes for types as represented in the AST.
- *
- * @{
  */
 
-/**
- * @brief A signed integer type.
- */
-struct IntType {
-    int nbits;
+struct NamedType {
+    std::string name;
 
-    IntType(int nbits): nbits(nbits) {}
+    NamedType(std::string n): name(n) {}
 };
-
-/**
- * @brief An unsigned integer type.
- */
-struct UIntType {
-    int nbits;
-
-    UIntType(int nbits): nbits(nbits) {}
-};
-
-/**
- * @brief A single-precision float.
- */
-struct Float {};
-
-/**
- * @brief A double-precision float.
- */
-struct Double {};
 
 /**
  * @brief The void type.
  */
 struct Void {};
 
-/**
- * @brief Any other type.
- */
-struct UserType {
-    std::string name;
-    
-    UserType(std::string n): name(n) {}
-};
-
 struct Pointer;
 
-typedef boost::variant< IntType, UIntType, Float, Double, Void, UserType,
+typedef boost::variant< NamedType, Void,
                         std::unique_ptr<Pointer> > Type;
 
 /**

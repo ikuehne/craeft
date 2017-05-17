@@ -98,9 +98,18 @@ public:
     /**
      * @brief Create a new, empty environment.
      */
-    Environment(void) {
+    Environment(llvm::LLVMContext &ctx) {
         // Should always have at least one scope.
         push();
+
+        // Add all of the built-in types.
+        add_type("Float", Float(SinglePrecision, ctx));
+        add_type("Double", Float(DoublePrecision, ctx));
+
+        for (int i = 1; i <= 64; ++i) {
+            add_type("I" + std::to_string(i), SignedInt(i, ctx));
+            add_type("U" + std::to_string(i), UnsignedInt(i, ctx));
+        }
     }
 
     /**
@@ -178,6 +187,12 @@ public:
                                              (name, result));
         return result;
     }
+
+    void add_type(std::string name, Type t) {
+        type_map.back()->push_back(std::pair<std::string, Type>
+                                             (name, t));
+    }
+
 
     /**
      * @brief Find the given type name in the map.

@@ -58,7 +58,8 @@ TranslatorImpl::TranslatorImpl(std::string module_name, std::string filename,
                                std::string triple)
     : fname(filename),
       builder(context),
-      module(new llvm::Module(module_name, context)) {
+      module(new llvm::Module(module_name, context)),
+      env(context) {
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
@@ -1246,6 +1247,11 @@ Value TranslatorImpl::get_identifier_value(std::string ident, SourcePos pos) {
 
     return add_load(addr, pos);
 }
+
+Type TranslatorImpl::lookup_type(std::string tname, SourcePos pos) {
+    return env.lookup_type(tname, pos, fname);
+}
+
 
 IfThenElse TranslatorImpl::create_ifthenelse(Value cond, SourcePos pos) {
     auto *f = builder.GetInsertBlock()->getParent();

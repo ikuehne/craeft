@@ -348,23 +348,7 @@ AST::Type ParserImpl::parse_type(void) {
     // Shift off the typename.
     lexer.shift();
 
-    AST::Type result = AST::UserType(tname);
-
-    if (tname == "Double") {
-        result = AST::Double();
-    } else if (tname == "Float") {
-        result = AST::Float();
-    } else if (tname.size() == 3 && isdigit(tname[1]) && isdigit(tname[2])) {
-        int nbits = std::stoi(tname.substr(1, 2));
-        if (nbits <= 64) {
-            if      (tname[0] == 'I') result = AST::IntType(nbits);
-            else if (tname[0] == 'U') result = AST::UIntType(nbits);
-        }
-    } else if ((tname.size() == 2 && isdigit(tname[1]))) {
-        int nbits = std::stoi(tname.substr(1, 1));
-        if      (tname[0] == 'I') result = AST::IntType(nbits);
-        else if (tname[0] == 'U') result = AST::UIntType(nbits);
-    }
+    AST::Type result = AST::NamedType(tname);
 
     while (is_type<Tok::Operator>(lexer.get_tok())) {
         auto op = boost::get<Tok::Operator>(lexer.get_tok());

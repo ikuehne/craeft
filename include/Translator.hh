@@ -228,6 +228,11 @@ public:
      */
     Value get_identifier_value(std::string ident, SourcePos pos);
 
+    /**
+     * @brief Look up the given type by name.
+     */
+    Type lookup_type(std::string tname, SourcePos pos);
+
     /** @} **/
 
     /**

@@ -52,12 +52,8 @@ public:
     Type codegen(const AST::Type &);
 
     // Visitors for Type nodes.
-    Type operator()(const AST::IntType &);
-    Type operator()(const AST::UIntType &);
-    Type operator()(const AST::Float &);
-    Type operator()(const AST::Double &);
+    Type operator()(const AST::NamedType &);
     Type operator()(const AST::Void &);
-    Type operator()(const AST::UserType &);
     Type operator()(const std::unique_ptr<AST::Pointer> &);
 
 private:

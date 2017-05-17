@@ -44,28 +44,13 @@ Type TypeCodegen::codegen(const AST::Type &ty) {
     return boost::apply_visitor(*this, ty);
 }
 
-Type TypeCodegen::operator()(const AST::IntType &it) {
-    return SignedInt(it.nbits, translator.get_ctx());
-}
-
-Type TypeCodegen::operator()(const AST::UIntType &ut) {
-    return UnsignedInt(ut.nbits, translator.get_ctx());
-}
-
-Type TypeCodegen::operator()(const AST::Float &_) {
-    return Float(SinglePrecision, translator.get_ctx());
-}
-
-Type TypeCodegen::operator()(const AST::Double &_) {
-    return Float(DoublePrecision, translator.get_ctx());
+Type TypeCodegen::operator()(const AST::NamedType &it) {
+    // TODO: Annotate type names with source positions.
+    return translator.lookup_type(it.name, SourcePos(0, 0));
 }
 
 Type TypeCodegen::operator()(const AST::Void &_) {
     return Void(translator.get_ctx());
-}
-
-Type TypeCodegen::operator()(const AST::UserType &ut) {
-    throw Error("error", "not implemented!", fname, SourcePos(0, 0));
 }
 
 Type TypeCodegen::operator()(const std::unique_ptr<AST::Pointer> &ut) {
