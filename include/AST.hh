@@ -226,9 +226,21 @@ void print_expr(const Expression &, std::ostream &);
  * @{
  */
 
-/* TODO: Expand to include dereferences of expressions. */
+struct FieldAccess;
+/* TODO: Expand to include arrays, etc. */
 typedef boost::variant < Variable,
-                         std::unique_ptr<Dereference> > LValue;
+                         std::unique_ptr<Dereference>,
+                         std::unique_ptr<FieldAccess> > LValue;
+
+struct FieldAccess {
+    LValue structure;
+    std::string field;
+
+    SourcePos pos;
+
+    FieldAccess(LValue structure, std::string field, SourcePos pos)
+        : structure(std::move(structure)), field(field), pos(pos) {}
+};
 
 /**
  * @brief Application of the address-of operator.

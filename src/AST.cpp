@@ -77,6 +77,12 @@ struct ExpressionPrintVisitor: boost::static_visitor<void> {
         out << "}";
     }
 
+    void operator()(const std::unique_ptr<FieldAccess> &fa) {
+        out << "FieldAccess {";
+        boost::apply_visitor(*this, fa->structure);
+        out << ", " << fa->field << "}";
+    }
+
     void operator()(const std::unique_ptr<Dereference> &deref) {
         out << "Dereference {";
         boost::apply_visitor(*this, deref->referand);

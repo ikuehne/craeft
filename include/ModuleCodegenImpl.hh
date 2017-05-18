@@ -78,6 +78,7 @@ public:
 
     Value operator()(const AST::Variable &);
     Value operator()(const std::unique_ptr<AST::Dereference> &);
+    Value operator()(const std::unique_ptr<AST::FieldAccess> &);
 
 private:
     Translator &translator;

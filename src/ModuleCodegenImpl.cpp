@@ -75,6 +75,12 @@ Value LValueCodegen::operator()(
     return eg.codegen(deref->referand);
 }
 
+Value LValueCodegen::operator()(const std::unique_ptr<AST::FieldAccess> &fa) {
+    auto st = codegen(fa->structure);
+
+    return translator.field_address(st, fa->field, fa->pos);
+}
+
 /*****************************************************************************
  * Code generation for expressions.
  */
@@ -125,6 +131,20 @@ Value ExpressionCodegen::codegen(const AST::Expression &expr) {
 
 Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::Binop> &binop) {
+    // Special cases: for now, just struct field accesses.
+    if (binop->op == ".") {
+        auto lhs = codegen(binop->lhs);
+
+        auto v = boost::get<AST::Variable>(&binop->rhs);
+
+        if (!v) {
+            throw Error("parse error", "expected name in struct field access",
+                        fname, binop->pos);
+        }
+
+        return translator.field_access(lhs, v->name, binop->pos);
+    }
+
     auto lhs = codegen(binop->lhs);
     auto rhs = codegen(binop->rhs);
 
@@ -297,8 +317,18 @@ void ModuleCodegenImpl::operator()(const AST::TypeDeclaration &td) {
 }
 
 void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
-    throw Error("error", "struct declarations not implemented",
-                fname, sd.pos);
+    std::vector<std::pair<std::string, std::shared_ptr<Type> > >fields;
+    TypeCodegen tg(translator, fname);
+
+    for (const auto &decl: sd.members) {
+        auto t = std::make_shared<Type>(tg.codegen(decl->type));
+        fields.push_back(std::pair<std::string, std::shared_ptr<Type> >
+                                  (decl->name.name, t));
+    }
+
+    Struct t(fields);
+
+    translator.create_struct(t, sd.name);
 }
 
 Function ModuleCodegenImpl::type_of_ast_decl(

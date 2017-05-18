@@ -250,7 +250,7 @@ void TranslatorImpl::add_store(Value pointer, Value new_val, SourcePos pos) {
                     fname, pos);
     }
 
-    builder.CreateStore(pointer.to_llvm(), new_val.to_llvm());
+    builder.CreateStore(new_val.to_llvm(), pointer.to_llvm());
 }
 
 Value TranslatorImpl::left_shift(Value val, Value nbits, SourcePos pos) {
@@ -760,6 +760,8 @@ public:
         auto *zero = llvm::ConstantInt::get(to_llvm_type(r_ty), 0);
         auto *negative = get_builder().CreateSub(zero, r.to_llvm());
 
+        assert(l.to_llvm());
+
         // Just do a regular GEP with a negative index.
         auto *result = get_builder().CreateGEP(l.to_llvm(), negative);
         return Value(result, l.get_type());
@@ -1132,6 +1134,65 @@ Value TranslatorImpl::bool_not(Value val, SourcePos pos) {
     return Value(inst, val.get_type());
 }
 
+inline std::pair<unsigned, Type *>
+TranslatorImpl::get_field_idx(Type _t, std::string field, SourcePos pos) {
+    auto t = boost::get<Struct>(&_t);
+
+    if (!t) {
+        throw Error("type error", "cannot access field of non-struct value",
+                    fname, pos);
+    }
+
+    auto field_entry = (*t)[field];
+
+    auto result_t = field_entry.second;
+
+    if (!result_t) {
+        throw Error("error", "no field \"" + field
+                           + "\" found for struct type", fname, pos);
+    }
+
+    assert(field_entry.first >= 0);
+
+    return field_entry;
+}
+
+Value TranslatorImpl::field_access(Value lhs, std::string field,
+                                   SourcePos pos) {
+    auto _t = lhs.get_type();
+    auto pair = get_field_idx(_t, field, pos);
+
+    std::vector<unsigned> idxs;
+
+    idxs.push_back(pair.first);
+
+    auto *instr = builder.CreateExtractValue(lhs.to_llvm(), idxs);
+
+    return Value(instr, *pair.second);
+}
+
+Value TranslatorImpl::field_address(Value ptr, std::string field,
+                                    SourcePos pos) {
+    auto _ptr_t = ptr.get_type();
+    auto ptr_t = boost::get<Pointer>(&_ptr_t);
+
+    if (!ptr_t) {
+        throw Error("type error",
+                    "cannot compute field address from non-pointer type",
+                    fname, pos);
+    }
+
+    auto pair = get_field_idx(*ptr_t->get_pointed(), field, pos);
+
+    auto *gep_type = to_llvm_type(*ptr_t->get_pointed());
+
+    auto *instr = builder.CreateStructGEP(gep_type, ptr.to_llvm(),
+                                          pair.first);
+
+    auto result_ptr = Pointer(std::make_shared<Type>(*pair.second));
+
+    return Value(instr, result_ptr);
+}
 
 Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
                            SourcePos pos) {
@@ -1222,6 +1283,12 @@ void TranslatorImpl::create_and_start_function(Function f,
     // TODO: Set return type here.
 }
 
+void TranslatorImpl::create_struct(Struct t, std::string name) {
+    env.add_type(name, t);
+
+    t.set_name(name);
+}
+
 void TranslatorImpl::end_function(void) {
     env.pop();
 
@@ -1251,7 +1318,6 @@ Value TranslatorImpl::get_identifier_value(std::string ident, SourcePos pos) {
 Type TranslatorImpl::lookup_type(std::string tname, SourcePos pos) {
     return env.lookup_type(tname, pos, fname);
 }
-
 
 IfThenElse TranslatorImpl::create_ifthenelse(Value cond, SourcePos pos) {
     auto *f = builder.GetInsertBlock()->getParent();

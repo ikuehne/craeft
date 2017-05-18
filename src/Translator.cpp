@@ -98,6 +98,14 @@ Value Translator::bool_not(Value val, SourcePos pos) {
     return pimpl->bool_not(val, pos);
 }
 
+Value Translator::field_access(Value lhs, std::string field, SourcePos pos) {
+    return pimpl->field_access(lhs, field, pos);
+}
+
+Value Translator::field_address(Value ptr, std::string field, SourcePos pos) {
+    return pimpl->field_address(ptr, field, pos);
+}
+
 Value Translator::call(std::string func, std::vector<Value> &args, SourcePos pos) {
     return pimpl->call(func, args, pos);
 }
@@ -150,6 +158,10 @@ void Translator::create_and_start_function(Function f,
                                            std::vector<std::string> args,
                                            std::string name) {
     pimpl->create_and_start_function(f, args, name);
+}
+
+void Translator::create_struct(Struct t, std::string name) {
+    pimpl->create_struct(t, name);
 }
 
 void Translator::end_function(void) {

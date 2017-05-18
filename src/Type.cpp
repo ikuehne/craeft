@@ -134,6 +134,10 @@ bool Function::operator==(const Function &other) const {
         return false;
     }
 
+    if (args.size() != other.args.size()) {
+        return false;
+    }
+
     // and argument types are equal.
     for (unsigned i = 0; i < args.size(); ++i) {
         if (*args[i] != *other.args[i]) {
@@ -154,6 +158,58 @@ llvm::FunctionType *Function::to_llvm(void) const {
     auto *ret = to_llvm_type(*rettype);
 
     return llvm::FunctionType::get(ret, arg_types, false);
+}
+
+/*****************************************************************************
+ * Compound (struct) types.
+ */
+
+Struct::Struct(
+        std::vector< std::pair< std::string, std::shared_ptr<Type> > >fields)
+      : fields(fields) {
+    std::vector<llvm::Type *> arg_types;
+
+    for (const auto &field: fields) {
+        arg_types.push_back(to_llvm_type(*field.second));
+    }
+
+    as_llvm = llvm::StructType::create(arg_types);
+}
+
+bool Struct::operator==(const Struct &other) const {
+    if (fields.size() != other.fields.size()) {
+        return false;
+    }
+
+    // Check that field types are equal.
+    for (unsigned i = 0; i < fields.size(); ++i) {
+        if ((fields[i].first != other.fields[i].first)
+         || (*fields[i].second != other.fields[i].second)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+std::pair<int, Type *>Struct::operator[](std::string field_name) {
+    for (int i = 0; i < (int)fields.size(); ++i) {
+        const auto &field = fields[i];
+        if (field.first == field_name) {
+            std::pair<int, Type *> result(i, field.second.get());
+            return result;
+        }
+    }
+
+    return std::pair<int, Type *>(-1, nullptr);
+}
+
+void Struct::set_name(std::string name) {
+    as_llvm->setName(name);
+}
+
+llvm::StructType *Struct::to_llvm(void) const {
+    return as_llvm;
 }
 
 /*****************************************************************************

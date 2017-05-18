@@ -58,7 +58,7 @@ static inline uint8_t digit(char n) {
 }
 
 static inline bool is_opchar(char c) {
-    return std::string("*=+-><&%^@~/").find(c) != std::string::npos;
+    return std::string(".*=+-><&%^@~/").find(c) != std::string::npos;
 }
 
 boost::variant<double, uint64_t> Lexer::lex_number(void) {
@@ -210,7 +210,9 @@ void Lexer::shift(void) {
     } else if (c == ',') {
         tok = Tok::Comma();
         get();
-    } else throw "Character not recognized";
+    } else throw Error("lexer error",
+                       std::string("character \"") + c + "\" not recognized",
+                       "TODO", pos);
 }
 
 Tok::Token Lexer::get_tok(void) const {

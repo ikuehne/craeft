@@ -97,6 +97,23 @@ inline AST::LValue ParserImpl::to_lvalue(AST::Expression expr, SourcePos pos)
     } else if (is_type<std::unique_ptr<AST::Dereference> >(expr)) {
         return std::move(boost::get<std::unique_ptr<AST::Dereference> >
                                    (expr));
+    } else if (is_type<std::unique_ptr<AST::Binop> >(expr)) {
+        auto binop = std::move(boost::get<std::unique_ptr<AST::Binop> >
+                                         (expr));
+
+        if (binop->op == ".") {
+            auto *var = boost::get<AST::Variable>(&binop->rhs);
+            if (var) {
+                return std::make_unique<AST::FieldAccess>
+                                       (to_lvalue(std::move(binop->lhs),
+                                                  binop->pos),
+                                        var->name, binop->pos);
+            } else { 
+                throw Error("parser error",
+                            "expected field name in field access",
+                            fname, pos);
+            }
+        }
     }
 
     throw Error("parser error", "expected l-value", fname, pos);
@@ -491,6 +508,7 @@ AST::StructDeclaration ParserImpl::parse_struct_declaration(void) {
     lexer.shift();
 
     auto tok = lexer.get_tok();
+
     auto *tname = boost::get<Tok::TypeName>(&tok);
 
     if (!tname) {

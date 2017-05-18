@@ -34,6 +34,7 @@ namespace llvm {
     class Type;
     class LLVMContext;
     class FunctionType;
+    class StructType;
 }
 
 namespace Craeft {
@@ -194,8 +195,43 @@ private:
     std::vector<std::shared_ptr<Type> > args;
 };
 
-typedef boost::variant<SignedInt, UnsignedInt, Float, Void, Pointer, Function>
-    _Type;
+/**
+ * @brief Craeft structs.
+ */
+class Struct {
+public:
+    /**
+     * @brief Create a new struct type.
+     *
+     * @param fields An array of field name/type pairs.
+     */
+    Struct(std::vector< std::pair< std::string, std::shared_ptr<Type> > >
+                fields);
+
+    bool operator==(const Struct &other) const;
+
+    /**
+     * @brief Set the name of this struct in the emitted IR.
+     */
+    void set_name(std::string name);
+
+    /**
+     * @brief Get the type and index corresponding to the given field in this
+     *        struct.
+     *
+     * Return `(-1, nullptr)` if no such field.
+     */
+    std::pair<int, Type *>operator[](std::string field_name);
+
+    llvm::StructType *to_llvm(void) const;
+
+private:
+    std::vector< std::pair< std::string, std::shared_ptr<Type> > > fields;
+    llvm::StructType *as_llvm;
+};
+
+typedef boost::variant<SignedInt, UnsignedInt, Float, Void, Pointer,
+                       Function, Struct > _Type;
 
 /**
  * @brief Internal representation of Craeft types.

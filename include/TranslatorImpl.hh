@@ -72,6 +72,9 @@ public:
     Value bool_or(Value lhs, Value rhs, SourcePos pos);
     Value bool_not(Value val, SourcePos pos);
 
+    Value field_access(Value lhs, std::string field, SourcePos pos);
+    Value field_address(Value ptr, std::string field, SourcePos pos);
+
     Value call(std::string func, std::vector<Value> &args, SourcePos pos);
     Variable declare(const std::string &name, const Type &t);
     void assign(const std::string &varname, Value val, SourcePos pos);
@@ -88,6 +91,8 @@ public:
     void create_function_prototype(Function f, std::string name);
     void create_and_start_function(Function f, std::vector<std::string> args,
                                    std::string name);
+
+    void create_struct(Struct t, std::string name);
 
     void end_function(void);
 
@@ -108,6 +113,9 @@ private:
                      llvm::CmpInst::Predicate sip,
                      llvm::CmpInst::Predicate uip,
                      llvm::CmpInst::Predicate fp);
+
+    inline std::pair<unsigned, Type *>
+    get_field_idx(Type t, std::string field, SourcePos pos);
 
     /**
      * @brief Move to the other block.

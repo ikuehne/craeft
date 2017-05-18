@@ -186,6 +186,21 @@ public:
     Value bool_not(Value val, SourcePos pos);
 
     /**
+     * @brief Access a field of the given struct.
+     *
+     * Return the actual value at that field.
+     */
+    Value field_access(Value lhs, std::string field, SourcePos pos);
+
+    /**
+     * @brief Get the address of the given field of the given struct pointer.
+     *
+     * @param ptr   A pointer to a struct type.
+     * @param field A field of the pointed struct type.
+     */
+    Value field_address(Value ptr, std::string field, SourcePos pos);
+
+    /**
      * @brief Function call.
      */
     Value call(std::string func, std::vector<Value> &args, SourcePos pos);
@@ -275,6 +290,8 @@ public:
     void create_function_prototype(Function f, std::string name);
     void create_and_start_function(Function f, std::vector<std::string> args,
                                    std::string name);
+
+    void create_struct(Struct t, std::string name);
 
     void end_function(void);
 
