@@ -118,6 +118,11 @@ private:
     get_field_idx(Type t, std::string field, SourcePos pos);
 
     /**
+     * @brief The return type of the current function, or NULL if none.
+     */
+    Type *rettype;
+
+    /**
      * @brief Move to the other block.
      */
     void point(Block other);

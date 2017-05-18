@@ -56,7 +56,8 @@ IfThenElse::~IfThenElse(void) {}
 
 TranslatorImpl::TranslatorImpl(std::string module_name, std::string filename,
                                std::string triple)
-    : fname(filename),
+    : rettype(NULL),
+      fname(filename),
       builder(context),
       module(new llvm::Module(module_name, context)),
       env(context) {
@@ -1280,7 +1281,12 @@ void TranslatorImpl::create_and_start_function(Function f,
         env.add_identifier(args[i++], Value(arg_addr, Pointer(ty)));
     }
 
-    // TODO: Set return type here.
+    if (rettype) {
+        throw Error("internal error", "cannot start function while inside "
+                                      "function", fname, SourcePos(0, 0));
+    }
+
+    rettype = f.get_rettype();
 }
 
 void TranslatorImpl::create_struct(Struct t, std::string name) {
@@ -1292,7 +1298,12 @@ void TranslatorImpl::create_struct(Struct t, std::string name) {
 void TranslatorImpl::end_function(void) {
     env.pop();
 
-    // TODO: When return types are tracked, forget them here.
+    // Add implicit void returns.
+    if (is_type<Void>(*rettype) && !current->is_terminated()) {
+        return_(SourcePos(0, 0));
+    }
+
+    rettype = NULL;
 }
 
 void TranslatorImpl::return_(Value val, SourcePos pos) {
