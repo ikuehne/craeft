@@ -125,6 +125,20 @@ inline AST::LValue ParserImpl::to_lvalue(AST::Expression expr, SourcePos pos)
                             "expected field name in field access",
                             fname, pos);
             }
+        } else if (binop->op == "->") {
+            auto *var = boost::get<AST::Variable>(&binop->rhs);
+            if (var) {
+                auto lvalue = std::make_unique<AST::Dereference>
+                                              (std::move(binop->lhs),
+                                               binop->pos);
+                return std::make_unique<AST::FieldAccess>
+                                       (std::move(lvalue), var->name,
+                                        binop->pos);
+            } else { 
+                throw Error("parser error",
+                            "expected field name in field access",
+                            fname, pos);
+            }
         }
     }
 

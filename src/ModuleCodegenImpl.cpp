@@ -143,6 +143,19 @@ Value ExpressionCodegen::operator()(
         }
 
         return translator.field_access(lhs, v->name, binop->pos);
+    } else if (binop->op == "->") {
+        auto lhs = codegen(binop->lhs);
+
+        auto v = boost::get<AST::Variable>(&binop->rhs);
+
+        if (!v) {
+            throw Error("parse error", "expected name in struct field access",
+                        fname, binop->pos);
+        }
+
+        auto derefed = translator.add_load(lhs, binop->pos);
+
+        return translator.field_access(derefed, v->name, binop->pos);
     }
 
     auto lhs = codegen(binop->lhs);
