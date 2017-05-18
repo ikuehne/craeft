@@ -126,9 +126,6 @@ struct Comma {
 struct Semicolon {
     static inline std::string repr(void) { return ";"; }
 };
-struct Arrow {
-    static inline std::string repr(void) { return "->"; }
-};
 struct Fn {
     static inline std::string repr(void) { return "fn"; }
 };
@@ -161,7 +158,6 @@ typedef boost::variant< TypeName,
                         OpenParen, CloseParen,
                         OpenBrace, CloseBrace,
                         Comma, Semicolon,
-                        Arrow,
                         Fn, Struct, Type,
                         Return,
                         If, Else, While > Token;

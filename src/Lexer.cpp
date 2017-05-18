@@ -186,11 +186,7 @@ void Lexer::shift(void) {
             result.push_back(c);
         }
 
-        if (result == "->") {
-            tok =  Tok::Arrow();
-        } else {
-            tok = Tok::Operator(result);
-        }
+        tok = Tok::Operator(result);
     /* Some random syntax. */
     } else if (c == '(') {
         tok = Tok::OpenParen();

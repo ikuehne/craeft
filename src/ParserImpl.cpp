@@ -39,6 +39,18 @@ static inline AstLiteral get_literal(TokLiteral tok, SourcePos pos) {
 }
 
 /*****************************************************************************
+ * Utilities for checking tokens.
+ */
+
+bool is_arrow(const Tok::Token &tok) {
+    auto *op = boost::get<Tok::Operator>(&tok);
+
+    if (!op) return false;
+
+    return op->op == "->";
+}
+
+/*****************************************************************************
  * Utilities for transforming the AST.
  */
 
@@ -591,7 +603,7 @@ AST::TopLevel ParserImpl::parse_function(void) {
     AST::Type ret_type = AST::Void();
 
     // parse another return type if present.
-    if (is_type<Tok::Arrow>(lexer.get_tok())) {
+    if (is_arrow(lexer.get_tok())) {
         lexer.shift();
         ret_type = parse_type();
     }
