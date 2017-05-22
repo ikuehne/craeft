@@ -151,17 +151,17 @@ void Translator::end_ifthenelse(IfThenElse structure) {
     pimpl->end_ifthenelse(std::move(structure));
 }
 
-void Translator::create_function_prototype(Function f, std::string name) {
+void Translator::create_function_prototype(Function<> f, std::string name) {
     pimpl->create_function_prototype(f, name);
 }
-void Translator::create_and_start_function(Function f,
+void Translator::create_and_start_function(Function<> f,
                                            std::vector<std::string> args,
                                            std::string name) {
     pimpl->create_and_start_function(f, args, name);
 }
 
-void Translator::create_struct(Struct t, std::string name) {
-    pimpl->create_struct(t, name);
+void Translator::create_struct(Struct<> t) {
+    pimpl->create_struct(t);
 }
 
 void Translator::end_function(void) {

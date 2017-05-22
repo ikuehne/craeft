@@ -155,28 +155,28 @@ struct CastVisitor: public boost::static_visitor<LlvmCastType> {
         }
     }
 
-    LlvmCastType operator()(const Pointer &,
+    LlvmCastType operator()(const Pointer<> &,
                             const SignedInt &) const {
         return PtrToInt;
     }
 
-    LlvmCastType operator()(const std::unique_ptr<Pointer> &,
+    LlvmCastType operator()(const std::unique_ptr<Pointer<> > &,
                             const UnsignedInt &) const {
         return PtrToInt;
     }
 
     LlvmCastType operator()(const SignedInt &,
-                            const std::unique_ptr<Pointer> &) const {
+                            const std::unique_ptr<Pointer<> > &) const {
         return IntToPtr;
     }
 
     LlvmCastType operator()(const UnsignedInt &,
-                            const std::unique_ptr<Pointer> &) const {
+                            const std::unique_ptr<Pointer<> > &) const {
         return IntToPtr;
     }
 
-    LlvmCastType operator()(const std::unique_ptr<Pointer> &,
-                            const std::unique_ptr<Pointer> &) const {
+    LlvmCastType operator()(const std::unique_ptr<Pointer<> > &,
+                            const std::unique_ptr<Pointer<> > &) const {
         return PtrToPtr;
     }
 };
@@ -185,7 +185,7 @@ Value TranslatorImpl::cast(Value val, const Type &dest_ty, SourcePos pos) {
     Type source_ty = val.get_type();
     llvm::Value *inst;
 
-    llvm::Type *dt = to_llvm_type(dest_ty);
+    llvm::Type *dt = to_llvm_type(dest_ty, *module);
     llvm::Value *v = val.to_llvm();
 
     if (source_ty == dest_ty) return val;
@@ -231,7 +231,7 @@ Value TranslatorImpl::cast(Value val, const Type &dest_ty, SourcePos pos) {
 
 Value TranslatorImpl::add_load(Value pointer, SourcePos pos) {
     auto ty = pointer.get_type();
-    auto *pointer_ty = boost::get<Pointer>(&ty);
+    auto *pointer_ty = boost::get<Pointer<> >(&ty);
     // Make sure value is actually a pointer.
     if (!pointer_ty) {
         throw Error("type error", "cannot dereference non-pointer value",
@@ -246,7 +246,7 @@ Value TranslatorImpl::add_load(Value pointer, SourcePos pos) {
 
 void TranslatorImpl::add_store(Value pointer, Value new_val, SourcePos pos) {
     // Make sure value is actually a pointer.
-    if (!is_type<Pointer>(pointer.get_type())) {
+    if (!is_type<Pointer<> >(pointer.get_type())) {
         throw Error("type error", "cannot dereference non-pointer value",
                     fname, pos);
     }
@@ -293,8 +293,10 @@ class Operator: public boost::static_visitor<Value> {
 public:
     Operator(const Value &lhs, const Value &rhs,
              const SourcePos pos, const std::string &fname,
+             llvm::Module &module,
              llvm::IRBuilder<> &builder)
-        : lhs(lhs), rhs(rhs), pos(pos), fname(fname), builder(builder) {}
+        : module(module), lhs(lhs), rhs(rhs), pos(pos), fname(fname),
+          builder(builder) {}
 
     virtual ~Operator() {};
 
@@ -331,11 +333,11 @@ public:
                    "and a pointer");
     }
 
-    Value operator()(const UnsignedInt &, const Pointer &) {
+    Value operator()(const UnsignedInt &, const Pointer<> &) {
         return int_ptr_op(lhs, rhs);
     }
 
-    Value operator()(const SignedInt &, const Pointer &) {
+    Value operator()(const SignedInt &, const Pointer<> &) {
         return int_ptr_op(lhs, rhs);
     }
 
@@ -344,11 +346,11 @@ public:
                    "and pointers");
     }
 
-    Value operator()(const Pointer &, const UnsignedInt &) {
+    Value operator()(const Pointer<> &, const UnsignedInt &) {
         return ptr_int_op(lhs, rhs);
     }
 
-    Value operator()(const Pointer &, const SignedInt &) {
+    Value operator()(const Pointer<> &, const SignedInt &) {
         return ptr_int_op(lhs, rhs);
     }
 
@@ -372,6 +374,8 @@ protected:
 
     const std::string &get_fname(void) const { return fname; }
 
+    llvm::Module &module;
+
 private:
     [[noreturn]] void type_error(std::string msg) const {
         throw Error("type error", msg, fname, pos);
@@ -387,8 +391,8 @@ private:
 /**
  * @brief Get the width of the provided integer type.
  */
-static int get_width(const Type &integral) {
-    auto *ty = to_llvm_type(integral);
+static int get_width(const Type &integral, llvm::Module &module) {
+    auto *ty = to_llvm_type(integral, module);
 
     assert(ty->isIntegerTy());
 
@@ -400,15 +404,16 @@ static int get_width(const Type &integral) {
 /**
  * Return the wider of the two types.
  */
-static const Type &get_wider(const Value &lhs, const Value &rhs) {
+static const Type &get_wider(const Value &lhs, const Value &rhs,
+                             llvm::Module &module) {
     auto &lty = lhs.get_type();
     auto &rty = rhs.get_type();
 
     assert(lhs.is_integral());
     assert(rhs.is_integral());
 
-    int lhs_nbits = get_width(lty);
-    int rhs_nbits = get_width(rty);
+    int lhs_nbits = get_width(lty, module);
+    int rhs_nbits = get_width(rty, module);
 
     if (lhs_nbits >= rhs_nbits) {
         return lty;
@@ -421,8 +426,9 @@ class BitwiseOperator: public Operator {
 public:
     BitwiseOperator(const Value &lhs, const Value &rhs,
                     const SourcePos pos, const std::string &fname,
+                    llvm::Module &module,
                     llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, builder) {}
+        : Operator(lhs, rhs, pos, fname, module, builder) {}
 
 	virtual ~BitwiseOperator() override {};
 
@@ -430,19 +436,21 @@ public:
         = 0;
 
     virtual Value sint_int_op(const Value &l, const Value &r) override {
-        const auto &t = get_wider(l, r);
+        const auto &t = get_wider(l, r, module);
         llvm::Value *llvm_l;
         llvm::Value *llvm_r;
         if (t == l.get_type()) {
             llvm_l = get_builder().CreateSExtOrTrunc(l.to_llvm(),
-                                                     to_llvm_type(t));
+                                                     to_llvm_type(t,
+                                                                  module));
         } else {
             llvm_l = l.to_llvm();
         }
 
         if (t == r.get_type()) {
             llvm_r = get_builder().CreateSExtOrTrunc(r.to_llvm(),
-                                                     to_llvm_type(t));
+                                                     to_llvm_type(t,
+                                                                  module));
         } else {
             llvm_r = r.to_llvm();
         }
@@ -452,19 +460,21 @@ public:
     }
 
     virtual Value uint_int_op(const Value &l, const Value &r) override {
-        const auto &t = get_wider(l, r);
+        const auto &t = get_wider(l, r, module);
         llvm::Value *llvm_l;
         llvm::Value *llvm_r;
         if (t == l.get_type()) {
             llvm_l = get_builder().CreateZExtOrTrunc(l.to_llvm(),
-                                                     to_llvm_type(t));
+                                                     to_llvm_type(t,
+                                                                  module));
         } else {
             llvm_l = l.to_llvm();
         }
 
         if (t == r.get_type()) {
             llvm_r = get_builder().CreateZExtOrTrunc(r.to_llvm(),
-                                                     to_llvm_type(t));
+                                                     to_llvm_type(t,
+                                                                  module));
         } else {
             llvm_r = r.to_llvm();
         }
@@ -478,8 +488,9 @@ public:
     struct classname: public BitwiseOperator {\
         classname(const Value &lhs, const Value &rhs,\
                   const SourcePos pos, const std::string &fname,\
+                  llvm::Module &module,\
                   llvm::IRBuilder<> &builder)\
-            : BitwiseOperator(lhs, rhs, pos, fname, builder) {}\
+            : BitwiseOperator(lhs, rhs, pos, fname, module, builder) {}\
 		virtual ~classname() override {}\
         virtual std::string get_op() const override { return (op); }\
         llvm::Value *perform(llvm::Value *l, llvm::Value *r) override {\
@@ -492,15 +503,15 @@ make_bitwise(CreateOr, BitwiseOr, "|");
 make_bitwise(CreateXor, BitwiseXor, "^");
 
 Value TranslatorImpl::bit_and(Value lhs, Value rhs, SourcePos pos) {
-    return BitwiseAnd(lhs, rhs, pos, fname, builder).apply();
+    return BitwiseAnd(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
 Value TranslatorImpl::bit_or(Value lhs, Value rhs, SourcePos pos) {
-    return BitwiseOr(lhs, rhs, pos, fname, builder).apply();
+    return BitwiseOr(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
 Value TranslatorImpl::bit_xor(Value lhs, Value rhs, SourcePos pos) {
-    return BitwiseXor(lhs, rhs, pos, fname, builder).apply();
+    return BitwiseXor(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
 Value TranslatorImpl::bit_not(Value val, SourcePos pos) {
@@ -557,27 +568,27 @@ struct OpVisitor: boost::static_visitor<ArithmeticOpType> {
     }
 
     ArithmeticOpType operator()(const SignedInt &,
-                                const std::unique_ptr<Pointer> &) const {
+                                const std::unique_ptr<Pointer<> > &) const {
         return IntPtrOp;
     }
 
     ArithmeticOpType operator()(const UnsignedInt &,
-                                const std::unique_ptr<Pointer> &) const {
+                                const std::unique_ptr<Pointer<> > &) const {
         return IntPtrOp;
     }
 
-    ArithmeticOpType operator()(const std::unique_ptr<Pointer> &,
+    ArithmeticOpType operator()(const std::unique_ptr<Pointer<> > &,
                                 const SignedInt &) const {
         return PtrIntOp;
     }
 
-    ArithmeticOpType operator()(const std::unique_ptr<Pointer> &,
+    ArithmeticOpType operator()(const std::unique_ptr<Pointer<> > &,
                                 const UnsignedInt &) const {
         return PtrIntOp;
     }
 
-    ArithmeticOpType operator()(const std::unique_ptr<Pointer> &,
-                                const std::unique_ptr<Pointer> &) const {
+    ArithmeticOpType operator()(const std::unique_ptr<Pointer<> > &,
+                                const std::unique_ptr<Pointer<> > &) const {
         return PtrPtrOp;
     }
 
@@ -605,14 +616,15 @@ class AddOperator: public Operator {
 public:
     AddOperator(const Value &lhs, const Value &rhs,
                 const SourcePos pos, const std::string &fname,
+                llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, builder) {}
+        : Operator(lhs, rhs, pos, fname, module, builder) {}
 
 	~AddOperator() override {}
 
     Value sint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type());
-        auto *rty = to_llvm_type(r.get_type());
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
         int lbits = lty->getIntegerBitWidth();
         int rbits = rty->getIntegerBitWidth();
 
@@ -630,8 +642,8 @@ public:
     }
 
     Value uint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type());
-        auto *rty = to_llvm_type(r.get_type());
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
         int lbits = lty->getIntegerBitWidth();
         int rbits = rty->getIntegerBitWidth();
 
@@ -655,14 +667,14 @@ public:
         if (wider == l.get_type()) {
             auto *r_instr =
                 get_builder().CreateFPCast(r.to_llvm(),
-                                           to_llvm_type(wider));
+                                           to_llvm_type(wider, module));
             result = get_builder().CreateFAdd(l.to_llvm(), r_instr);
         } else {
             assert(wider == r.get_type());
 
             auto *l_instr =
                 get_builder().CreateFPCast(l.to_llvm(),
-                                           to_llvm_type(wider));
+                                           to_llvm_type(wider, module));
             result = get_builder().CreateFAdd(l_instr, r.to_llvm());
         }
 
@@ -684,21 +696,22 @@ public:
 };
 
 Value TranslatorImpl::add(Value lhs, Value rhs, SourcePos pos) {
-    return AddOperator(lhs, rhs, pos, fname, builder).apply();
+    return AddOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
 class SubOperator: public Operator {
 public:
     SubOperator(const Value &lhs, const Value &rhs,
                 const SourcePos pos, const std::string &fname,
+                llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, builder) {}
+        : Operator(lhs, rhs, pos, fname, module, builder) {}
 
 	~SubOperator() override {}
 
     Value sint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type());
-        auto *rty = to_llvm_type(r.get_type());
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
         int lbits = lty->getIntegerBitWidth();
         int rbits = rty->getIntegerBitWidth();
 
@@ -716,8 +729,8 @@ public:
     }
 
     Value uint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type());
-        auto *rty = to_llvm_type(r.get_type());
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
         int lbits = lty->getIntegerBitWidth();
         int rbits = rty->getIntegerBitWidth();
 
@@ -741,14 +754,14 @@ public:
         if (wider == l.get_type()) {
             auto *r_instr =
                 get_builder().CreateFPCast(r.to_llvm(),
-                                           to_llvm_type(wider));
+                                           to_llvm_type(wider, module));
             result = get_builder().CreateFSub(l.to_llvm(), r_instr);
         } else {
             assert(wider == r.get_type());
 
             auto *l_instr =
                 get_builder().CreateFPCast(l.to_llvm(),
-                                           to_llvm_type(wider));
+                                           to_llvm_type(wider, module));
             result = get_builder().CreateFSub(l_instr, r.to_llvm());
         }
 
@@ -758,7 +771,7 @@ public:
     Value ptr_int_op(const Value &l, const Value &r) override {
         // Construct negative `r` by subtracting it from 0.
         auto r_ty = r.get_type();
-        auto *zero = llvm::ConstantInt::get(to_llvm_type(r_ty), 0);
+        auto *zero = llvm::ConstantInt::get(to_llvm_type(r_ty, module), 0);
         auto *negative = get_builder().CreateSub(zero, r.to_llvm());
 
         assert(l.to_llvm());
@@ -783,21 +796,22 @@ public:
 };
 
 Value TranslatorImpl::sub(Value lhs, Value rhs, SourcePos pos) {
-    return SubOperator(lhs, rhs, pos, fname, builder).apply();
+    return SubOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
 class MulOperator: public Operator {
 public:
     MulOperator(const Value &lhs, const Value &rhs,
                 const SourcePos pos, const std::string &fname,
+                llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, builder) {}
+        : Operator(lhs, rhs, pos, fname, module, builder) {}
 
 	~MulOperator() {}
 
     Value sint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type());
-        auto *rty = to_llvm_type(r.get_type());
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
         int lbits = lty->getIntegerBitWidth();
         int rbits = rty->getIntegerBitWidth();
 
@@ -815,8 +829,8 @@ public:
     }
 
     Value uint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type());
-        auto *rty = to_llvm_type(r.get_type());
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
         int lbits = lty->getIntegerBitWidth();
         int rbits = rty->getIntegerBitWidth();
 
@@ -840,14 +854,14 @@ public:
         if (wider == l.get_type()) {
             auto *r_instr =
                 get_builder().CreateFPCast(r.to_llvm(),
-                                           to_llvm_type(wider));
+                                           to_llvm_type(wider, module));
             result = get_builder().CreateFMul(l.to_llvm(), r_instr);
         } else {
             assert(wider == r.get_type());
 
             auto *l_instr =
                 get_builder().CreateFPCast(l.to_llvm(),
-                                           to_llvm_type(wider));
+                                           to_llvm_type(wider, module));
             result = get_builder().CreateFMul(l_instr, r.to_llvm());
         }
 
@@ -860,21 +874,22 @@ public:
 };
 
 Value TranslatorImpl::mul(Value lhs, Value rhs, SourcePos pos) {
-    return MulOperator(lhs, rhs, pos, fname, builder).apply();
+    return MulOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
 class DivOperator: public Operator {
 public:
     DivOperator(const Value &lhs, const Value &rhs,
                 const SourcePos pos, const std::string &fname,
+                llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, builder) {}
+        : Operator(lhs, rhs, pos, fname, module, builder) {}
 
 	~DivOperator() override {}
 
     Value sint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type());
-        auto *rty = to_llvm_type(r.get_type());
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
         int lbits = lty->getIntegerBitWidth();
         int rbits = rty->getIntegerBitWidth();
 
@@ -892,8 +907,8 @@ public:
     }
 
     Value uint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type());
-        auto *rty = to_llvm_type(r.get_type());
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
         int lbits = lty->getIntegerBitWidth();
         int rbits = rty->getIntegerBitWidth();
 
@@ -917,14 +932,14 @@ public:
         if (wider == l.get_type()) {
             auto *r_instr =
                 get_builder().CreateFPCast(r.to_llvm(),
-                                           to_llvm_type(wider));
+                                           to_llvm_type(wider, module));
             result = get_builder().CreateFDiv(l.to_llvm(), r_instr);
         } else {
             assert(wider == r.get_type());
 
             auto *l_instr =
                 get_builder().CreateFPCast(l.to_llvm(),
-                                           to_llvm_type(wider));
+                                           to_llvm_type(wider, module));
             result = get_builder().CreateFDiv(l_instr, r.to_llvm());
         }
 
@@ -937,7 +952,7 @@ public:
 };
 
 Value TranslatorImpl::div(Value lhs, Value rhs, SourcePos pos) {
-    return DivOperator(lhs, rhs, pos, fname, builder).apply();
+    return DivOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
 Value TranslatorImpl::apply_to_wider_integer(
@@ -949,8 +964,8 @@ Value TranslatorImpl::apply_to_wider_integer(
     Type lt = lhs.get_type();
     Type rt = rhs.get_type();
 
-    llvm::Type *llt = to_llvm_type(lt);
-    llvm::Type *lrt = to_llvm_type(rt);
+    llvm::Type *llt = to_llvm_type(lt, *module);
+    llvm::Type *lrt = to_llvm_type(rt, *module);
 
     int lbits = llt->getIntegerBitWidth();
     int rbits = lrt->getIntegerBitWidth();
@@ -1099,7 +1114,7 @@ static inline bool is_u1(Value v) {
         return false;
     }
 
-    int width = to_llvm_type(ty)->getIntegerBitWidth();
+    int width = lt->get_nbits();
 
     return width == 1;
 }
@@ -1137,7 +1152,7 @@ Value TranslatorImpl::bool_not(Value val, SourcePos pos) {
 
 inline std::pair<unsigned, Type *>
 TranslatorImpl::get_field_idx(Type _t, std::string field, SourcePos pos) {
-    auto t = boost::get<Struct>(&_t);
+    auto t = boost::get<Struct<> >(&_t);
 
     if (!t) {
         throw Error("type error", "cannot access field of non-struct value",
@@ -1175,7 +1190,7 @@ Value TranslatorImpl::field_access(Value lhs, std::string field,
 Value TranslatorImpl::field_address(Value ptr, std::string field,
                                     SourcePos pos) {
     auto _ptr_t = ptr.get_type();
-    auto ptr_t = boost::get<Pointer>(&_ptr_t);
+    auto ptr_t = boost::get<Pointer<> >(&_ptr_t);
 
     if (!ptr_t) {
         throw Error("type error",
@@ -1185,12 +1200,12 @@ Value TranslatorImpl::field_address(Value ptr, std::string field,
 
     auto pair = get_field_idx(*ptr_t->get_pointed(), field, pos);
 
-    auto *gep_type = to_llvm_type(*ptr_t->get_pointed());
+    auto *gep_type = to_llvm_type(*ptr_t->get_pointed(), *module);
 
     auto *instr = builder.CreateStructGEP(gep_type, ptr.to_llvm(),
                                           pair.first);
 
-    auto result_ptr = Pointer(std::make_shared<Type>(*pair.second));
+    auto result_ptr = Pointer<>(std::make_shared<Type>(*pair.second));
 
     return Value(instr, result_ptr);
 }
@@ -1210,7 +1225,7 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
 
     auto fbinding = env.lookup_identifier(func, pos, fname);
 	auto ty = fbinding.get_type();
-    auto *ftype = boost::get<Function>(&ty);
+    auto *ftype = boost::get<Function<> >(&ty);
 
     if (!ftype) {
         throw Error("type error", "cannot call non-function value",
@@ -1229,8 +1244,9 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
 }
 
 Variable TranslatorImpl::declare(const std::string &varname, const Type &t) {
-    auto *alloca = builder.CreateAlloca(to_llvm_type(t), nullptr, varname);
-    return env.add_identifier(varname, Value(alloca, Pointer(t)));
+    auto *alloca = builder.CreateAlloca(to_llvm_type(t, *module),
+                                        nullptr, varname);
+    return env.add_identifier(varname, Value(alloca, Pointer<>(t)));
 }
 
 void TranslatorImpl::assign(const std::string &varname, Value val,
@@ -1250,18 +1266,21 @@ void TranslatorImpl::assign(const std::string &varname, Value val,
     builder.CreateStore(val.to_llvm(), load);
 }
 
-void TranslatorImpl::create_function_prototype(Function f, std::string name) {
-    auto *result = llvm::Function::Create(f.to_llvm(),
+void TranslatorImpl::create_function_prototype(Function<> f, std::string name)
+{
+    auto *ll_f = static_cast<llvm::FunctionType *>(to_llvm_type(f, *module));
+    auto *result = llvm::Function::Create(ll_f,
                                           llvm::Function::ExternalLinkage,
                                           name, module.get());
 
     env.add_identifier(name, Value(result, f));
 }
 
-void TranslatorImpl::create_and_start_function(Function f,
+void TranslatorImpl::create_and_start_function(Function<> f,
                                                std::vector<std::string> args,
                                                std::string name) {
-    auto *result = llvm::Function::Create(f.to_llvm(),
+    auto *ll_f = static_cast<llvm::FunctionType *>(to_llvm_type(f, *module));
+    auto *result = llvm::Function::Create(ll_f,
                                           llvm::Function::ExternalLinkage,
                                           name, module.get());
     env.add_identifier(name, Value(result, f));
@@ -1276,9 +1295,9 @@ void TranslatorImpl::create_and_start_function(Function f,
     
     for (auto &arg: result->args()) {
         auto &ty = f.get_args()[i];
-        auto arg_addr = builder.CreateAlloca(to_llvm_type(*ty));
+        auto arg_addr = builder.CreateAlloca(to_llvm_type(*ty, *module));
         builder.CreateStore(&arg, arg_addr);
-        env.add_identifier(args[i++], Value(arg_addr, Pointer(ty)));
+        env.add_identifier(args[i++], Value(arg_addr, Pointer<>(ty)));
     }
 
     if (rettype) {
@@ -1289,10 +1308,8 @@ void TranslatorImpl::create_and_start_function(Function f,
     rettype = f.get_rettype();
 }
 
-void TranslatorImpl::create_struct(Struct t, std::string name) {
-    env.add_type(name, t);
-
-    t.set_name(name);
+void TranslatorImpl::create_struct(Struct<> t) {
+    env.add_type(t.get_name(), t);
 }
 
 void TranslatorImpl::end_function(void) {
@@ -1321,7 +1338,7 @@ Value TranslatorImpl::get_identifier_addr(std::string ident, SourcePos pos) {
 Value TranslatorImpl::get_identifier_value(std::string ident, SourcePos pos) {
     Value addr = get_identifier_addr(ident, pos);
 
-    assert(is_type<Pointer>(addr.get_type()));
+    assert(is_type<Pointer<> >(addr.get_type()));
 
     return add_load(addr, pos);
 }

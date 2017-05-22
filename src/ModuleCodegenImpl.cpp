@@ -50,11 +50,11 @@ Type TypeCodegen::operator()(const AST::NamedType &it) {
 }
 
 Type TypeCodegen::operator()(const AST::Void &_) {
-    return Void(translator.get_ctx());
+    return Void();
 }
 
 Type TypeCodegen::operator()(const std::unique_ptr<AST::Pointer> &ut) {
-    return Pointer(codegen(ut->pointed));
+    return Pointer<>(codegen(ut->pointed));
 }
 
 /*****************************************************************************
@@ -86,21 +86,23 @@ Value LValueCodegen::operator()(const std::unique_ptr<AST::FieldAccess> &fa) {
  */
 
 Value ExpressionCodegen::operator()(const AST::IntLiteral &lit) {
-    SignedInt type(64, translator.get_ctx());
-    return Value(llvm::ConstantInt::get(type.to_llvm(), lit.value, true),
+    SignedInt type(64);
+    auto &ctx = translator.get_ctx();
+    return Value(llvm::ConstantInt::get(type.to_llvm(ctx), lit.value, true),
                  type);
 }
 
 Value ExpressionCodegen::operator()(const AST::UIntLiteral &lit) {
-    UnsignedInt type(64, translator.get_ctx());
-    return Value(llvm::ConstantInt::get(type.to_llvm(), lit.value, true),
+    UnsignedInt type(64);
+    auto &ctx = translator.get_ctx();
+    return Value(llvm::ConstantInt::get(type.to_llvm(ctx), lit.value, true),
                  type);
 }
 
 Value ExpressionCodegen::operator()(const AST::FloatLiteral &lit) {
-    Float type(DoublePrecision, translator.get_ctx());
-    return Value(llvm::ConstantFP::get(translator.get_ctx(),
-                                       llvm::APFloat(lit.value)),
+    Float type(DoublePrecision);
+    auto &ctx = translator.get_ctx();
+    return Value(llvm::ConstantFP::get(ctx, llvm::APFloat(lit.value)),
                  type);
 }
 
@@ -339,12 +341,12 @@ void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
                                   (decl->name.name, t));
     }
 
-    Struct t(fields);
+    Struct<> t(fields, sd.name);
 
-    translator.create_struct(t, sd.name);
+    translator.create_struct(t);
 }
 
-Function ModuleCodegenImpl::type_of_ast_decl(
+Function<> ModuleCodegenImpl::type_of_ast_decl(
         const AST::FunctionDeclaration &fd) {
     std::vector<std::shared_ptr<Type> > arg_types;
     TypeCodegen tg(translator, fname);
@@ -357,7 +359,7 @@ Function ModuleCodegenImpl::type_of_ast_decl(
     auto ret_type = std::make_shared<Type>
                                     (tg.codegen(fd.ret_type));
 
-    return Function(ret_type, arg_types);
+    return Function<>(ret_type, arg_types);
 }
 
 void ModuleCodegenImpl::operator()(const AST::FunctionDeclaration &fd) {

@@ -32,6 +32,7 @@
 // Forward-declare LLVM things.
 namespace llvm {
     class Type;
+    class Module;
     class LLVMContext;
     class FunctionType;
     class StructType;
@@ -39,31 +40,26 @@ namespace llvm {
 
 namespace Craeft {
 
+/*****************************************************************************
+ * Simple ("terminal") types.
+ */
+
 /**
  * @brief Signed integer types.
  */
 class SignedInt {
 public:
     /**
-     * @brief Build a signed integer type corresponding to the given LLVM
-     *        type.
-     *
-     * @param ty An LLVM integer type.  An assertion will be tripped if any
-     *           other type is given.
+     * @brief Build a signed integer type of the given width.
      */
-    SignedInt(llvm::Type *ty);
+    SignedInt(int nbits);
 
-    /**
-     * @brief Build a signed integer type of the given width in the given
-     *        context.
-     */
-    SignedInt(int nbits, llvm::LLVMContext &);
+    llvm::Type *to_llvm(llvm::LLVMContext &) const;
 
     bool operator==(const SignedInt &other) const;
-    llvm::Type *to_llvm(void) const;
 
 private:
-    llvm::Type *ty;
+    int nbits;
 };
 
 /**
@@ -72,24 +68,18 @@ private:
 class UnsignedInt {
 public:
     /**
-     * @brief Build an unsigned integer type corresponding to the given LLVM
-     *        type.
-     *
-     * @param ty An LLVM integer type.  An assertion will be tripped if any
-     *           other type is given.
-     */
-    UnsignedInt(llvm::Type *ty);
-
-    /**
      * @brief Build an unsigned integer type of the given width in the given
      *        context.
      */
-    UnsignedInt(int nbits, llvm::LLVMContext &);
+    UnsignedInt(int nbits);
+
+    int get_nbits(void) const { return nbits; }
+
+    llvm::Type *to_llvm(llvm::LLVMContext &) const;
     bool operator==(const UnsignedInt &other) const;
-    llvm::Type *to_llvm(void) const;
 
 private:
-    llvm::Type *ty;
+    int nbits;
 };
 
 /**
@@ -113,26 +103,17 @@ enum Precision {
 class Float {
 public:
     /**
-     * @brief Build a floating-point type corresponding to the given LLVM
-     *        type.
-     *
-     * @param ty An LLVM float type.  An assertion will be tripped if any
-     *           other type is given.
-     */
-    Float(llvm::Type *ty);
-
-    /**
      * @brief Build a floating-point type of the given precision in the given
      *        context.
      */
-    Float(Precision, llvm::LLVMContext &);
+    Float(Precision);
 
     bool operator<(const Float &other) const;
     bool operator==(const Float &other) const;
-    llvm::Type *to_llvm(void) const;
+
+    llvm::Type *to_llvm(llvm::LLVMContext &) const;
 
 private:
-    llvm::Type *ty;
     Precision prec;
 };
 
@@ -141,63 +122,92 @@ public:
     /**
      * @brief Get the void type for the given LLVM context.
      */
-    Void(llvm::LLVMContext &);
+    Void(void);
+
+    llvm::Type *to_llvm(llvm::LLVMContext &ctx) const;
 
     /**
      * @brief For consistency: all void types are equal.
      */
     bool operator==(const Void &other) const { return true; }
-
-    llvm::Type *to_llvm(void) const {
-        return ty;
-    }
-
-private:
-    llvm::Type *ty;
 };
 
 struct Type;
 
+/*****************************************************************************
+ * Generic, "nonterminal" types.
+ */
+
 /**
  * @brief Pointer types.
  */
+template<typename TypeType=Type>
 class Pointer {
 public:
     /**
      * @brief Build a pointer type pointing to the given type.
      */
-    Pointer(Type pointed);
-    Pointer(std::shared_ptr<Type> pointed): pointed(pointed) {}
+    Pointer(TypeType pointed)
+        : pointed(std::make_shared<TypeType>(pointed)) {}
 
-    Type *get_pointed(void) const { return pointed.get(); }
+    Pointer(std::shared_ptr<TypeType> pointed): pointed(pointed) {}
 
-    bool operator==(const Pointer &other) const;
-    llvm::Type *to_llvm(void) const;
+    TypeType *get_pointed(void) const { return pointed.get(); }
+
+    bool operator==(const Pointer<TypeType> &other) const {
+        return pointed == other.pointed;
+    }
 
 private:
-    std::shared_ptr<Type> pointed;
+    std::shared_ptr<TypeType> pointed;
 };
 
+template<typename TypeType=Type>
 class Function {
 public:
-    Function(std::shared_ptr<Type> rettype,
-             std::vector<std::shared_ptr<Type> >args);
+    Function(std::shared_ptr<TypeType> rettype,
+             std::vector<std::shared_ptr<TypeType> >args)
+          : rettype(rettype), args(args) {
+        assert(rettype.get());
+    }
 
-    bool operator==(const Function &other) const;
-    Type *get_rettype(void) const { return rettype.get(); }
-    const std::vector<std::shared_ptr<Type> > &get_args(void) const {
+    bool operator==(const Function<TypeType> &other) const {
+        // Check that return types are equal,
+        if (*other.rettype != *rettype) {
+            return false;
+        }
+
+        if (args.size() != other.args.size()) {
+            return false;
+        }
+
+        // and argument types are equal.
+        for (unsigned i = 0; i < args.size(); ++i) {
+            if (*args[i] != *other.args[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    TypeType *get_rettype(void) const {
+        return rettype.get();
+    }
+
+    const std::vector<std::shared_ptr<TypeType> > &get_args(void) const {
         return args;
     }
-    llvm::FunctionType *to_llvm(void) const;
 
 private:
-    std::shared_ptr<Type> rettype;
-    std::vector<std::shared_ptr<Type> > args;
+    std::shared_ptr<TypeType> rettype;
+    std::vector<std::shared_ptr<TypeType> > args;
 };
 
 /**
  * @brief Craeft structs.
  */
+template<typename TypeType=Type>
 class Struct {
 public:
     /**
@@ -205,15 +215,37 @@ public:
      *
      * @param fields An array of field name/type pairs.
      */
-    Struct(std::vector< std::pair< std::string, std::shared_ptr<Type> > >
-                fields);
+    Struct(std::vector< std::pair< std::string, std::shared_ptr<TypeType> > >
+                fields,
+            std::string name)
+          : fields(fields), name(name) {
 
-    bool operator==(const Struct &other) const;
+    }
 
-    /**
-     * @brief Set the name of this struct in the emitted IR.
-     */
-    void set_name(std::string name);
+    const std::vector<std::pair<std::string, std::shared_ptr<TypeType> > > &
+          get_fields(void) const {
+        return fields;
+    }
+
+    std::string get_name(void) const {
+        return name;
+    }
+
+    bool operator==(const Struct<TypeType> &other) const {
+        if (fields.size() != other.fields.size()) {
+            return false;
+        }
+
+        // Check that field types are equal.
+        for (unsigned i = 0; i < fields.size(); ++i) {
+            if ((fields[i].first != other.fields[i].first)
+             || (*fields[i].second != other.fields[i].second)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     /**
      * @brief Get the type and index corresponding to the given field in this
@@ -221,17 +253,29 @@ public:
      *
      * Return `(-1, nullptr)` if no such field.
      */
-    std::pair<int, Type *>operator[](std::string field_name);
+    std::pair<int, TypeType *>operator[](std::string field_name) {
+        for (int i = 0; i < (int)fields.size(); ++i) {
+            const auto &pair = fields[i];
+            if (pair.first == field_name) {
+                return std::pair<int, TypeType *>(i, pair.second.get());
+            }
+        }
 
-    llvm::StructType *to_llvm(void) const;
+        return std::pair<int, TypeType *>(-1, NULL);
+    }
 
 private:
-    std::vector< std::pair< std::string, std::shared_ptr<Type> > > fields;
-    llvm::StructType *as_llvm;
+    std::vector< std::pair< std::string, std::shared_ptr<TypeType> > > fields;
+    std::string name;
 };
 
-typedef boost::variant<SignedInt, UnsignedInt, Float, Void, Pointer,
-                       Function, Struct > _Type;
+
+/*****************************************************************************
+ * Completed types: types with no template parameters missing.
+ */
+
+typedef boost::variant<SignedInt, UnsignedInt, Float, Void, Pointer<Type>,
+                       Function<Type>, Struct<Type> > _Type;
 
 /**
  * @brief Internal representation of Craeft types.
@@ -239,7 +283,7 @@ typedef boost::variant<SignedInt, UnsignedInt, Float, Void, Pointer,
  * Both represents everything about Craeft types and allows for simple
  * translation to the corresponding LLVM type.
  */
-struct Type: _Type {
+struct Type: public _Type {
     template<typename... Args>
     Type(Args... args): _Type(args...) {}
 
@@ -259,6 +303,41 @@ struct Type: _Type {
  * possible on the Craeft type can be represented in LLVM on the returned
  * type.
  */
-llvm::Type *to_llvm_type(const Type &t);
+llvm::Type *to_llvm_type(const Type &t, llvm::Module &module);
+
+/*****************************************************************************
+ * Template types: types with template parameters potentially missing.
+ */
+
+struct TemplateType;
+
+struct TemplateStruct {
+    int n_parameters;
+
+    Struct<TemplateType> inner;
+
+    int get_nparameters(void) const;
+
+    const Struct<TemplateType> &get_inner(void) const;
+};
+
+struct TemplateFunction {
+    int n_parameters;
+
+    Function<TemplateType> inner;
+
+    int get_nparameters(void) const;
+
+    const Function<TemplateType> &get_inner(void) const;
+};
+
+typedef boost::variant<SignedInt, UnsignedInt, Float, Void,
+                       Pointer<TemplateType>, Struct<TemplateType>,
+                       Function<TemplateType>, int>
+        _TemplateType;
+
+struct TemplateType: public _TemplateType {};
+
+Type specialize(const TemplateType &temp, std::vector<Type> &args);
 
 }

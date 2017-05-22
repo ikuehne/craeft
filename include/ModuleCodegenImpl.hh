@@ -187,7 +187,7 @@ private:
     StatementCodegen stmt_cg;
 
     /* Utilities. */
-    Function type_of_ast_decl(const AST::FunctionDeclaration &fd);
+    Function<> type_of_ast_decl(const AST::FunctionDeclaration &fd);
 };
 
 }

@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
             "select output file to emit LLVM IR")
         ("asm,s", opt::value<std::string>(),
             "select output file to emit target-specific assembly")
-        ("opt,O", opt::value<int>(),
+        ("opt,O", opt::value<int>()->default_value(0),
             "select optimization level (default 0)")
         ("in", opt::value<std::string>(), "select input file");
     opt::positional_options_description pos;
@@ -66,9 +66,7 @@ int main(int argc, char **argv) {
     }
     opt::notify(opt_map);
 
-    int opt_level = 0;
-
-    if (opt_map.count("opt")) opt_level = opt_map["opt"].as<int>();
+    int opt_level = opt_map["opt"].as<int>();
 
     /* If the user did good, */
     if (!opt_map.count("help")

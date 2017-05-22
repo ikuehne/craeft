@@ -63,13 +63,13 @@ struct Variable {
      * @brief Get the type of this binding.
      */
     Type get_type(void) {
-        if (is_type<Function>(val.get_type())) {
+        if (is_type<Function<> >(val.get_type())) {
             return val.get_type();
         }
 
         /* We actually only hold a *pointer* to the value, so we have to get
          * the pointed type. */
-        return *boost::get<Pointer>(val.get_type()).get_pointed();
+        return *boost::get<Pointer<> >(val.get_type()).get_pointed();
     }
 
     /**
@@ -103,12 +103,12 @@ public:
         push();
 
         // Add all of the built-in types.
-        add_type("Float", Float(SinglePrecision, ctx));
-        add_type("Double", Float(DoublePrecision, ctx));
+        add_type("Float", Float(SinglePrecision));
+        add_type("Double", Float(DoublePrecision));
 
         for (int i = 1; i <= 64; ++i) {
-            add_type("I" + std::to_string(i), SignedInt(i, ctx));
-            add_type("U" + std::to_string(i), UnsignedInt(i, ctx));
+            add_type("I" + std::to_string(i), SignedInt(i));
+            add_type("U" + std::to_string(i), UnsignedInt(i));
         }
     }
 

@@ -21,6 +21,7 @@
  */
 
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Module.h"
 
 #include "Type.hh"
 
@@ -30,64 +31,43 @@ namespace Craeft {
  * Integer types.
  */
 
-SignedInt::SignedInt(llvm::Type *ty): ty(ty) {
-    assert(ty->isIntegerTy());
-}
+SignedInt::SignedInt(int nbits): nbits(nbits) {}
 
-SignedInt::SignedInt(int nbits, llvm::LLVMContext &ctx)
-    : ty(llvm::IntegerType::get(ctx, nbits)) {}
-
-llvm::Type *SignedInt::to_llvm(void) const {
-    return ty;
+llvm::Type *SignedInt::to_llvm(llvm::LLVMContext &ctx) const {
+    return llvm::IntegerType::get(ctx, nbits);
 }
 
 bool SignedInt::operator==(const SignedInt &other) const {
-    return ty == other.ty;
+    return nbits == other.nbits;
 }
 
-UnsignedInt::UnsignedInt(llvm::Type *ty): ty(ty) {
-    assert(ty->isIntegerTy());
-}
+UnsignedInt::UnsignedInt(int nbits)
+    : nbits(nbits) {}
 
-UnsignedInt::UnsignedInt(int nbits, llvm::LLVMContext &ctx)
-    : ty(llvm::IntegerType::get(ctx, nbits)) {}
-
-llvm::Type *UnsignedInt::to_llvm(void) const {
-    return ty;
+llvm::Type *UnsignedInt::to_llvm(llvm::LLVMContext &ctx) const {
+    return llvm::IntegerType::get(ctx, nbits);
 }
 
 bool UnsignedInt::operator==(const UnsignedInt &other) const {
-    return ty == other.ty;
+    return nbits == other.nbits;
 }
 
 /*****************************************************************************
  * @brief Floating-point types.
  */
 
-Float::Float(llvm::Type *ty): ty(ty) {
-    if (ty->isFloatTy()) {
-        prec = SinglePrecision;
-    } else if (ty->isDoubleTy()) {
-        prec = DoublePrecision;
-    } else {
-        assert(0);
-    }
-}
+Float::Float(Precision pr): prec(pr) {}
 
-Float::Float(Precision pr, llvm::LLVMContext &ctx): prec(pr) {
-    switch (pr) {
+llvm::Type *Float::to_llvm(llvm::LLVMContext &ctx) const {
+    switch (prec) {
         case SinglePrecision:
-            ty = llvm::Type::getFloatTy(ctx);
+            return llvm::Type::getFloatTy(ctx);
             break;
 
         case DoublePrecision:
-            ty = llvm::Type::getDoubleTy(ctx);
+            return llvm::Type::getDoubleTy(ctx);
             break;
     }
-}
-
-llvm::Type *Float::to_llvm(void) const {
-    return ty;
 }
 
 bool Float::operator<(const Float &other) const {
@@ -95,121 +75,17 @@ bool Float::operator<(const Float &other) const {
 }
 
 bool Float::operator==(const Float &other) const {
-    return ty == other.ty;
+    return prec == other.prec;
 }
 
 /*****************************************************************************
  * Void types.
  */
 
-Void::Void(llvm::LLVMContext &ctx): ty(llvm::Type::getVoidTy(ctx)) {}
+Void::Void(void) {}
 
-/*****************************************************************************
- * Pointer types.
- */
-
-Pointer::Pointer(Type pointed): pointed(std::make_shared<Type>(pointed)) {}
-
-llvm::Type *Pointer::to_llvm() const {
-    return llvm::PointerType::getUnqual(Craeft::to_llvm_type(*pointed));
-}
-
-bool Pointer::operator==(const Pointer &other) const {
-    return pointed == other.pointed;
-}
-
-/*****************************************************************************
- * Function types.
- */
-
-Function::Function(std::shared_ptr<Type> rettype,
-                   std::vector< std::shared_ptr<Type> >args)
-        : rettype(rettype), args(args) {
-    assert(rettype.get() != nullptr);
-}
-
-bool Function::operator==(const Function &other) const {
-    // Check that return types are equal,
-    if (*other.rettype != *rettype) {
-        return false;
-    }
-
-    if (args.size() != other.args.size()) {
-        return false;
-    }
-
-    // and argument types are equal.
-    for (unsigned i = 0; i < args.size(); ++i) {
-        if (*args[i] != *other.args[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-llvm::FunctionType *Function::to_llvm(void) const {
-    std::vector<llvm::Type *> arg_types;
-
-    for (const auto &t: args) {
-        arg_types.push_back(to_llvm_type(*t));
-    }
-
-    auto *ret = to_llvm_type(*rettype);
-
-    return llvm::FunctionType::get(ret, arg_types, false);
-}
-
-/*****************************************************************************
- * Compound (struct) types.
- */
-
-Struct::Struct(
-        std::vector< std::pair< std::string, std::shared_ptr<Type> > >fields)
-      : fields(fields) {
-    std::vector<llvm::Type *> arg_types;
-
-    for (const auto &field: fields) {
-        arg_types.push_back(to_llvm_type(*field.second));
-    }
-
-    as_llvm = llvm::StructType::create(arg_types);
-}
-
-bool Struct::operator==(const Struct &other) const {
-    if (fields.size() != other.fields.size()) {
-        return false;
-    }
-
-    // Check that field types are equal.
-    for (unsigned i = 0; i < fields.size(); ++i) {
-        if ((fields[i].first != other.fields[i].first)
-         || (*fields[i].second != other.fields[i].second)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-std::pair<int, Type *>Struct::operator[](std::string field_name) {
-    for (int i = 0; i < (int)fields.size(); ++i) {
-        const auto &field = fields[i];
-        if (field.first == field_name) {
-            std::pair<int, Type *> result(i, field.second.get());
-            return result;
-        }
-    }
-
-    return std::pair<int, Type *>(-1, nullptr);
-}
-
-void Struct::set_name(std::string name) {
-    as_llvm->setName(name);
-}
-
-llvm::StructType *Struct::to_llvm(void) const {
-    return as_llvm;
+llvm::Type *Void::to_llvm(llvm::LLVMContext &ctx) const {
+    return llvm::Type::getVoidTy(ctx);
 }
 
 /*****************************************************************************
@@ -218,14 +94,112 @@ llvm::StructType *Struct::to_llvm(void) const {
 
 /* Visitor for converting Craeft types to LLVM types. */
 struct ToLlvmVisitor: public boost::static_visitor<llvm::Type *> {
+    ToLlvmVisitor(llvm::Module &mod): ctx(mod.getContext()),
+                                      mod(mod) {}
+
     template<typename T>
     llvm::Type *operator()(const T &t) const {
-        return t.to_llvm();
+        return t.to_llvm(ctx);
     }
+
+    llvm::Type *operator()(const Function<Type> &func) const {
+        std::vector<llvm::Type *> arg_types;
+
+        for (const auto &t: func.get_args()) {
+            arg_types.push_back(to_llvm_type(*t, mod));
+        }
+
+        auto *ret = to_llvm_type(*func.get_rettype(), mod);
+
+        return llvm::FunctionType::get(ret, arg_types, false);
+    }
+
+    llvm::Type *operator()(const Pointer<Type> &ptr) const {
+        return llvm::PointerType::getUnqual(to_llvm_type(*ptr.get_pointed(),
+                                            mod));
+    }
+
+    llvm::Type *operator()(const Struct<Type> &str) const {
+        auto *result = mod.getTypeByName(str.get_name());
+        if (result) {
+            return result;
+        }
+
+        std::vector<llvm::Type *> arg_types;
+
+        for (const auto &field: str.get_fields()) {
+            arg_types.push_back(to_llvm_type(*field.second, mod));
+        }
+
+        result = llvm::StructType::create(arg_types, str.get_name());
+
+        return result;
+    }
+
+private:
+    llvm::LLVMContext &ctx;
+    llvm::Module &mod;
 };
 
-llvm::Type *to_llvm_type(const Type &t) {
-    return boost::apply_visitor(ToLlvmVisitor(), t);
+llvm::Type *to_llvm_type(const Type &t, llvm::Module &mod) {
+    return boost::apply_visitor(ToLlvmVisitor(mod), t);
+}
+
+/*****************************************************************************
+ * Specializing template types.
+ */
+
+struct SpecializerTypeVisitor: public boost::static_visitor<Type> {
+    SpecializerTypeVisitor(std::vector<Type> &template_args)
+        : args(template_args) {}
+
+    template<typename T>
+    Type operator()(const T &simple) const {
+        return simple;
+    }
+
+    Type operator()(const Pointer<TemplateType> &ptr) const {
+        return Pointer<Type>(specialize(*ptr.get_pointed(), args));
+    }
+
+    Type operator()(const Struct<TemplateType> &str) const {
+        std::vector<std::pair<std::string,
+                              std::shared_ptr<Type> > >fields;
+
+        for (const auto &t_field: str.get_fields()) {
+            fields.push_back(std::pair<std::string, std::shared_ptr<Type> >
+                                      (t_field.first,
+                                       std::make_shared<Type>(
+                                         specialize(*t_field.second, args))));
+        }
+
+        return Struct<Type>(fields, str.get_name());
+    }
+
+    Type operator()(const int &i) const {
+        return args[i];
+    }
+
+    Type operator()(const Function<TemplateType> &fn) const {
+        auto rettype = std::make_shared<Type>
+                                       (specialize(*fn.get_rettype(), args));
+
+        std::vector<std::shared_ptr<Type> >fn_args;
+
+        for (const auto &arg: fn.get_args()) {
+            fn_args.push_back(std::make_shared<Type>
+                                              (specialize(*arg, args)));
+        }
+
+        return Function<Type>(rettype, fn_args);
+    }
+
+private:
+    std::vector<Type> &args;
+};
+
+Type specialize(const TemplateType &temp, std::vector<Type> &args) {
+    return boost::apply_visitor(SpecializerTypeVisitor(args), temp);
 }
 
 }

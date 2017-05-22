@@ -287,11 +287,12 @@ public:
      * @{
      */
 
-    void create_function_prototype(Function f, std::string name);
-    void create_and_start_function(Function f, std::vector<std::string> args,
+    void create_function_prototype(Function<> f, std::string name);
+    void create_and_start_function(Function<> f,
+                                   std::vector<std::string> args,
                                    std::string name);
 
-    void create_struct(Struct t, std::string name);
+    void create_struct(Struct<> t);
 
     void end_function(void);
 
