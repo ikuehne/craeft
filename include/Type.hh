@@ -25,6 +25,7 @@
 #pragma once
 
 #include <memory>
+#include <sstream>
 #include <vector>
 
 #include <boost/variant.hpp>
@@ -57,6 +58,10 @@ public:
     llvm::Type *to_llvm(llvm::LLVMContext &) const;
 
     bool operator==(const SignedInt &other) const;
+
+    int get_nbits(void) const {
+        return nbits;
+    }
 
 private:
     int nbits;
@@ -111,6 +116,10 @@ public:
     bool operator<(const Float &other) const;
     bool operator==(const Float &other) const;
 
+    Precision get_precision(void) const {
+        return prec;
+    }
+
     llvm::Type *to_llvm(llvm::LLVMContext &) const;
 
 private:
@@ -126,6 +135,9 @@ public:
 
     llvm::Type *to_llvm(llvm::LLVMContext &ctx) const;
 
+    std::string get_name(void) const {
+        return "void";
+    }
     /**
      * @brief For consistency: all void types are equal.
      */
@@ -305,6 +317,8 @@ struct Type: public _Type {
  */
 llvm::Type *to_llvm_type(const Type &t, llvm::Module &module);
 
+std::string get_name(Type t);
+
 /*****************************************************************************
  * Template types: types with template parameters potentially missing.
  */
@@ -338,6 +352,20 @@ typedef boost::variant<SignedInt, UnsignedInt, Float, Void,
 
 struct TemplateType: public _TemplateType {};
 
-Type specialize(const TemplateType &temp, std::vector<Type> &args);
+/**
+ * @brief Specialize the given template type given a list of template
+ *        arguments.
+ */
+Type specialize(const TemplateType &temp, const std::vector<Type> &args);
+
+/**
+ * @brief Mangle the name of the given template function given the provided
+ *        template arguments.
+ *
+ * The function is pure and produces a label which cannot conflict with any
+ * other value or type name.
+ */
+std::string mangle_name(std::string fname,
+                        const std::vector<Type> &args);
 
 }

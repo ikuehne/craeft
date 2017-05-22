@@ -146,11 +146,76 @@ llvm::Type *to_llvm_type(const Type &t, llvm::Module &mod) {
 }
 
 /*****************************************************************************
+ * Getting unique names for functions.
+ */
+
+struct NamingVisitor: public boost::static_visitor<std::string> {
+    std::string operator()(const SignedInt &si) const {
+        std::stringstream result;
+
+        result << "signed";
+        result << si.get_nbits();
+
+        return result.str();
+    }
+
+    std::string operator()(const UnsignedInt &ui) const {
+        std::stringstream result;
+
+        result << "unsigned";
+        result << ui.get_nbits();
+
+        return result.str();
+    }
+
+    std::string operator()(const Float &f) const {
+        if (f.get_precision() == SinglePrecision) {
+            return "float";
+        } else {
+            return "double";
+        }
+    }
+
+    std::string operator()(const Void &) const {
+        return std::string("void");
+    }
+
+    std::string operator()(const Pointer<Type> &ptr) const {
+        return std::string("$") + get_name(*ptr.get_pointed()) + "$";
+    }
+
+    std::string operator()(const Function<Type> &func) const {
+        std::stringstream result;
+
+        result << "$.";
+
+        for (auto &arg: func.get_args()) {
+            result << get_name(*arg);
+            result << ".";
+        }
+
+        result << func.get_rettype();
+
+        result << ".$";
+
+        return result.str();
+    }
+
+    std::string operator()(const Struct<Type> &str) const {
+        return str.get_name();
+    }
+};
+
+std::string get_name(Type t) {
+    return boost::apply_visitor(NamingVisitor(), t);
+}
+
+/*****************************************************************************
  * Specializing template types.
  */
 
 struct SpecializerTypeVisitor: public boost::static_visitor<Type> {
-    SpecializerTypeVisitor(std::vector<Type> &template_args)
+    SpecializerTypeVisitor(const std::vector<Type> &template_args)
         : args(template_args) {}
 
     template<typename T>
@@ -173,7 +238,16 @@ struct SpecializerTypeVisitor: public boost::static_visitor<Type> {
                                          specialize(*t_field.second, args))));
         }
 
-        return Struct<Type>(fields, str.get_name());
+        std::stringstream namestream;
+
+        namestream << "tmpl." << str.get_name();
+
+        for (auto &arg: args) {
+            namestream << "." << get_name(arg);
+        }
+
+
+        return Struct<Type>(fields, namestream.str());
     }
 
     Type operator()(const int &i) const {
@@ -195,11 +269,24 @@ struct SpecializerTypeVisitor: public boost::static_visitor<Type> {
     }
 
 private:
-    std::vector<Type> &args;
+    const std::vector<Type> &args;
 };
 
-Type specialize(const TemplateType &temp, std::vector<Type> &args) {
+Type specialize(const TemplateType &temp, const std::vector<Type> &args) {
     return boost::apply_visitor(SpecializerTypeVisitor(args), temp);
+}
+
+std::string mangle_name(std::string fname,
+                        const std::vector<Type> &args) {
+    std::stringstream namestream;
+
+    namestream << "fntmpl." << fname;
+
+    for (auto &arg: args) {
+        namestream << "." << get_name(arg);
+    }
+
+    return namestream.str();
 }
 
 }
