@@ -53,6 +53,9 @@ namespace AST {
  * @defgroup Types Classes for types as represented in the AST.
  */
 
+/**
+ * @brief Named types (e.g. structs).
+ */
 struct NamedType {
     std::string name;
 
@@ -64,10 +67,13 @@ struct NamedType {
  */
 struct Void {};
 
+struct TemplatedType;
+
 struct Pointer;
 
 typedef boost::variant< NamedType, Void,
-                        std::unique_ptr<Pointer> > Type;
+                        std::unique_ptr<Pointer>,
+                        std::unique_ptr<TemplatedType> > Type;
 
 /**
  * @brief A pointer to another type.
@@ -76,6 +82,18 @@ struct Pointer {
     Type pointed;
 
     Pointer(Type pointed): pointed(std::move(pointed)) {}
+};
+
+/**
+ * @brief A type with template arguments.
+ */
+struct TemplatedType {
+    std::string name;
+
+    std::vector<Type> args;
+
+    TemplatedType(std::string name, std::vector<Type> args)
+        : name(name), args(std::move(args)) {}
 };
 
 /** @} */
@@ -132,6 +150,7 @@ struct Dereference;
 struct Reference;
 struct Binop;
 struct FunctionCall;
+struct TemplateFunctionCall;
 struct Cast;
 
 /**
@@ -147,6 +166,7 @@ typedef boost::variant< IntLiteral,
                         std::unique_ptr<Dereference>,
                         std::unique_ptr<Binop>,
                         std::unique_ptr<FunctionCall>,
+                        std::unique_ptr<TemplateFunctionCall>,
                         std::unique_ptr<Cast> > Expression;
 
 /**
@@ -195,6 +215,25 @@ struct FunctionCall {
                  std::vector<Expression> args,
                  SourcePos pos)
         : fname(std::move(fname)), args(std::move(args)), pos(pos) {}
+};
+
+/**
+ * @brief Calls to templated function calls with type arguments.
+ */
+struct TemplateFunctionCall {
+    std::string fname;
+
+    std::vector<Type> tmpl_args;
+    std::vector<Expression> val_args;
+
+    SourcePos pos;
+
+    TemplateFunctionCall(std::string fname,
+                         std::vector<Type> tmpl_args,
+                         std::vector<Expression> val_args,
+                         SourcePos pos)
+        : fname(fname), tmpl_args(std::move(tmpl_args)),
+          val_args(std::move(val_args)), pos(pos) {}
 };
 
 /**
@@ -395,6 +434,24 @@ struct StructDeclaration {
 };
 
 /**
+ * @brief Template struct declarations.
+ */
+struct TemplateStructDeclaration {
+    std::vector<std::string> argnames;
+    
+    StructDeclaration decl;
+
+    TemplateStructDeclaration(
+            std::string name,
+            std::vector<std::string> argnames,
+            std::vector<std::unique_ptr<Declaration> > members,
+            SourcePos pos)
+        : argnames(argnames),
+          decl(name, std::move(members), pos) {}
+};
+
+
+/**
  * @brief Function declarations.
  */
 struct FunctionDeclaration {
@@ -427,9 +484,27 @@ struct FunctionDefinition {
           pos(pos) {}
 };
 
+/**
+ * @brief Template function definitions.
+ */
+struct TemplateFunctionDefinition {
+    std::vector<std::string> argnames;
+    std::unique_ptr<FunctionDefinition> def;
+
+    TemplateFunctionDefinition(FunctionDeclaration signature,
+                               std::vector<std::string> argnames,
+                               std::vector<Statement> block,
+                               SourcePos pos)
+        : argnames(std::move(argnames)),
+          def(new FunctionDefinition(std::move(signature),
+                                     std::move(block), pos)) {}
+};
+
 typedef boost::variant< TypeDeclaration, StructDeclaration,
+                        TemplateStructDeclaration,
                         FunctionDeclaration,
-                        std::unique_ptr<FunctionDefinition> > TopLevel;
+                        std::unique_ptr<FunctionDefinition>,
+                        TemplateFunctionDefinition > TopLevel;
 
 void print_toplevel(const TopLevel &, std::ostream &out);
 

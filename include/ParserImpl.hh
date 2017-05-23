@@ -119,9 +119,19 @@ private:
     
     AST::TypeDeclaration parse_type_declaration(void);
 
-    AST::StructDeclaration parse_struct_declaration(void);
+    AST::TopLevel parse_struct_declaration(void);
 
     AST::TopLevel parse_function(void);
+
+    std::vector<AST::Expression> parse_expr_list(void);
+
+    std::vector<AST::Type> parse_type_list(void);
+
+    std::vector<std::unique_ptr<AST::Declaration> >parse_declarations(void);
+
+    std::vector<AST::Statement> parse_block(void);
+
+    std::vector<std::unique_ptr<AST::Declaration> >parse_arg_list(void);
 
     /**
      * @brief Look up the precedence of an operator.
@@ -134,6 +144,11 @@ private:
 
     template<typename T>
     inline void find_and_shift(std::string at_place);
+
+    inline void find_and_shift_op(std::string op, std::string at_place);
+
+    inline bool at_open_generic(void);
+    inline bool at_close_generic(void);
 
     [[noreturn]] inline void _throw(std::string message);
 

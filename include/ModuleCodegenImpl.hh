@@ -55,6 +55,7 @@ public:
     Type operator()(const AST::NamedType &);
     Type operator()(const AST::Void &);
     Type operator()(const std::unique_ptr<AST::Pointer> &);
+    Type operator()(const std::unique_ptr<AST::TemplatedType> &);
 
 private:
     Translator &translator;
@@ -106,6 +107,7 @@ public:
     Value operator()(const std::unique_ptr<AST::Dereference> &);
     Value operator()(const std::unique_ptr<AST::Binop> &);
     Value operator()(const std::unique_ptr<AST::FunctionCall> &);
+    Value operator()(const std::unique_ptr<AST::TemplateFunctionCall> &);
     Value operator()(const std::unique_ptr<AST::Cast> &);
 
 private:
@@ -168,8 +170,10 @@ public:
     // Visitors for top-level AST nodes.
     void operator()(const AST::TypeDeclaration &);
     void operator()(const AST::StructDeclaration &);
+    void operator()(const AST::TemplateStructDeclaration &);
     void operator()(const AST::FunctionDeclaration &);
     void operator()(const std::unique_ptr<AST::FunctionDefinition> &);
+    void operator()(const AST::TemplateFunctionDefinition &);
 
 private:
     Translator translator;

@@ -57,6 +57,9 @@ Type TypeCodegen::operator()(const std::unique_ptr<AST::Pointer> &ut) {
     return Pointer<>(codegen(ut->pointed));
 }
 
+Type TypeCodegen::operator()(const std::unique_ptr<AST::TemplatedType> &ut) {
+}
+
 /*****************************************************************************
  * Code generation for L-Values.
  */
@@ -220,6 +223,11 @@ Value ExpressionCodegen::operator()(
 }
 
 Value ExpressionCodegen::operator()(
+        const std::unique_ptr<AST::TemplateFunctionCall> &) {
+
+}
+
+Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::Cast> &cast) {
     auto dest_ty = TypeCodegen(translator, fname).codegen(*cast->t);
 
@@ -346,6 +354,10 @@ void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
     translator.create_struct(t);
 }
 
+void ModuleCodegenImpl::operator()(const AST::TemplateStructDeclaration &) {
+
+}
+
 Function<> ModuleCodegenImpl::type_of_ast_decl(
         const AST::FunctionDeclaration &fd) {
     std::vector<std::shared_ptr<Type> > arg_types;
@@ -384,6 +396,10 @@ void ModuleCodegenImpl::operator()(
     }
 
     translator.end_function();
+}
+
+void ModuleCodegenImpl::operator()(const AST::TemplateFunctionDefinition &) {
+
 }
 
 void ModuleCodegenImpl::optimize(int opt_level) {

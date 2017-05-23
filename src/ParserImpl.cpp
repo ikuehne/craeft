@@ -89,6 +89,15 @@ public:
                       });
     }
 
+    void operator()(const std::unique_ptr<AST::TemplateFunctionCall> &fc)
+          const {
+        std::for_each(fc->val_args.begin(), fc->val_args.end(),
+                      [&](const auto &arg) {
+                          boost::apply_visitor(*this, arg);
+                      });
+    }
+
+
     void operator()(const std::unique_ptr<AST::Cast> &cast) const {
         boost::apply_visitor(*this, cast->arg);
     }
@@ -225,6 +234,31 @@ bool ParserImpl::at_eof(void) const {
  * Parser methods for dealing with particular forms.
  */
 
+std::vector<AST::Expression> ParserImpl::parse_expr_list(void) {
+    std::vector<AST::Expression> exprs;
+
+    do {
+        exprs.push_back(parse_expression());
+
+        if (is_type<Tok::Comma>(lexer.get_tok())) {
+            lexer.shift();
+            continue;
+        }
+    } while(0);
+
+    return exprs;
+}
+
+std::vector<AST::Type> ParserImpl::parse_type_list(void) {
+    std::vector<AST::Type> types;
+
+    do {
+        types.push_back(parse_type());
+    } while(is_type<Tok::Comma>(lexer.get_tok()));
+
+    return types;
+}
+
 AST::Expression ParserImpl::parse_variable(void) {
     auto tok = boost::get<Tok::Identifier>(lexer.get_tok());
 
@@ -232,6 +266,34 @@ AST::Expression ParserImpl::parse_variable(void) {
 
     // Shift the name.
     lexer.shift();
+
+    if (at_open_generic()) {
+        // Shift the <:.
+        lexer.shift();
+
+        std::vector<AST::Type> t_args;
+
+        if (!at_close_generic()) {
+            t_args = parse_type_list();
+        }
+
+        find_and_shift_op(":>", "after template argument list");
+
+        find_and_shift<Tok::OpenParen>("in template function call");
+
+        std::vector<AST::Expression> args;
+
+        if (!is_type<Tok::CloseParen>(lexer.get_tok())) {
+            args = parse_expr_list();
+
+        }
+
+        // Shift the close paren.
+        find_and_shift<Tok::CloseParen>("after function argument list");
+
+        return std::make_unique<AST::TemplateFunctionCall>
+                (id, std::move(t_args), std::move(args), lexer.get_pos());
+    }
 
     /* Case not function call. */
     if (!is_type<Tok::OpenParen>(lexer.get_tok())) {
@@ -245,22 +307,12 @@ AST::Expression ParserImpl::parse_variable(void) {
     std::vector<AST::Expression> args;
 
     if (!is_type<Tok::CloseParen>(lexer.get_tok())) {
-        while (true) {
-            AST::Expression arg(parse_expression());
-            args.push_back(std::move(arg)); 
+        args = parse_expr_list();
 
-            /* If close paren, we've reached the end of the list. */
-            if (is_type<Tok::CloseParen>(lexer.get_tok())) {
-                break;
-            }
-
-            // Expect comma before next arg.
-            find_and_shift<Tok::Comma>("in function argument list");
-        }
     }
 
     // Shift the close paren.
-    lexer.shift();
+    find_and_shift<Tok::CloseParen>("after function argument list");
 
     return std::make_unique<AST::FunctionCall>(
             std::move(id), std::move(args), lexer.get_pos());
@@ -393,6 +445,19 @@ AST::Type ParserImpl::parse_type(void) {
 
     AST::Type result = AST::NamedType(tname);
 
+    if (at_open_generic()) {
+        lexer.shift();
+
+        std::vector<AST::Type> args;
+        if (!at_close_generic()) {
+            args = parse_type_list();
+        }
+
+        find_and_shift_op(":>", "after template type");
+
+        result = std::make_unique<AST::TemplatedType>(tname, std::move(args));
+    }
+
     while (is_type<Tok::Operator>(lexer.get_tok())) {
         auto op = boost::get<Tok::Operator>(lexer.get_tok());
         if (op.op != "*") break;
@@ -456,16 +521,7 @@ std::unique_ptr<AST::IfStatement> ParserImpl::parse_if_statement(void) {
 
     auto cond = parse_expression();
 
-    find_and_shift<Tok::OpenBrace>("after if condition");
-
-    std::vector<AST::Statement> if_block;
-
-    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
-        if_block.push_back(parse_statement());
-    }
-
-    // Shift the }.
-    lexer.shift();
+    auto if_block = parse_block();
 
     std::vector<AST::Statement> else_block;
 
@@ -477,17 +533,11 @@ std::unique_ptr<AST::IfStatement> ParserImpl::parse_if_statement(void) {
                                                   start);
     }
 
-    // Otherwise, shift the "else".
+    // Otherwise, shift the "else"
     lexer.shift();
 
-    find_and_shift<Tok::OpenBrace>("after \"else\"");
-
-    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
-        else_block.push_back(parse_statement());
-    }
-
-    // Shift the }.
-    lexer.shift();
+    // and parse the corresponding block.
+    else_block = parse_block();;
 
     return std::make_unique<AST::IfStatement>(std::move(cond),
                                               std::move(if_block),
@@ -527,26 +577,11 @@ AST::TypeDeclaration ParserImpl::parse_type_declaration(void) {
     return AST::TypeDeclaration(tname->name, start);
 }
 
-AST::StructDeclaration ParserImpl::parse_struct_declaration(void) {
-    auto start = lexer.get_pos();
+std::vector<std::unique_ptr<AST::Declaration> >
+      ParserImpl::parse_declarations(void) {
+    find_and_shift<Tok::OpenBrace>("in declaration block");
 
-    // Shift the `struct`.
-    lexer.shift();
-
-    auto tok = lexer.get_tok();
-
-    auto *tname = boost::get<Tok::TypeName>(&tok);
-
-    if (!tname) {
-        _throw("expected type name in type declaration");
-    }
-
-    // Shift the type name.
-    lexer.shift();
-
-    find_and_shift<Tok::OpenBrace>("in struct definition");
-
-    std::vector<std::unique_ptr<AST::Declaration> > members;
+    std::vector<std::unique_ptr<AST::Declaration> > result;
 
     // Until we get to the closing brace,
     while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
@@ -561,7 +596,7 @@ AST::StructDeclaration ParserImpl::parse_struct_declaration(void) {
             _throw("expected semicolon after struct member declaration");
         }
 
-        members.push_back(std::move(*decl));
+        result.push_back(std::move(*decl));
 
         // Shift the semicolon.
         lexer.shift();
@@ -570,14 +605,108 @@ AST::StructDeclaration ParserImpl::parse_struct_declaration(void) {
     // Shift the closing brace.
     lexer.shift();
 
+    return result;
+}
+
+AST::TopLevel ParserImpl::parse_struct_declaration(void) {
+    auto start = lexer.get_pos();
+
+    // Shift the `struct`.
+    lexer.shift();
+
+    auto tok = lexer.get_tok();
+
+    if (at_open_generic()) {
+        lexer.shift();
+
+        std::vector<std::string> type_list;
+
+        if (!at_close_generic()) {
+            do {
+                auto *tname = boost::get<Tok::TypeName>(&tok);
+
+                if (!tname) {
+                    _throw("expected type name in template argument list");
+                }
+
+                type_list.push_back(tname->name);
+
+                if (is_type<Tok::Comma>(lexer.get_tok())) {
+                    lexer.shift();
+                    continue;
+                }
+            } while (0);
+        }
+
+        find_and_shift_op(":>", "after template argument list");
+
+        auto *tname = boost::get<Tok::TypeName>(&tok);
+
+        if (!tname) {
+            _throw("expected type name in template struct declaration");
+        }
+
+        // Shift the type name.
+        lexer.shift();
+
+        auto members = parse_declarations();
+
+        return AST::TemplateStructDeclaration(tname->name,
+                                              type_list,
+                                              std::move(members),
+                                              start);
+    }
+
+    auto *tname = boost::get<Tok::TypeName>(&tok);
+
+    if (!tname) {
+        _throw("expected type name in type declaration");
+    }
+
+    // Shift the type name.
+    lexer.shift();
+
+    auto members = parse_declarations();
+
     return AST::StructDeclaration(tname->name, std::move(members), start);
 }
 
 AST::TopLevel ParserImpl::parse_function(void) {
     auto start = lexer.get_pos();
 
+    bool templ = false;
+
     // Shift the `fn`.
     lexer.shift();
+
+    std::vector<std::string> type_list;
+
+    if (at_open_generic()) {
+        templ = true;
+
+        lexer.shift();
+
+        if (!at_close_generic()) {
+            do {
+                auto tok = lexer.get_tok();
+                auto *tname = boost::get<Tok::TypeName>(&tok);
+
+                if (!tname) {
+                    _throw("expected type name in function template "
+                           "argument list");
+                }
+
+                type_list.push_back(tname->name);
+
+                if (is_type<Tok::Comma>(lexer.get_tok())) {
+                    lexer.shift();
+                    continue;
+                }
+            } while (0);
+        }
+
+        find_and_shift_op(":>", "after template argument list");
+    }
 
     auto tok = lexer.get_tok();
 
@@ -592,6 +721,68 @@ AST::TopLevel ParserImpl::parse_function(void) {
     // Shift the function name.
     lexer.shift();
 
+    auto args = parse_arg_list();
+
+    // Default to void type;
+    AST::Type ret_type = AST::Void();
+
+    // parse another return type if present.
+    if (is_arrow(lexer.get_tok())) {
+        lexer.shift();
+        ret_type = parse_type();
+    }
+
+    AST::FunctionDeclaration decl(fname, std::move(args),
+                                  std::move(ret_type), start);
+
+    // If semicolon, this is just a forward declaration.
+    if (is_type<Tok::Semicolon>(lexer.get_tok())) {
+        // Shift the semicolon.
+        lexer.shift();
+        return std::move(decl);
+    }
+
+    auto body = parse_block();
+
+    if (templ) {
+        return AST::TemplateFunctionDefinition(std::move(decl), type_list,
+                                               std::move(body), start);
+
+    }
+    return std::make_unique<AST::FunctionDefinition>(std::move(decl),
+                                                     std::move(body),
+                                                     start);
+}
+
+std::vector<AST::Statement> ParserImpl::parse_block(void) {
+    find_and_shift<Tok::OpenBrace>("before block");
+
+    std::vector<AST::Statement> result;
+
+    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
+        result.push_back(parse_statement());
+    }
+
+    lexer.shift();
+
+    return result;
+}
+
+int ParserImpl::get_token_precedence(void) const {
+    auto tok = lexer.get_tok();
+
+    if (auto *op = boost::get<Tok::Operator>(&tok)) {
+        auto i = precedences.find(op->op);
+        if (i != precedences.end()) {
+            return i->second;
+        }
+    }
+
+    return -1;
+}
+
+std::vector<std::unique_ptr<AST::Declaration> >
+      ParserImpl::parse_arg_list(void) {
     find_and_shift<Tok::OpenParen>("before argument list");
 
     std::vector<std::unique_ptr<AST::Declaration> > args;
@@ -613,52 +804,7 @@ AST::TopLevel ParserImpl::parse_function(void) {
     // Shift the closing paren.
     lexer.shift();
 
-    // Default to void type;
-    AST::Type ret_type = AST::Void();
-
-    // parse another return type if present.
-    if (is_arrow(lexer.get_tok())) {
-        lexer.shift();
-        ret_type = parse_type();
-    }
-
-    AST::FunctionDeclaration decl(fname, std::move(args),
-                                  std::move(ret_type), start);
-
-    // If semicolon, this is just a forward declaration.
-    if (is_type<Tok::Semicolon>(lexer.get_tok())) {
-        // Shift the semicolon.
-        lexer.shift();
-        return std::move(decl);
-    }
-
-    find_and_shift<Tok::OpenBrace>("before function body");
-
-    std::vector<AST::Statement> body;
-
-    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
-        body.push_back(parse_statement());
-    }
-
-    // Shift the closing brace.
-    lexer.shift();
-
-    return std::make_unique<AST::FunctionDefinition>(std::move(decl),
-                                                     std::move(body),
-                                                     start);
-}
-
-int ParserImpl::get_token_precedence(void) const {
-    auto tok = lexer.get_tok();
-
-    if (auto *op = boost::get<Tok::Operator>(&tok)) {
-        auto i = precedences.find(op->op);
-        if (i != precedences.end()) {
-            return i->second;
-        }
-    }
-
-    return -1;
+    return args;
 }
 
 template<typename T>
@@ -668,6 +814,32 @@ inline void ParserImpl::find_and_shift(std::string at_place) {
     }
 
     lexer.shift();
+}
+
+inline void ParserImpl::find_and_shift_op(std::string op,
+                                          std::string at_place) {
+    auto tok = lexer.get_tok();
+
+    auto *_op = boost::get<Tok::Operator>(&tok);
+    if (!_op || _op->op != op) {
+        _throw("expected \"" + op + "\" " + at_place);
+    }
+}
+
+inline bool ParserImpl::at_open_generic(void) {
+    auto tok = lexer.get_tok();
+
+    auto *_op = boost::get<Tok::Operator>(&tok);
+
+    return _op && _op->op == "<:";
+}
+
+inline bool ParserImpl::at_close_generic(void) {
+    auto tok = lexer.get_tok();
+
+    auto *_op = boost::get<Tok::Operator>(&tok);
+
+    return _op && _op->op == ":>";
 }
 
 [[noreturn]] inline void ParserImpl::_throw(std::string message) {

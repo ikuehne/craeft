@@ -52,6 +52,17 @@ struct TypePrintVisitor: boost::static_visitor<void> {
         out << "}";
     }
 
+    void operator()(const std::unique_ptr<TemplatedType> &t) {
+        out << "TemplatedType {" << t->name;
+
+        for (const auto &arg: t->args) {
+            boost::apply_visitor(*this, arg);
+            out << ", ";
+        }
+
+        out << "}";
+    }
+
     std::ostream &out;
 };
 
@@ -103,6 +114,30 @@ struct ExpressionPrintVisitor: boost::static_visitor<void> {
             out << ", ";
             boost::apply_visitor(*this, arg);
         }
+        out << "}";
+    }
+
+    void operator()(const std::unique_ptr<TemplateFunctionCall> &fc) {
+        out << "TemplateFunctionCall {" << fc->fname << ", ";
+
+        out << "TemplateArgs {";
+
+        TypePrintVisitor tv(out);
+
+        if (fc->tmpl_args.size()) {
+            boost::apply_visitor(tv, fc->tmpl_args[0]);
+        }
+
+        for (unsigned i = 1; i < fc->tmpl_args.size(); ++i) {
+            out << ", ";
+            boost::apply_visitor(tv, fc->tmpl_args[i]);
+        }
+
+        for (const auto &arg: fc->val_args) {
+            out << ", ";
+            boost::apply_visitor(*this, arg);
+        }
+
         out << "}";
     }
 
@@ -271,6 +306,30 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
         for (const auto &arg: func->block) {
             out << ", ";
             boost::apply_visitor(sv, arg);
+        }
+
+        out << "}";
+    }
+
+    void operator()(const TemplateStructDeclaration &sd) {
+        out << "TemplateStructDeclaration {";
+
+        (*this)(sd.decl);
+
+        for (const auto &arg: sd.argnames) {
+            out << ", " << arg;
+        }
+
+        out << "}";
+    }
+
+    void operator()(const TemplateFunctionDefinition &fd) {
+        out << "TemplateFunctionDefinition {";
+
+        (*this)(fd.def);
+
+        for (const auto &arg: fd.argnames) {
+            out << ", " << arg;
         }
 
         out << "}";
