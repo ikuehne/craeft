@@ -333,6 +333,11 @@ struct TemplateStruct {
     int get_nparameters(void) const;
 
     const Struct<TemplateType> &get_inner(void) const;
+
+    Struct<Type> specialize(const std::vector<Type> &) const;
+
+    Struct<TemplateType>
+        respecialize(const std::vector<TemplateType> &) const;
 };
 
 struct TemplateFunction {
@@ -350,7 +355,10 @@ typedef boost::variant<SignedInt, UnsignedInt, Float, Void,
                        Function<TemplateType>, int>
         _TemplateType;
 
-struct TemplateType: public _TemplateType {};
+struct TemplateType: public _TemplateType {
+    template<typename... Args>
+    TemplateType(Args... args): _TemplateType(args...) {}
+};
 
 /**
  * @brief Specialize the given template type given a list of template

@@ -227,7 +227,7 @@ struct SpecializerTypeVisitor: public boost::static_visitor<Type> {
         return Pointer<Type>(specialize(*ptr.get_pointed(), args));
     }
 
-    Type operator()(const Struct<TemplateType> &str) const {
+    Struct<Type> operator()(const Struct<TemplateType> &str) const {
         std::vector<std::pair<std::string,
                               std::shared_ptr<Type> > >fields;
 
@@ -245,7 +245,6 @@ struct SpecializerTypeVisitor: public boost::static_visitor<Type> {
         for (auto &arg: args) {
             namestream << "." << get_name(arg);
         }
-
 
         return Struct<Type>(fields, namestream.str());
     }
@@ -272,6 +271,62 @@ private:
     const std::vector<Type> &args;
 };
 
+/*****************************************************************************
+ * Respecializing template types.
+ */
+
+struct RespecializerTypeVisitor: public boost::static_visitor<TemplateType> {
+    RespecializerTypeVisitor(const std::vector<TemplateType> &template_args)
+        : args(template_args) {}
+
+    template<typename T>
+    TemplateType operator()(const T &simple) const {
+        return simple;
+    }
+
+    TemplateType operator()(const Pointer<TemplateType> &ptr) const {
+        auto pointed = boost::apply_visitor(*this, *ptr.get_pointed());
+        return Pointer<TemplateType>(std::make_shared<TemplateType>(pointed));
+    }
+
+    Struct<TemplateType> operator()(const Struct<TemplateType> &str) const {
+        std::vector<std::pair<std::string,
+                              std::shared_ptr<TemplateType> > >fields;
+
+        for (const auto &t_field: str.get_fields()) {
+            auto field = boost::apply_visitor(*this, *t_field.second);
+            fields.push_back(std::pair<std::string,
+                                        std::shared_ptr<TemplateType> >
+                                      (t_field.first,
+                                       std::make_shared<TemplateType>(
+                                           field)));
+        }
+
+        return Struct<TemplateType>(fields, str.get_name());
+    }
+
+    TemplateType operator()(const int &i) const {
+        return args[i];
+    }
+
+    TemplateType operator()(const Function<TemplateType> &fn) const {
+        auto r = boost::apply_visitor(*this, *fn.get_rettype());
+        auto rettype = std::make_shared<TemplateType>(r);
+
+        std::vector<std::shared_ptr<TemplateType> >fn_args;
+
+        for (const auto &arg: fn.get_args()) {
+            auto a = boost::apply_visitor(*this, *arg);
+            fn_args.push_back(std::make_shared<TemplateType>(a));
+        }
+
+        return Function<TemplateType>(rettype, fn_args);
+    }
+
+private:
+    const std::vector<TemplateType> &args;
+};
+
 Type specialize(const TemplateType &temp, const std::vector<Type> &args) {
     return boost::apply_visitor(SpecializerTypeVisitor(args), temp);
 }
@@ -287,6 +342,28 @@ std::string mangle_name(std::string fname,
     }
 
     return namestream.str();
+}
+
+/*****************************************************************************
+ * Template types.
+ */
+
+int TemplateStruct::get_nparameters(void) const {
+    return n_parameters;
+}
+
+const Struct<TemplateType> &TemplateStruct::get_inner(void) const {
+    return inner;
+}
+
+Struct<Type> TemplateStruct::specialize(
+        const std::vector<Type> &args) const {
+    return SpecializerTypeVisitor(args)(get_inner());
+}
+
+Struct<TemplateType> TemplateStruct::respecialize(
+        const std::vector<TemplateType> &args) const {
+    return RespecializerTypeVisitor(args)(get_inner());
 }
 
 }
