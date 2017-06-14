@@ -99,7 +99,7 @@ Also, the compiler optimizes simple tail calls.  The code it produces for this
 function is (after cleaning up a couple of labels and removing some assembler
 directives):
 
-```x86_assembly
+```assembly_x86
 fact:
     movl    $1, %eax
     jmp     finish
