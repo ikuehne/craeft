@@ -185,6 +185,7 @@ LLVM, a compiler supporting C++14, Boost, and cmake are required.
 
 Usage and Example Code
 ======================
+
 The compiler can produce LLVM IR, assembly, or static object code files, with
 the `--ll`, `--asm`, and `-c` flags respectively.  So to compile the
 `factorial.cr` example:
@@ -201,3 +202,11 @@ cc ../examples/factorial_harness.c -c
 cc factorial_harness.o factorial.o -o factorial
 ./factorial
 ```
+
+License
+=======
+
+Cr&#230;ft is distributed under the GPL3.  See [LICENSE](LICENSE).
+
+[Boost](boost.org) and [LLVM](http://llvm.org) are distributed under their
+respective licenses.
