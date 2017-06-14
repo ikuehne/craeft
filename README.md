@@ -195,7 +195,7 @@ Each of the examples has a corresponding C "harness" which calls the Cr&#230;ft
 functions.  So, to compile and run `factorial.cr` with the harness:
 
 ```
-cc ../examples/factorial\_harness.c -c
-cc factorial\_harness.o factorial.o -o factorial
+cc ../examples/factorial_harness.c -c
+cc factorial_harness.o factorial.o -o factorial
 ./factorial
 ```
