@@ -6,7 +6,8 @@ CS 81 with Donnie Pinkston as project mentor. The language, Cr&#230;ft, is a
 strongly statically typed, imperative, low-level programming language with
 support for generic programming inspired by C and Rust.
 
-Internal documentation can be found [here](http://iankuehne.com/craeft).
+Internal documentation for the compiler can be found
+[here](http://iankuehne.com/craeft).
 
 Language
 ========
@@ -32,7 +33,7 @@ identifier: [a-z][a-zA-Z0-9_]*
 
 Type: [A-Z][a-zA-Z0-9_]*
 
-op: [!*+-><&%^@~/]+
+op: [!*+-><&%^@~/=]+
 
 expr: identifier
     | literal
@@ -75,3 +76,41 @@ the assignment operators) and the precedences and fixities (which follow C).
 I've also omitted the definition of `literal`, simply because it is boring and
 new literals are likely to be added soon.  C numeric literals are currently
 supported, except for hexadecimal literals.
+
+### An Example
+
+As is traditional, we introduce the language with a definition of the factorial
+function:
+
+```
+fn fact(U64 n) -> U64 {
+    if n == 0 {
+        return 1;
+    }
+    return n * fact(n - 1);
+}
+```
+
+A couple of interesting features of the language are present here: integer types
+are written with a `U` or an `I` followed by the number of bits, which can range
+from 1 (for a boolean) to 64.
+
+Also, the compiler optimizes simple tail calls.  The code it produces for this
+function is (after cleaning up a couple of labels and removing some assembler
+directives):
+
+```x86_assembly
+fact:
+    movl    $1, %eax
+    jmp     finish
+
+loop:
+    imulq   %rdi, %rax
+    decq    %rdi
+
+finish:
+    testq   %rdi, %rdi
+    jnz     loop
+    retq
+```
+
