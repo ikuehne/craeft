@@ -29,18 +29,19 @@
 #pragma once
 
 #include <cctype>
+#include <iostream>
 #include <memory>
 #include <string>
-#include <vector>
 
-#include <boost/range/adaptor/reversed.hpp>
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
 
+#include "AST.hh"
 #include "Error.hh"
 #include "Type.hh"
+#include "Scope.hh"
 #include "Value.hh"
 #include "VariantUtils.hh"
 
@@ -90,8 +91,26 @@ private:
     Value val;
 };
 
-typedef std::vector<std::pair<std::string, Variable> > IdentScope;
-typedef std::vector<std::pair<std::string, Type> >  TypeScope;
+struct TemplateValue {
+    /**
+     * @brief Create a new `Variable` based on the given instruction.
+     */
+    TemplateValue(std::shared_ptr<AST::FunctionDefinition> ast,
+                  std::vector<std::string> arg_names,
+                  TemplateFunction ty)
+          : fd(ast), ty(ty), arg_names(arg_names) {} 
+
+    /**
+     * @brief The AST for this template function.
+     *
+     * We cannot actually compile this AST until we get the type arguments.
+     */
+    std::shared_ptr<AST::FunctionDefinition> fd;
+
+    TemplateFunction ty;
+
+    std::vector<std::string> arg_names;
+};
 
 class Environment {
 public:
@@ -116,41 +135,30 @@ public:
      * @brief Pop the most recently entered (deepest) scope.
      */
     void pop(void) {
-        // TODO: properly handle this error.
-        assert(ident_map.size() > 1);
-
-        ident_map.pop_back();
-        type_map.pop_back();
+        ident_map.pop();
+        type_map.pop();
+        template_map.pop();
+        templatefunc_map.pop();
     }
 
     /**
      * @brief Push a new, empty scope.
      */
     void push(void) {
-        ident_map.push_back(std::make_unique<IdentScope>());
-        type_map.push_back(std::make_unique<TypeScope>());
+        ident_map.push();
+        type_map.push();
+        template_map.push();
+        templatefunc_map.push();
     }
 
     /**
      * @brief Get whether the given name is bound in any scope.
      */
     bool bound(const std::string &name) {
-        if (islower(name[0])) {
-            for (auto &vec: boost::adaptors::reverse(ident_map)) {
-                for (auto &pair: *vec) {
-                    if (pair.first == name) {
-                        return true;
-                    }
-                }
-            }
-        } else if (isupper(name[0])) {
-            for (auto &vec: boost::adaptors::reverse(type_map)) {
-                for (auto &pair: *vec) {
-                    if (pair.first == name) {
-                        return true;
-                    }
-                }
-            }
+        if (islower(name[0]) && ident_map.present(name)) {
+            return true;
+        } else {
+            return type_map.present(name);
         }
 
         return false;
@@ -167,32 +175,34 @@ public:
                                SourcePos pos, std::string &fname) {
         assert(islower(name[0]));
 
-        // First try to find the result,
-        for (auto &vec: boost::adaptors::reverse(ident_map)) {
-            for (auto &pair: boost::adaptors::reverse(*vec)) {
-                if (pair.first == name) {
-                    // returning it if possible.
-                    return pair.second;
-                }
-            }
+        try {
+            return ident_map[name];
+        } catch (KeyNotPresentException) {
+            throw Error("name error", "variable \"" + name + "\" not found",
+                        fname, pos);
         }
-
-        throw Error("error", "variable \"" + name + "\" not found.",
-                    fname, pos);
     }
 
     Variable add_identifier(std::string name, Value val) {
         Variable result(val);
-        ident_map.back()->push_back(std::pair<std::string, Variable>
-                                             (name, result));
+        ident_map.bind(name, result);
         return result;
     }
 
     void add_type(std::string name, Type t) {
-        type_map.back()->push_back(std::pair<std::string, Type>
-                                             (name, t));
+        type_map.bind(name, t);
+
+        std::string fname("hello, there!");
+        lookup_type(name, SourcePos(0, 0), fname);
     }
 
+    void add_template_type(std::string name, TemplateStruct t) {
+        template_map.bind(name, t);
+    }
+
+    void add_template_func(std::string name, TemplateValue v) {
+        templatefunc_map.bind(name, v);
+    }
 
     /**
      * @brief Find the given type name in the map.
@@ -200,27 +210,50 @@ public:
      * @param tname Must be a valid type name.
      */
     const Type &lookup_type(const std::string &tname,
-                      SourcePos pos,
-                      std::string &fname) {
+                            SourcePos pos,
+                            std::string &fname) {
         assert(isupper(tname[0]));
 
-        // First try to find the result,
-        for (auto &vec: boost::adaptors::reverse(type_map)) {
-            for (auto &pair: *vec) {
-                if (pair.first == tname) {
-                    // returning it if possible.
-                    return pair.second;
-                }
-            }
+        try {
+            return type_map[tname];
+        } catch (KeyNotPresentException) {
+            throw Error("name error", "type \"" + tname + "\" not found",
+                        fname, pos);
         }
+    }
 
-        throw Error("error", "type \"" + tname + "\" not found.",
-                    fname, pos);
+    const TemplateStruct &lookup_template(const std::string &tname,
+                                          SourcePos pos,
+                                          std::string &fname) {
+        assert(isupper(tname[0]));
+
+        try {
+            return template_map[tname];
+        } catch (KeyNotPresentException) {
+            throw Error("name error", "template type \"" + tname + "\" not "
+                        "found",
+                        fname, pos);
+        }
+    }
+
+    const TemplateValue &lookup_template_func(const std::string &func_name,
+                                              SourcePos pos,
+                                              std::string &fname) {
+        assert(islower(func_name[0]));
+
+        try {
+            return templatefunc_map[func_name];
+        } catch (KeyNotPresentException) {
+            throw Error("name error", "template function \"" + func_name
+                                    + "\" not found", fname, pos);
+        }
     }
 
 private:
-    std::vector < std::unique_ptr <IdentScope> > ident_map;
-    std::vector < std::unique_ptr <TypeScope> > type_map;
+    Scope<Variable> ident_map;
+    Scope<Type> type_map;
+    Scope<TemplateStruct> template_map;
+    Scope<TemplateValue> templatefunc_map;
 };
 
 }

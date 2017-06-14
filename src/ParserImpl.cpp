@@ -237,14 +237,16 @@ bool ParserImpl::at_eof(void) const {
 std::vector<AST::Expression> ParserImpl::parse_expr_list(void) {
     std::vector<AST::Expression> exprs;
 
+    bool cont;
     do {
+        cont = false;
         exprs.push_back(parse_expression());
 
         if (is_type<Tok::Comma>(lexer.get_tok())) {
             lexer.shift();
-            continue;
+            cont = true;
         }
-    } while(0);
+    } while(cont);
 
     return exprs;
 }
@@ -252,9 +254,16 @@ std::vector<AST::Expression> ParserImpl::parse_expr_list(void) {
 std::vector<AST::Type> ParserImpl::parse_type_list(void) {
     std::vector<AST::Type> types;
 
+    bool cont;
     do {
+        cont = false;
         types.push_back(parse_type());
-    } while(is_type<Tok::Comma>(lexer.get_tok()));
+
+        if (is_type<Tok::Comma>(lexer.get_tok())) {
+            lexer.shift();
+            cont = true;
+        }
+    } while(cont);
 
     return types;
 }
@@ -275,6 +284,8 @@ AST::Expression ParserImpl::parse_variable(void) {
 
         if (!at_close_generic()) {
             t_args = parse_type_list();
+
+            assert(t_args.size() > 0);
         }
 
         find_and_shift_op(":>", "after template argument list");
@@ -285,7 +296,6 @@ AST::Expression ParserImpl::parse_variable(void) {
 
         if (!is_type<Tok::CloseParen>(lexer.get_tok())) {
             args = parse_expr_list();
-
         }
 
         // Shift the close paren.
@@ -619,10 +629,14 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
     if (at_open_generic()) {
         lexer.shift();
 
+        tok = lexer.get_tok();
+
         std::vector<std::string> type_list;
 
         if (!at_close_generic()) {
+            bool cont;
             do {
+                cont = false;
                 auto *tname = boost::get<Tok::TypeName>(&tok);
 
                 if (!tname) {
@@ -631,14 +645,18 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
 
                 type_list.push_back(tname->name);
 
+                lexer.shift();
+
                 if (is_type<Tok::Comma>(lexer.get_tok())) {
                     lexer.shift();
-                    continue;
+                    cont = true;
                 }
-            } while (0);
+            } while (cont);
         }
 
         find_and_shift_op(":>", "after template argument list");
+
+        tok = lexer.get_tok();
 
         auto *tname = boost::get<Tok::TypeName>(&tok);
 
@@ -687,7 +705,9 @@ AST::TopLevel ParserImpl::parse_function(void) {
         lexer.shift();
 
         if (!at_close_generic()) {
+            bool cont;
             do {
+                cont = false;
                 auto tok = lexer.get_tok();
                 auto *tname = boost::get<Tok::TypeName>(&tok);
 
@@ -698,11 +718,13 @@ AST::TopLevel ParserImpl::parse_function(void) {
 
                 type_list.push_back(tname->name);
 
+                lexer.shift();
+
                 if (is_type<Tok::Comma>(lexer.get_tok())) {
                     lexer.shift();
-                    continue;
+                    cont = true;
                 }
-            } while (0);
+            } while (cont);
         }
 
         find_and_shift_op(":>", "after template argument list");
@@ -749,6 +771,7 @@ AST::TopLevel ParserImpl::parse_function(void) {
                                                std::move(body), start);
 
     }
+
     return std::make_unique<AST::FunctionDefinition>(std::move(decl),
                                                      std::move(body),
                                                      start);
@@ -824,6 +847,8 @@ inline void ParserImpl::find_and_shift_op(std::string op,
     if (!_op || _op->op != op) {
         _throw("expected \"" + op + "\" " + at_place);
     }
+
+    lexer.shift();
 }
 
 inline bool ParserImpl::at_open_generic(void) {

@@ -57,6 +57,7 @@ IfThenElse::~IfThenElse(void) {}
 TranslatorImpl::TranslatorImpl(std::string module_name, std::string filename,
                                std::string triple)
     : rettype(NULL),
+      specializations(),
       fname(filename),
       builder(context),
       module(new llvm::Module(module_name, context)),
@@ -160,23 +161,23 @@ struct CastVisitor: public boost::static_visitor<LlvmCastType> {
         return PtrToInt;
     }
 
-    LlvmCastType operator()(const std::unique_ptr<Pointer<> > &,
+    LlvmCastType operator()(const Pointer<> &,
                             const UnsignedInt &) const {
         return PtrToInt;
     }
 
     LlvmCastType operator()(const SignedInt &,
-                            const std::unique_ptr<Pointer<> > &) const {
+                            const Pointer<> &) const {
         return IntToPtr;
     }
 
     LlvmCastType operator()(const UnsignedInt &,
-                            const std::unique_ptr<Pointer<> > &) const {
+                            const Pointer<> &) const {
         return IntToPtr;
     }
 
-    LlvmCastType operator()(const std::unique_ptr<Pointer<> > &,
-                            const std::unique_ptr<Pointer<> > &) const {
+    LlvmCastType operator()(const Pointer<> &,
+                            const Pointer<> &) const {
         return PtrToPtr;
     }
 };
@@ -217,10 +218,13 @@ Value TranslatorImpl::cast(Value val, const Type &dest_ty, SourcePos pos) {
         break;
     case PtrToInt:
         inst = builder.CreatePtrToInt(v, dt);
+        break;
     case IntToPtr:
         inst = builder.CreateIntToPtr(v, dt);
+        break;
     case PtrToPtr:
         inst = builder.CreateBitCast(v, dt);
+        break;
     case Illegal:
         // TODO: Add representations of types to make this more helpful.
         throw Error("type error", "cannot cast types", fname, pos);
@@ -356,6 +360,10 @@ public:
 
     virtual Value ptr_ptr_op(const Value &, const Value &) {
         type_error("cannot perform \"" + get_op() + "\" between pointers");
+    }
+
+    Value operator()(const Pointer<> &, const Pointer<> &) {
+        return ptr_ptr_op(lhs, rhs);
     }
 
     template<typename L, typename R>
@@ -1233,7 +1241,11 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
     }
 
     for (unsigned i = 0; i < args.size(); ++i) {
-        if (!(args[i].get_type() == *ftype->get_args()[i])) {
+        auto lhs_ty = args[i].get_type();
+        auto rhs_ty = *ftype->get_args()[i];
+        if (!(lhs_ty == rhs_ty)) {
+            auto lhs_pointed = boost::get<Pointer<> >(lhs_ty).get_pointed();
+            auto rhs_pointed = boost::get<Pointer<> >(rhs_ty).get_pointed();
             throw Error("type error", "argument does not match function type",
                         fname, pos);
         }
@@ -1241,6 +1253,47 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
 
     auto *inst = builder.CreateCall(fbinding.get_val().to_llvm(), llvm_args);
     return Value(inst, *ftype->get_rettype());
+}
+
+Value TranslatorImpl::call(std::string func, std::vector<Type> &templ_args,
+                           std::vector<Value> &v_args, SourcePos pos) {
+
+    // Use the mangled name to find the function if it has been implemented.
+    auto name = mangle_name(func, templ_args);
+
+    auto tv = env.lookup_template_func(func, pos, fname);
+
+
+    auto specialized_type = tv.ty.specialize(templ_args);
+
+    // Try to just find the specialized function.
+    auto *fbinding = module->getFunction(name);
+
+    // If it isn't there, make it, and note that we need to fill it out later.
+    if (!fbinding) {
+        auto *ll_ty = to_llvm_type(specialized_type, *module);
+
+        auto *f_ty = static_cast<llvm::FunctionType *>(ll_ty);
+        fbinding = llvm::Function::Create(f_ty,
+                                          llvm::Function::ExternalLinkage,
+                                          name,
+                                          module.get());
+
+        std::pair<std::vector<Type>, const TemplateValue &>specialization
+            (templ_args, tv);
+
+        specializations.push_back(specialization);
+    }
+
+    std::vector<llvm::Value *>llvm_args;
+
+    for (const auto &arg: v_args) {
+        llvm_args.push_back(arg.to_llvm());
+    }
+
+    auto *inst = builder.CreateCall(fbinding, llvm_args);
+    return Value(inst, *specialized_type.get_rettype());
+
 }
 
 Variable TranslatorImpl::declare(const std::string &varname, const Type &t) {
@@ -1280,9 +1333,18 @@ void TranslatorImpl::create_and_start_function(Function<> f,
                                                std::vector<std::string> args,
                                                std::string name) {
     auto *ll_f = static_cast<llvm::FunctionType *>(to_llvm_type(f, *module));
-    auto *result = llvm::Function::Create(ll_f,
-                                          llvm::Function::ExternalLinkage,
-                                          name, module.get());
+
+    // Try to find the function already in the module.
+    auto *result = module->getFunction(name);
+
+    // If it's not there,
+    if (!result) {
+        // generate it.
+        result = llvm::Function::Create(ll_f,
+                                        llvm::Function::ExternalLinkage,
+                                        name, module.get());
+    }
+
     env.add_identifier(name, Value(result, f));
 
     // Create the first block in the function.
@@ -1312,7 +1374,8 @@ void TranslatorImpl::create_struct(Struct<> t) {
     env.add_type(t.get_name(), t);
 }
 
-void TranslatorImpl::end_function(void) {
+std::vector< std::pair< std::vector<Type>, TemplateValue> >
+TranslatorImpl::end_function(void) {
     env.pop();
 
     // Add implicit void returns.
@@ -1321,6 +1384,13 @@ void TranslatorImpl::end_function(void) {
     }
 
     rettype = NULL;
+
+    auto saved_specializations = std::move(specializations);
+
+    specializations =
+        std::vector< std::pair< std::vector<Type>, TemplateValue > >();
+
+    return saved_specializations;
 }
 
 void TranslatorImpl::return_(Value val, SourcePos pos) {
@@ -1345,6 +1415,39 @@ Value TranslatorImpl::get_identifier_value(std::string ident, SourcePos pos) {
 
 Type TranslatorImpl::lookup_type(std::string tname, SourcePos pos) {
     return env.lookup_type(tname, pos, fname);
+}
+
+void TranslatorImpl::push_scope(void) { env.push(); }
+void TranslatorImpl::pop_scope(void) { env.pop(); }
+void TranslatorImpl::bind_type(std::string name, Type t) {
+    env.add_type(name, t);
+}
+
+Type TranslatorImpl::specialize_template(std::string template_name,
+                                         const std::vector<Type> &args,
+                                         SourcePos pos) {
+    return env.lookup_template(template_name, pos, fname)
+              .specialize(args);
+}
+
+Struct<TemplateType> TranslatorImpl::respecialize_template(
+        std::string template_name,
+        const std::vector<TemplateType> &args,
+        SourcePos pos) {
+    return env.lookup_template(template_name, pos, fname)
+              .respecialize(args);
+}
+
+void TranslatorImpl::register_template(
+                       std::string name,
+                       std::shared_ptr<AST::FunctionDefinition> def,
+                       std::vector<std::string> args,
+                       TemplateFunction func) {
+    env.add_template_func(name, TemplateValue(def, args, func));
+}
+
+void TranslatorImpl::register_template(TemplateStruct str, std::string name) {
+    env.add_template_type(name, str);
 }
 
 IfThenElse TranslatorImpl::create_ifthenelse(Value cond, SourcePos pos) {

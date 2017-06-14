@@ -90,7 +90,7 @@ void Error::emit(std::ostream &out) {
         << ": " << TERM_ERR << header << ": " << TERM_RESET
         << msg << "\n\t"
         << lines[pos.lineno] << "\n\t"
-        << std::string(pos.charno, ' ')
+        << std::string(std::max(0, pos.charno - 1), ' ')
         << TERM_IND << "^" << TERM_RESET << std::endl;
 }
 

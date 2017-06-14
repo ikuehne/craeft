@@ -311,6 +311,19 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
         out << "}";
     }
 
+    void operator()(const std::shared_ptr<FunctionDefinition> &func) {
+        out << "FunctionDefinition {";
+        (*this)(func->signature);
+
+        StatementPrintVisitor sv(out);
+        for (const auto &arg: func->block) {
+            out << ", ";
+            boost::apply_visitor(sv, arg);
+        }
+
+        out << "}";
+    }
+
     void operator()(const TemplateStructDeclaration &sd) {
         out << "TemplateStructDeclaration {";
 

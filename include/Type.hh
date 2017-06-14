@@ -5,8 +5,7 @@
  */
 
 /* Craeft: a new systems programming language.
- *
- * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
+ * * Copyright (C) 2017 Ian Kuehne <ikuehne@caltech.edu>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -167,7 +166,7 @@ public:
     TypeType *get_pointed(void) const { return pointed.get(); }
 
     bool operator==(const Pointer<TypeType> &other) const {
-        return pointed == other.pointed;
+        return *pointed == *other.pointed;
     }
 
 private:
@@ -182,6 +181,9 @@ public:
           : rettype(rettype), args(args) {
         assert(rettype.get());
     }
+
+    /*Function(Function<TypeType> &other):
+        rettype(other.rettype), args(other.args) {}*/
 
     bool operator==(const Function<TypeType> &other) const {
         // Check that return types are equal,
@@ -326,6 +328,8 @@ std::string get_name(Type t);
 struct TemplateType;
 
 struct TemplateStruct {
+    TemplateStruct(Struct<TemplateType> inner, int n_parameters);
+
     int n_parameters;
 
     Struct<TemplateType> inner;
@@ -343,7 +347,12 @@ struct TemplateStruct {
 struct TemplateFunction {
     int n_parameters;
 
+    TemplateFunction(Function<TemplateType> inner,
+                     std::vector<std::string> args);
+
     Function<TemplateType> inner;
+
+    Function<Type> specialize(const std::vector<Type> &) const;
 
     int get_nparameters(void) const;
 
@@ -360,11 +369,14 @@ struct TemplateType: public _TemplateType {
     TemplateType(Args... args): _TemplateType(args...) {}
 };
 
+TemplateType to_template(const Type &t);
+
 /**
  * @brief Specialize the given template type given a list of template
  *        arguments.
  */
-Type specialize(const TemplateType &temp, const std::vector<Type> &args);
+Type specialize(const TemplateType &temp,
+                const std::vector<Type> &args);
 
 /**
  * @brief Mangle the name of the given template function given the provided

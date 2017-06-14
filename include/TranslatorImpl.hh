@@ -76,6 +76,8 @@ public:
     Value field_address(Value ptr, std::string field, SourcePos pos);
 
     Value call(std::string func, std::vector<Value> &args, SourcePos pos);
+    Value call(std::string func, std::vector<Type> &templ_args,
+               std::vector<Value> &v_args, SourcePos pos);
     Variable declare(const std::string &name, const Type &t);
     void assign(const std::string &varname, Value val, SourcePos pos);
     void return_(Value val, SourcePos pos);
@@ -84,6 +86,26 @@ public:
     Value get_identifier_addr(std::string ident, SourcePos pos);
     Value get_identifier_value(std::string ident, SourcePos pos);
     Type lookup_type(std::string tname, SourcePos pos);
+
+    void push_scope(void);
+    void pop_scope(void);
+
+    void bind_type(std::string, Type t);
+
+    Type specialize_template(std::string template_name,
+                             const std::vector<Type> &args,
+                             SourcePos pos);
+    Struct<TemplateType> respecialize_template(std::string template_name,
+                                               const std::vector<TemplateType>
+                                               &args,
+                                               SourcePos pos);
+
+    void register_template(std::string name,
+                           std::shared_ptr<AST::FunctionDefinition>,
+                           std::vector<std::string> args,
+                           TemplateFunction func);
+    void register_template(TemplateStruct, std::string name);
+
 
     IfThenElse create_ifthenelse(Value cond, SourcePos pos);
     void point_to_else(IfThenElse &structure);
@@ -94,7 +116,8 @@ public:
 
     void create_struct(Struct<> t);
 
-    void end_function(void);
+    std::vector< std::pair< std::vector<Type>, TemplateValue> >
+        end_function(void);
 
     void validate(std::ostream &);
     void optimize(int opt_level);
@@ -121,6 +144,13 @@ private:
      * @brief The return type of the current function, or NULL if none.
      */
     Type *rettype;
+
+    /**
+     * @brief The list of specializations that are used but have not yet been
+     *        defined.
+     */
+    std::vector< std::pair< std::vector<Type>, TemplateValue > >
+        specializations;
 
     /**
      * @brief Move to the other block.

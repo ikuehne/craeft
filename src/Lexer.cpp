@@ -58,7 +58,7 @@ static inline uint8_t digit(char n) {
 }
 
 static inline bool is_opchar(char c) {
-    return std::string(":.*=+-><&%^@~/").find(c) != std::string::npos;
+    return std::string("!:.*=+-><&%^@~/").find(c) != std::string::npos;
 }
 
 boost::variant<double, uint64_t> Lexer::lex_number(void) {

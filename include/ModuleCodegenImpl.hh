@@ -62,6 +62,29 @@ private:
     std::string &fname;
 };
 
+class TemplateTypeCodegen: public boost::static_visitor<TemplateType> {
+public:
+    TemplateTypeCodegen(Translator &translator,
+                        std::string &fname,
+                        std::vector<std::string> args)
+        : translator(translator), fname(fname), args(args) {}
+    /**
+     * @brief Get the LLVM type corresponding to the given Craeft type.
+     */
+    TemplateType codegen(const AST::Type &);
+
+    // Visitors for Type nodes.
+    TemplateType operator()(const AST::NamedType &);
+    TemplateType operator()(const AST::Void &);
+    TemplateType operator()(const std::unique_ptr<AST::Pointer> &);
+    TemplateType operator()(const std::unique_ptr<AST::TemplatedType> &);
+
+private:
+    Translator &translator;
+    std::vector<std::string> args;
+    std::string &fname;
+};
+
 class ExpressionCodegen;
 
 class LValueCodegen: public boost::static_visitor<Value> {
@@ -166,6 +189,10 @@ public:
     void emit_ir(std::ostream &);
     void emit_obj(int fd);
     void emit_asm(int fd);
+
+    std::vector< std::pair< std::vector<Type>, TemplateValue> >
+         codegen_function_with_name(
+            const AST::FunctionDefinition &, std::string);
 
     // Visitors for top-level AST nodes.
     void operator()(const AST::TypeDeclaration &);

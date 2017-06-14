@@ -57,8 +57,54 @@ Type TypeCodegen::operator()(const std::unique_ptr<AST::Pointer> &ut) {
     return Pointer<>(codegen(ut->pointed));
 }
 
-Type TypeCodegen::operator()(const std::unique_ptr<AST::TemplatedType> &ut) {
+Type TypeCodegen::operator()(const std::unique_ptr<AST::TemplatedType> &t) {
+    std::vector<Type> args;
+
+    for (const auto &arg: t->args) {
+        args.push_back(codegen(arg));
+    }
+
+    return translator.specialize_template(t->name, args, SourcePos(0, 0));
 }
+
+/*****************************************************************************
+ * Code generation for template types.
+ */
+
+TemplateType TemplateTypeCodegen::codegen(const AST::Type &ty) {
+    return boost::apply_visitor(*this, ty);
+}
+
+TemplateType TemplateTypeCodegen::operator()(const AST::NamedType &it) {
+    for (int i = 0; i < (int)args.size(); ++i) {
+        if (it.name == args[i]) {
+            return i;
+        }
+    }
+    
+    return to_template(translator.lookup_type(it.name, SourcePos(0, 0)));
+}
+
+TemplateType TemplateTypeCodegen::operator()(const AST::Void &_) {
+    return Void();
+}
+
+TemplateType TemplateTypeCodegen::operator()(
+        const std::unique_ptr<AST::Pointer> &ut) {
+    return Pointer<TemplateType>(codegen(ut->pointed));
+}
+
+TemplateType TemplateTypeCodegen::operator()(
+        const std::unique_ptr<AST::TemplatedType> &t) {
+    std::vector<TemplateType> args;
+
+    for (const auto &arg: t->args) {
+        args.push_back(codegen(arg));
+    }
+
+    return translator.respecialize_template(t->name, args, SourcePos(0, 0));
+}
+
 
 /*****************************************************************************
  * Code generation for L-Values.
@@ -223,8 +269,22 @@ Value ExpressionCodegen::operator()(
 }
 
 Value ExpressionCodegen::operator()(
-        const std::unique_ptr<AST::TemplateFunctionCall> &) {
+        const std::unique_ptr<AST::TemplateFunctionCall> &call) {
+    TypeCodegen tg(translator, fname);
 
+    std::vector<Type> tmpl_args;
+
+    for (const auto &arg: call->tmpl_args) {
+        tmpl_args.push_back(tg.codegen(arg));
+    }
+
+    std::vector<Value> args;
+
+    for (const auto &arg: call->val_args) {
+        args.push_back(codegen(arg));
+    }
+
+    return translator.call(call->fname, tmpl_args, args, call->pos);
 }
 
 Value ExpressionCodegen::operator()(
@@ -354,8 +414,22 @@ void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
     translator.create_struct(t);
 }
 
-void ModuleCodegenImpl::operator()(const AST::TemplateStructDeclaration &) {
+void ModuleCodegenImpl::operator()(const AST::TemplateStructDeclaration &s) {
+    std::vector<std::pair<std::string, std::shared_ptr<TemplateType> > >fields;
+    TemplateTypeCodegen tg(translator, fname, s.argnames);
 
+    for (const auto &decl: s.decl.members) {
+        auto t = std::make_shared<TemplateType>(tg.codegen(decl->type));
+        fields.push_back(std::pair<std::string,
+                                  std::shared_ptr<TemplateType> >
+                                  (decl->name.name, t));
+    }
+
+    Struct<TemplateType> t(fields, s.decl.name);
+
+    TemplateStruct tmpl(t, s.argnames.size());
+
+    translator.register_template(tmpl, s.decl.name);
 }
 
 Function<> ModuleCodegenImpl::type_of_ast_decl(
@@ -379,27 +453,76 @@ void ModuleCodegenImpl::operator()(const AST::FunctionDeclaration &fd) {
     translator.create_function_prototype(ty, fd.name);
 }
 
-void ModuleCodegenImpl::operator()(
-        const std::unique_ptr<AST::FunctionDefinition> &fd) {
-    auto ty = type_of_ast_decl(fd->signature);
+std::vector< std::pair< std::vector<Type>, TemplateValue> >
+ModuleCodegenImpl::codegen_function_with_name(
+        const AST::FunctionDefinition &fd,
+        std::string name) {
+    auto ty = type_of_ast_decl(fd.signature);
 
     std::vector<std::string> arg_names;
 
-    for (auto &decl: fd->signature.args) {
+    for (auto &decl: fd.signature.args) {
         arg_names.push_back(decl->name.name);
     }
 
-    translator.create_and_start_function(ty, arg_names, fd->signature.name);
+    translator.create_and_start_function(ty, arg_names, name);
 
-    for (const auto &arg: fd->block) {
+    for (const auto &arg: fd.block) {
         stmt_cg.codegen(arg);
     }
 
-    translator.end_function();
+    return translator.end_function();
 }
 
-void ModuleCodegenImpl::operator()(const AST::TemplateFunctionDefinition &) {
+void ModuleCodegenImpl::operator()(
+        const std::unique_ptr<AST::FunctionDefinition> &fd) {
+    auto specializations = codegen_function_with_name(*fd,
+                                                      fd->signature.name);
 
+    for (int i = 0; i < (int)specializations.size(); ++i) {
+        const auto specialization = specializations[i];
+        const auto &args = specialization.first;
+        const auto &val = specialization.second;
+
+        assert(val.arg_names.size() == args.size());
+
+        translator.push_scope();
+
+        for (int j = 0; j < (int)args.size(); ++j) {
+            translator.bind_type(val.arg_names[j], args[j]);
+        }
+
+        auto name = mangle_name(val.fd->signature.name, args);
+
+        // Add any specializations added in codegen for *this* specialization.
+        auto new_specializations = codegen_function_with_name(*val.fd, name);
+
+        for (const auto &specialization: new_specializations) {
+            specializations.push_back(specialization);
+        }
+
+        translator.pop_scope();
+    }
+}
+
+void ModuleCodegenImpl::operator()(const AST::TemplateFunctionDefinition &f) {
+    auto name = f.def->signature.name;
+
+    std::vector<std::shared_ptr<TemplateType> >arg_types;
+    TemplateTypeCodegen tg(translator, fname, f.argnames);
+
+    for (const auto &decl: f.def->signature.args) {
+        arg_types.push_back(std::make_shared<TemplateType>
+                                            (tg.codegen(decl->type)));
+    }
+
+    auto ret_type = std::make_shared<TemplateType>
+                                    (tg.codegen(f.def->signature.ret_type));
+
+    auto t = Function<TemplateType>(ret_type, arg_types);
+
+    translator.register_template(name, f.def, f.argnames,
+                                 TemplateFunction(t, f.argnames));
 }
 
 void ModuleCodegenImpl::optimize(int opt_level) {

@@ -489,7 +489,7 @@ struct FunctionDefinition {
  */
 struct TemplateFunctionDefinition {
     std::vector<std::string> argnames;
-    std::unique_ptr<FunctionDefinition> def;
+    std::shared_ptr<FunctionDefinition> def;
 
     TemplateFunctionDefinition(FunctionDeclaration signature,
                                std::vector<std::string> argnames,

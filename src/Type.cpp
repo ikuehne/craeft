@@ -253,7 +253,7 @@ struct SpecializerTypeVisitor: public boost::static_visitor<Type> {
         return args[i];
     }
 
-    Type operator()(const Function<TemplateType> &fn) const {
+    Function<Type> operator()(const Function<TemplateType> &fn) const {
         auto rettype = std::make_shared<Type>
                                        (specialize(*fn.get_rettype(), args));
 
@@ -335,7 +335,7 @@ std::string mangle_name(std::string fname,
                         const std::vector<Type> &args) {
     std::stringstream namestream;
 
-    namestream << "fntmpl." << fname;
+    namestream << "FnTmpl." << fname;
 
     for (auto &arg: args) {
         namestream << "." << get_name(arg);
@@ -345,8 +345,66 @@ std::string mangle_name(std::string fname,
 }
 
 /*****************************************************************************
+ * Converting normal types to template types.
+ */
+
+class TemplatizerVisitor: public boost::static_visitor<TemplateType> {
+public:
+    template<typename T>
+    TemplateType operator()(const T &t) const {
+        return t;
+    }
+
+    TemplateType operator()(const Struct<Type> &t) const {
+        std::vector<std::pair<std::string, std::shared_ptr<TemplateType> > >
+                fields;
+
+        for (const auto &field: t.get_fields()) {
+            auto t = boost::apply_visitor(*this, *field.second);
+            auto p = std::make_shared<TemplateType>(t);
+
+            fields.push_back(
+                    std::pair<std::string, std::shared_ptr<TemplateType> >(
+                        field.first, p));
+        }
+
+        return Struct<TemplateType>(fields, t.get_name());
+    }
+
+    TemplateType operator()(const Pointer<Type> &p) const {
+        auto pointed = boost::apply_visitor(*this, *p.get_pointed());
+
+        auto ptr = std::make_shared<TemplateType>(pointed);
+
+        return Pointer<TemplateType>(ptr);
+    }
+
+    Function<TemplateType> operator()(const Function<Type> &f) const {
+        auto rettype = boost::apply_visitor(*this, *f.get_rettype());
+        auto ptr = std::make_shared<TemplateType>(rettype);
+
+        std::vector<std::shared_ptr<TemplateType> >args;
+
+        for (const auto &arg: f.get_args()) {
+            auto a = boost::apply_visitor(*this, *arg);
+            args.push_back(std::make_shared<TemplateType>(a));
+        }
+
+        return Function<TemplateType>(ptr, args);
+    }
+
+};
+
+TemplateType to_template(const Type &t) {
+    return boost::apply_visitor(TemplatizerVisitor(), t);
+}
+
+/*****************************************************************************
  * Template types.
  */
+
+TemplateStruct::TemplateStruct(Struct<TemplateType> inner, int n_parameters)
+    : n_parameters(n_parameters), inner(inner) {}
 
 int TemplateStruct::get_nparameters(void) const {
     return n_parameters;
@@ -364,6 +422,15 @@ Struct<Type> TemplateStruct::specialize(
 Struct<TemplateType> TemplateStruct::respecialize(
         const std::vector<TemplateType> &args) const {
     return RespecializerTypeVisitor(args)(get_inner());
+}
+
+TemplateFunction::TemplateFunction(Function<TemplateType> inner,
+                                   std::vector<std::string> args)
+    : n_parameters(args.size()),
+      inner(inner) {}
+
+Function<Type> TemplateFunction::specialize(const std::vector<Type> &args) const {
+    return SpecializerTypeVisitor(args)(inner);
 }
 
 }

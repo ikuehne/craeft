@@ -206,6 +206,12 @@ public:
     Value call(std::string func, std::vector<Value> &args, SourcePos pos);
 
     /**
+     * @brief Template function call.
+     */
+    Value call(std::string func, std::vector<Type> &templ_args,
+               std::vector<Value> &v_args, SourcePos pos);
+
+    /**
      * @brief Create a variable with the given name and type.
      */
     Variable declare(const std::string &name, const Type &t);
@@ -248,6 +254,43 @@ public:
      */
     Type lookup_type(std::string tname, SourcePos pos);
 
+    /**
+     * @brief Push a new scope.
+     */
+    void push_scope(void);
+
+    /**
+     * @brief Pop the topmost scope.
+     */
+    void pop_scope(void);
+
+    /**
+     * @brief Bind the given name to the given type.
+     */
+    void bind_type(std::string, Type t);
+
+    Type specialize_template(std::string template_name,
+                             const std::vector<Type> &args,
+                             SourcePos pos);
+
+    /**
+     * @brief Register a template function.
+     */
+    void register_template(std::string name,
+                           std::shared_ptr<AST::FunctionDefinition>,
+                           std::vector<std::string> args,
+                           TemplateFunction func);
+
+    /**
+     * @brief Register a template struct.
+     */
+    void register_template(TemplateStruct, std::string name);
+
+    Struct<TemplateType> respecialize_template(std::string template_name,
+                                         const std::vector<TemplateType>
+                                              &args,
+                                         SourcePos pos);
+
     /** @} **/
 
     /**
@@ -282,19 +325,27 @@ public:
     /**
      * @defgroup Control structures.
      *
-     * Again, fairly thin abstractions over LLVM's primitives.
-     *
      * @{
      */
 
     void create_function_prototype(Function<> f, std::string name);
+
     void create_and_start_function(Function<> f,
                                    std::vector<std::string> args,
                                    std::string name);
 
     void create_struct(Struct<> t);
+    void create_struct(TemplateStruct t);
 
-    void end_function(void);
+    /**
+     * @brief Point away from the current function.
+     *
+     * @return A vector of specializations referenced in the current function,
+     *         which need to be defined in the current module or a linked
+     *         module.
+     */
+    std::vector< std::pair< std::vector<Type>, TemplateValue> >
+        end_function(void);
 
     /** @} */
 
