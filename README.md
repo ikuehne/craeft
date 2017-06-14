@@ -174,6 +174,7 @@ Compiling
 To compile the compiler:
 
 ```
+mkdir build
 cd build
 cmake ..
 make
