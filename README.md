@@ -31,7 +31,10 @@ EBNR:
 ```
 identifier: [a-z][a-zA-Z0-9_]*
 
-Type: [A-Z][a-zA-Z0-9_]*
+TypeName: [A-Z][a-zA-Z0-9_]*
+
+Type: TypeName
+    | TypeName<:[Type,]* Type:>
 
 op: [!*+-><&%^@~/=]+
 
@@ -77,7 +80,8 @@ I've also omitted the definition of `literal`, simply because it is boring and
 new literals are likely to be added soon.  C numeric literals are currently
 supported, except for hexadecimal literals.
 
-### An Example
+An Example
+----------
 
 As is traditional, we introduce the language with a definition of the factorial
 function:
@@ -96,8 +100,8 @@ are written with a `U` or an `I` followed by the number of bits, which can range
 from 1 (for a boolean) to 64.
 
 Also, the compiler optimizes simple tail calls.  The code it produces for this
-function is (after cleaning up a couple of labels and removing some assembler
-directives):
+function on x86 is (after cleaning up a couple of labels and removing some
+assembler directives):
 
 ```assembly_x86
 fact:
@@ -114,3 +118,84 @@ finish:
     retq
 ```
 
+Generics
+--------
+
+The main feature of Cr&#230;ft not shared with C is its support for structural
+and functional generics.  A structural template allows filling struct fields
+with type parameters.  So, for example, a generic linked list would look like:
+
+```
+struct<:T:> ListNode {
+    T contents;
+    U8 *next;
+}
+```
+
+(there is a bug in the compiler implementation which prevents recursive struct
+definitions, even where the size can be computed--this is an early alpha
+compiler).  This can then be used like a normal struct by providing the type
+parameter in a declaration:
+
+```
+ListNode<:U64:> int_list;
+int_list.contents = 10;
+...
+```
+
+Functional generics similarly allow for a function with a type parameter.  So,
+if we wanted a function which created a new singleton list of a generic type, we
+could write:
+
+```
+fn<:T:> list_new(T contents) -> ListNode<:T:> {
+    ListNode<:T:> result;
+    result.contents = contents;
+    result.next = (U8 *)0;
+    return result;
+}
+```
+
+The compiler currently expands all templates at compile time, so this is
+nominally a "zero-cost" abstraction.  Of course, that could easily lead to an
+explosion in compile times and code size, so a short term goal is to add support
+for runtime polymorphism, which has no such drawbacks.
+
+Linking with C Code
+-------------------
+
+Linking with C code is trivial.  The compiler uses the system C calling
+convention and alignment rules, so compiled code need simply declare the C
+function, and then it may be called freely.
+
+Compiling
+=========
+
+To compile the compiler:
+
+```
+cd build
+cmake ..
+make
+```
+
+LLVM, a compiler supporting C++14, Boost, and cmake are required.
+
+Usage and Example Code
+======================
+The compiler can produce LLVM IR, assembly, or static object code files, with
+the `--ll`, `--asm`, and `-c` flags respectively.  So to compile the
+`factorial.cr` example:
+
+```
+./craeftc ../examples/factorial.cr -c factorial.o
+```
+
+Each of the examples has a corresponding C "harness" which calls the Cr&#230;ft
+functions.  So, to compile and run `factorial.cr` with the harness:
+
+```
+cc ../examples/factorial\_harness.c -c
+cc factorial\_harness.o factorial.o -o factorial
+./factorial
+```
