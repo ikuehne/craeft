@@ -35,6 +35,7 @@ TypeName: [A-Z][a-zA-Z0-9_]*
 
 Type: TypeName
     | TypeName<:[Type,]* Type:>
+    | Type *
 
 op: [!*+-><&%^@~/=]+
 
