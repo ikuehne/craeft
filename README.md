@@ -42,6 +42,9 @@ op: [!*+-><&%^@~/=]+
 expr: identifier
     | literal
     | expr op expr
+    | identifier ( [expr,]* expr)
+    | identifier ( )
+    | Type ( expr )
 
 declaration: Type identifier;
            | Type identifier = expr;
