@@ -26,7 +26,7 @@ Syntax
 ------
 
 The syntax is simple, and largely familiar to any C programmer.  Roughly, in
-EBNR:
+EBNF:
 
 ```
 identifier: [a-z][a-zA-Z0-9_]*
