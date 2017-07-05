@@ -40,11 +40,12 @@ craeftc
 *.out
 *.app
 
-# YouCompleteMe
-.ycm_*
+# Compile commands database.
+compile_commands.json
 
 # Vim
 .*.swp
+.ycm*
 
 # I like to call temporary files for storing random crap one of these.
 log
