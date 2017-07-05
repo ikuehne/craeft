@@ -20,6 +20,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <functional>
+
 #include "llvm/ADT/Triple.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/LegacyPassManager.h"
@@ -300,7 +302,19 @@ public:
              llvm::Module &module,
              llvm::IRBuilder<> &builder)
         : module(module), lhs(lhs), rhs(rhs), pos(pos), fname(fname),
-          builder(builder) {}
+          builder(builder) {
+        unsigned_int_extender = [&](llvm::Value *v, llvm::Type *t) {
+            return get_builder().CreateSExtOrTrunc(v, t);
+        };
+
+        signed_int_extender = [&](llvm::Value *v, llvm::Type *t) {
+            return get_builder().CreateSExtOrTrunc(v, t);
+        };
+
+        float_extender = [&](llvm::Value *v, llvm::Type *t) {
+            return get_builder().CreateFPCast(v, t);
+        };
+    }
 
     virtual ~Operator() {};
 
@@ -382,6 +396,14 @@ protected:
 
     const std::string &get_fname(void) const { return fname; }
 
+    using Extender=std::function<llvm::Value *(llvm::Value *, llvm::Type*)>;
+
+    using Performer=std::function<llvm::Value *(llvm::Value *, llvm::Value*)>;
+
+    Extender unsigned_int_extender;
+    Extender signed_int_extender;
+    Extender float_extender;
+
     llvm::Module &module;
 
 private:
@@ -438,27 +460,24 @@ public:
                     llvm::IRBuilder<> &builder)
         : Operator(lhs, rhs, pos, fname, module, builder) {}
 
-	virtual ~BitwiseOperator() override {};
+    virtual ~BitwiseOperator() override {};
 
-    virtual llvm::Value *perform(llvm::Value *, llvm::Value *)
-        = 0;
+    virtual llvm::Value *perform(llvm::Value *, llvm::Value *) = 0;
 
-    virtual Value sint_int_op(const Value &l, const Value &r) override {
+    template<typename Extender>
+    Value extend_and_perform(const Value &l, const Value &r,
+                             Extender extender) {
         const auto &t = get_wider(l, r, module);
         llvm::Value *llvm_l;
         llvm::Value *llvm_r;
         if (t == l.get_type()) {
-            llvm_l = get_builder().CreateSExtOrTrunc(l.to_llvm(),
-                                                     to_llvm_type(t,
-                                                                  module));
+            llvm_l = extender(l.to_llvm(), to_llvm_type(t, module));
         } else {
             llvm_l = l.to_llvm();
         }
 
         if (t == r.get_type()) {
-            llvm_r = get_builder().CreateSExtOrTrunc(r.to_llvm(),
-                                                     to_llvm_type(t,
-                                                                  module));
+            llvm_r = extender(r.to_llvm(), to_llvm_type(t, module));
         } else {
             llvm_r = r.to_llvm();
         }
@@ -467,28 +486,12 @@ public:
         return Value(result, t);
     }
 
+    virtual Value sint_int_op(const Value &l, const Value &r) override {
+        return extend_and_perform(l, r, unsigned_int_extender);
+    }
+
     virtual Value uint_int_op(const Value &l, const Value &r) override {
-        const auto &t = get_wider(l, r, module);
-        llvm::Value *llvm_l;
-        llvm::Value *llvm_r;
-        if (t == l.get_type()) {
-            llvm_l = get_builder().CreateZExtOrTrunc(l.to_llvm(),
-                                                     to_llvm_type(t,
-                                                                  module));
-        } else {
-            llvm_l = l.to_llvm();
-        }
-
-        if (t == r.get_type()) {
-            llvm_r = get_builder().CreateZExtOrTrunc(r.to_llvm(),
-                                                     to_llvm_type(t,
-                                                                  module));
-        } else {
-            llvm_r = r.to_llvm();
-        }
-
-        auto *result = perform(llvm_l, llvm_r);
-        return Value(result, t);
+        return extend_and_perform(l, r, signed_int_extender);
     }
 };
 
@@ -499,7 +502,7 @@ public:
                   llvm::Module &module,\
                   llvm::IRBuilder<> &builder)\
             : BitwiseOperator(lhs, rhs, pos, fname, module, builder) {}\
-		virtual ~classname() override {}\
+        virtual ~classname() override {}\
         virtual std::string get_op() const override { return (op); }\
         llvm::Value *perform(llvm::Value *l, llvm::Value *r) override {\
             return get_builder().method(l, r);\
@@ -606,7 +609,7 @@ struct OpVisitor: boost::static_visitor<ArithmeticOpType> {
     }
 };
 
-const Float &get_wider_type(const Type &l, const Type &r) {
+const Float &get_wider_float(const Type &l, const Type &r) {
     auto *l_ty = boost::get<Float>(&l);
     auto *r_ty = boost::get<Float>(&r);
 
@@ -620,74 +623,97 @@ const Float &get_wider_type(const Type &l, const Type &r) {
     }
 }
 
-class AddOperator: public Operator {
+class ArithmeticOperator: public Operator {
+public:
+    ArithmeticOperator(const Value &lhs, const Value &rhs,
+                const SourcePos pos, const std::string &fname,
+                llvm::Module &module,
+                llvm::IRBuilder<> &builder)
+          : Operator(lhs, rhs, pos, fname, module, builder) {
+        sint_performer = [&](llvm::Value *l, llvm::Value *r) {
+            return sint_perform(l, r);
+        };
+
+        uint_performer = [&](llvm::Value *l, llvm::Value *r) {
+            return uint_perform(l, r);
+        };
+
+        float_performer = [&](llvm::Value *l, llvm::Value *r) {
+            return float_perform(l, r);
+        };
+    }
+
+    Value extend_and_perform_int(const Value &l, const Value &r,
+                                 Extender extender, Performer performer) {
+        auto *lty = to_llvm_type(l.get_type(), module);
+        auto *rty = to_llvm_type(r.get_type(), module);
+        int lbits = lty->getIntegerBitWidth();
+        int rbits = rty->getIntegerBitWidth();
+
+        if (lbits < rbits) {
+            auto *l_instr = extender(l.to_llvm(), rty);
+            auto *result = performer(l_instr, r.to_llvm());
+            return Value(result, r.get_type());
+        }
+
+        auto *r_instr = extender(r.to_llvm(), lty);
+        auto *result = performer(l.to_llvm(), r_instr);
+        return Value(result, l.get_type());
+    }
+
+    Value extend_and_perform_float(const Value &l, const Value &r,
+                                   Extender extender, Performer performer) {
+        Type wider = get_wider_float(l.get_type(), r.get_type());
+
+        llvm::Value *result;
+        if (wider == l.get_type()) {
+            auto *r_extended = extender(r.to_llvm(),
+                                        to_llvm_type(wider, module));
+            result = performer(l.to_llvm(), r_extended);
+        } else {
+            auto *l_extended = extender(l.to_llvm(),
+                                        to_llvm_type(wider, module));
+            result = performer(l_extended, r.to_llvm());
+        }
+
+        return Value(result, wider);
+    }
+
+    Value sint_int_op(const Value &l, const Value &r) override {
+        return extend_and_perform_int(l, r,
+                                      signed_int_extender, sint_performer);
+    }
+
+    Value uint_int_op(const Value &l, const Value &r) override {
+        return extend_and_perform_int(l, r,
+                                      unsigned_int_extender, uint_performer);
+    }
+
+    Value float_float_op(const Value &l, const Value &r) override {
+        return extend_and_perform_float(l, r,
+                                        float_extender, float_performer);
+    }
+
+protected:
+    virtual llvm::Value *uint_perform(llvm::Value *, llvm::Value *) = 0;
+    virtual llvm::Value *sint_perform(llvm::Value *, llvm::Value *) = 0;
+    virtual llvm::Value *float_perform(llvm::Value *, llvm::Value *) = 0;
+
+private:
+    Performer uint_performer;
+    Performer sint_performer;
+    Performer float_performer;
+};
+
+class AddOperator: public ArithmeticOperator {
 public:
     AddOperator(const Value &lhs, const Value &rhs,
                 const SourcePos pos, const std::string &fname,
                 llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, module, builder) {}
+          : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
 
-	~AddOperator() override {}
-
-    Value sint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type(), module);
-        auto *rty = to_llvm_type(r.get_type(), module);
-        int lbits = lty->getIntegerBitWidth();
-        int rbits = rty->getIntegerBitWidth();
-
-        if (lbits < rbits) {
-            auto *l_instr = get_builder().CreateSExtOrTrunc(l.to_llvm(),
-                                                            rty);
-            auto *result = get_builder().CreateAdd(l_instr, r.to_llvm());
-            return Value(result, r.get_type());
-        } else {
-            auto *r_instr = get_builder().CreateSExtOrTrunc(r.to_llvm(),
-                                                            lty);
-            auto *result = get_builder().CreateAdd(l.to_llvm(), r_instr);
-            return Value(result, l.get_type());
-        }
-    }
-
-    Value uint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type(), module);
-        auto *rty = to_llvm_type(r.get_type(), module);
-        int lbits = lty->getIntegerBitWidth();
-        int rbits = rty->getIntegerBitWidth();
-
-        if (lbits < rbits) {
-            auto *l_instr = get_builder().CreateZExtOrTrunc(l.to_llvm(),
-                                                            rty);
-            auto *result = get_builder().CreateAdd(l_instr, r.to_llvm());
-            return Value(result, r.get_type());
-        } else {
-            auto *r_instr = get_builder().CreateZExtOrTrunc(r.to_llvm(),
-                                                            lty);
-            auto *result = get_builder().CreateAdd(l.to_llvm(), r_instr);
-            return Value(result, l.get_type());
-        }
-    }
-
-    Value float_float_op(const Value &l, const Value &r) override {
-        Type wider = get_wider_type(l.get_type(), r.get_type());
-
-        llvm::Value *result;
-        if (wider == l.get_type()) {
-            auto *r_instr =
-                get_builder().CreateFPCast(r.to_llvm(),
-                                           to_llvm_type(wider, module));
-            result = get_builder().CreateFAdd(l.to_llvm(), r_instr);
-        } else {
-            assert(wider == r.get_type());
-
-            auto *l_instr =
-                get_builder().CreateFPCast(l.to_llvm(),
-                                           to_llvm_type(wider, module));
-            result = get_builder().CreateFAdd(l_instr, r.to_llvm());
-        }
-
-        return Value(result, wider);
-    }
+    ~AddOperator() override {}
 
     Value ptr_int_op(const Value &l, const Value &r) override {
         auto *result = get_builder().CreateGEP(l.to_llvm(), r.to_llvm());
@@ -701,80 +727,38 @@ public:
     std::string get_op(void) const override {
         return "+";
     }
+
+protected:
+
+    virtual llvm::Value *sint_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateAdd(l, r);
+    }
+
+    virtual llvm::Value *uint_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateAdd(l, r);
+    }
+
+    virtual llvm::Value *float_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateFAdd(l, r);
+    }
 };
 
 Value TranslatorImpl::add(Value lhs, Value rhs, SourcePos pos) {
     return AddOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
-class SubOperator: public Operator {
+class SubOperator: public ArithmeticOperator {
 public:
     SubOperator(const Value &lhs, const Value &rhs,
                 const SourcePos pos, const std::string &fname,
                 llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, module, builder) {}
+        : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
 
-	~SubOperator() override {}
-
-    Value sint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type(), module);
-        auto *rty = to_llvm_type(r.get_type(), module);
-        int lbits = lty->getIntegerBitWidth();
-        int rbits = rty->getIntegerBitWidth();
-
-        if (lbits < rbits) {
-            auto *l_instr = get_builder().CreateSExtOrTrunc(l.to_llvm(),
-                                                            rty);
-            auto *result = get_builder().CreateSub(l_instr, r.to_llvm());
-            return Value(result, r.get_type());
-        } else {
-            auto *r_instr = get_builder().CreateSExtOrTrunc(r.to_llvm(),
-                                                            lty);
-            auto *result = get_builder().CreateSub(l.to_llvm(), r_instr);
-            return Value(result, l.get_type());
-        }
-    }
-
-    Value uint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type(), module);
-        auto *rty = to_llvm_type(r.get_type(), module);
-        int lbits = lty->getIntegerBitWidth();
-        int rbits = rty->getIntegerBitWidth();
-
-        if (lbits < rbits) {
-            auto *l_instr = get_builder().CreateZExtOrTrunc(l.to_llvm(),
-                                                            rty);
-            auto *result = get_builder().CreateSub(l_instr, r.to_llvm());
-            return Value(result, r.get_type());
-        } else {
-            auto *r_instr = get_builder().CreateZExtOrTrunc(r.to_llvm(),
-                                                            lty);
-            auto *result = get_builder().CreateSub(l.to_llvm(), r_instr);
-            return Value(result, l.get_type());
-        }
-    }
-
-    Value float_float_op(const Value &l, const Value &r) override {
-        Type wider = get_wider_type(l.get_type(), r.get_type());
-
-        llvm::Value *result;
-        if (wider == l.get_type()) {
-            auto *r_instr =
-                get_builder().CreateFPCast(r.to_llvm(),
-                                           to_llvm_type(wider, module));
-            result = get_builder().CreateFSub(l.to_llvm(), r_instr);
-        } else {
-            assert(wider == r.get_type());
-
-            auto *l_instr =
-                get_builder().CreateFPCast(l.to_llvm(),
-                                           to_llvm_type(wider, module));
-            result = get_builder().CreateFSub(l_instr, r.to_llvm());
-        }
-
-        return Value(result, wider);
-    }
+    ~SubOperator() override {}
 
     Value ptr_int_op(const Value &l, const Value &r) override {
         // Construct negative `r` by subtracting it from 0.
@@ -801,83 +785,56 @@ public:
     std::string get_op(void) const override {
         return "-";
     }
+
+protected:
+    virtual llvm::Value *sint_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateSub(l, r);
+    }
+
+    virtual llvm::Value *uint_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateSub(l, r);
+    }
+
+    virtual llvm::Value *float_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateFSub(l, r);
+    }
 };
 
 Value TranslatorImpl::sub(Value lhs, Value rhs, SourcePos pos) {
     return SubOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
-class MulOperator: public Operator {
+class MulOperator: public ArithmeticOperator {
 public:
     MulOperator(const Value &lhs, const Value &rhs,
                 const SourcePos pos, const std::string &fname,
                 llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, module, builder) {}
+        : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
 
-	~MulOperator() {}
-
-    Value sint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type(), module);
-        auto *rty = to_llvm_type(r.get_type(), module);
-        int lbits = lty->getIntegerBitWidth();
-        int rbits = rty->getIntegerBitWidth();
-
-        if (lbits < rbits) {
-            auto *l_instr = get_builder().CreateSExtOrTrunc(l.to_llvm(),
-                                                            rty);
-            auto *result = get_builder().CreateMul(l_instr, r.to_llvm());
-            return Value(result, r.get_type());
-        } else {
-            auto *r_instr = get_builder().CreateSExtOrTrunc(r.to_llvm(),
-                                                            lty);
-            auto *result = get_builder().CreateMul(l.to_llvm(), r_instr);
-            return Value(result, l.get_type());
-        }
-    }
-
-    Value uint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type(), module);
-        auto *rty = to_llvm_type(r.get_type(), module);
-        int lbits = lty->getIntegerBitWidth();
-        int rbits = rty->getIntegerBitWidth();
-
-        if (lbits < rbits) {
-            auto *l_instr = get_builder().CreateZExtOrTrunc(l.to_llvm(),
-                                                            rty);
-            auto *result = get_builder().CreateMul(l_instr, r.to_llvm());
-            return Value(result, r.get_type());
-        } else {
-            auto *r_instr = get_builder().CreateZExtOrTrunc(r.to_llvm(),
-                                                            lty);
-            auto *result = get_builder().CreateMul(l.to_llvm(), r_instr);
-            return Value(result, l.get_type());
-        }
-    }
-
-    Value float_float_op(const Value &l, const Value &r) override {
-        Type wider = get_wider_type(l.get_type(), r.get_type());
-
-        llvm::Value *result;
-        if (wider == l.get_type()) {
-            auto *r_instr =
-                get_builder().CreateFPCast(r.to_llvm(),
-                                           to_llvm_type(wider, module));
-            result = get_builder().CreateFMul(l.to_llvm(), r_instr);
-        } else {
-            assert(wider == r.get_type());
-
-            auto *l_instr =
-                get_builder().CreateFPCast(l.to_llvm(),
-                                           to_llvm_type(wider, module));
-            result = get_builder().CreateFMul(l_instr, r.to_llvm());
-        }
-
-        return Value(result, wider);
-    }
+    ~MulOperator() {}
 
     std::string get_op(void) const override {
         return "*";
+    }
+
+protected:
+    virtual llvm::Value *sint_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateMul(l, r);
+    }
+
+    virtual llvm::Value *uint_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateMul(l, r);
+    }
+
+    virtual llvm::Value *float_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateFMul(l, r);
     }
 };
 
@@ -885,77 +842,34 @@ Value TranslatorImpl::mul(Value lhs, Value rhs, SourcePos pos) {
     return MulOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
-class DivOperator: public Operator {
+class DivOperator: public ArithmeticOperator {
 public:
     DivOperator(const Value &lhs, const Value &rhs,
                 const SourcePos pos, const std::string &fname,
                 llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, module, builder) {}
+        : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
 
-	~DivOperator() override {}
-
-    Value sint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type(), module);
-        auto *rty = to_llvm_type(r.get_type(), module);
-        int lbits = lty->getIntegerBitWidth();
-        int rbits = rty->getIntegerBitWidth();
-
-        if (lbits < rbits) {
-            auto *l_instr = get_builder().CreateSExtOrTrunc(l.to_llvm(),
-                                                            rty);
-            auto *result = get_builder().CreateSDiv(l_instr, r.to_llvm());
-            return Value(result, r.get_type());
-        } else {
-            auto *r_instr = get_builder().CreateSExtOrTrunc(r.to_llvm(),
-                                                            lty);
-            auto *result = get_builder().CreateSDiv(l.to_llvm(), r_instr);
-            return Value(result, l.get_type());
-        }
-    }
-
-    Value uint_int_op(const Value &l, const Value &r) override {
-        auto *lty = to_llvm_type(l.get_type(), module);
-        auto *rty = to_llvm_type(r.get_type(), module);
-        int lbits = lty->getIntegerBitWidth();
-        int rbits = rty->getIntegerBitWidth();
-
-        if (lbits < rbits) {
-            auto *l_instr = get_builder().CreateZExtOrTrunc(l.to_llvm(),
-                                                            rty);
-            auto *result = get_builder().CreateUDiv(l_instr, r.to_llvm());
-            return Value(result, r.get_type());
-        } else {
-            auto *r_instr = get_builder().CreateZExtOrTrunc(r.to_llvm(),
-                                                            lty);
-            auto *result = get_builder().CreateUDiv(l.to_llvm(), r_instr);
-            return Value(result, l.get_type());
-        }
-    }
-
-    Value float_float_op(const Value &l, const Value &r) override {
-        Type wider = get_wider_type(l.get_type(), r.get_type());
-
-        llvm::Value *result;
-        if (wider == l.get_type()) {
-            auto *r_instr =
-                get_builder().CreateFPCast(r.to_llvm(),
-                                           to_llvm_type(wider, module));
-            result = get_builder().CreateFDiv(l.to_llvm(), r_instr);
-        } else {
-            assert(wider == r.get_type());
-
-            auto *l_instr =
-                get_builder().CreateFPCast(l.to_llvm(),
-                                           to_llvm_type(wider, module));
-            result = get_builder().CreateFDiv(l_instr, r.to_llvm());
-        }
-
-        return Value(result, wider);
-    }
+    ~DivOperator() override {}
 
     std::string get_op(void) const override {
         return "/";
+    }
+
+protected:
+    virtual llvm::Value *sint_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateSDiv(l, r);
+    }
+
+    virtual llvm::Value *uint_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateUDiv(l, r);
+    }
+
+    virtual llvm::Value *float_perform(llvm::Value *l, llvm::Value *r)
+          override {
+        return get_builder().CreateFDiv(l, r);
     }
 };
 
@@ -963,158 +877,237 @@ Value TranslatorImpl::div(Value lhs, Value rhs, SourcePos pos) {
     return DivOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
-Value TranslatorImpl::apply_to_wider_integer(
-        Value lhs, Value rhs, SourcePos pos,
-        std::function<llvm::Value *(llvm::Value *, llvm::Value *)>f) {
-    assert(lhs.is_integral());
-    assert(rhs.is_integral());
+class ComparisonOperator: public ArithmeticOperator {
+public:
+    ComparisonOperator(const Value &lhs, const Value &rhs,
+                const SourcePos pos, const std::string &fname,
+                llvm::Module &module,
+                llvm::IRBuilder<> &builder)
+        : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
 
-    Type lt = lhs.get_type();
-    Type rt = rhs.get_type();
-
-    llvm::Type *llt = to_llvm_type(lt, *module);
-    llvm::Type *lrt = to_llvm_type(rt, *module);
-
-    int lbits = llt->getIntegerBitWidth();
-    int rbits = lrt->getIntegerBitWidth();
-
-    bool signed_op;
-
-    if (is_type<SignedInt>(lt) && is_type<SignedInt>(rt)) {
-        signed_op = true;
-    } else if (is_type<UnsignedInt>(lt) && is_type<UnsignedInt>(rt)) {
-        signed_op = false;
-    } else {
-        throw Error("type error", "cannot perform operation between signed "
-                                  "and unsigned integers", fname, pos);
-    }
-
-    if (lbits > rbits) {
-        llvm::Value *r;
-
-        if (signed_op) {
-            r = builder.CreateSExtOrTrunc(rhs.to_llvm(), llt);
-        } else {
-            r = builder.CreateZExtOrTrunc(rhs.to_llvm(), llt);
+    virtual Value ptr_ptr_op(const Value &l, const Value &r) override {
+        if (!(l.get_type() == r.get_type())) {
+            throw Error("type error", "cannot compare pointers to different "
+                                      "types", get_fname(), get_pos());
         }
 
-        auto *result = f(lhs.to_llvm(), r);
-
-        return Value(result, lt);
-    } else {
-        llvm::Value *l;
-
-        if (signed_op) {
-            l = builder.CreateSExtOrTrunc(lhs.to_llvm(), lrt);
-        } else {
-            l = builder.CreateZExtOrTrunc(lhs.to_llvm(), lrt);
-        }
-
-        auto *result = f(l, rhs.to_llvm());
-
-        return Value(result, rt);
+        auto result = get_builder().CreateICmp(unsigned_int_predicate(),
+                                               l.to_llvm(), r.to_llvm());
+        return Value(result, l.get_type());
     }
-}
 
-Value TranslatorImpl::build_comp(Value lhs, Value rhs, SourcePos pos,
-                                 llvm::CmpInst::Predicate sip,
-                                 llvm::CmpInst::Predicate uip,
-                                 llvm::CmpInst::Predicate fp) {
-    OpVisitor v;
-
-    auto lhs_ty = lhs.get_type();
-    auto rhs_ty = rhs.get_type();
-
-    Type wider(lhs_ty);
-    llvm::Value *lhs_casted;
-    llvm::Value *rhs_casted;
-    llvm::Value *result;
-
-    switch (boost::apply_visitor(v, lhs_ty, rhs_ty)) {
-        case UIntIntOp:
-            return apply_to_wider_integer(lhs, rhs, pos,
-                                          [&](auto *lhs, auto *rhs) {
-                return builder.CreateICmp(uip, lhs, rhs);
-            });
-        case SIntIntOp:
-            return apply_to_wider_integer(lhs, rhs, pos,
-                                          [&](auto *lhs, auto *rhs) {
-                return builder.CreateICmp(sip, lhs, rhs);
-            });
-        case IntFloatOp:
-        case FloatIntOp:
-            throw Error("type error", "cannot compare integral and floating "
-                                      "point values", fname, pos);
-        case FloatFloatOp:
-            wider = get_wider_type(lhs_ty, rhs_ty);
-            lhs_casted = cast(lhs, wider, pos).to_llvm();
-            rhs_casted = cast(rhs, wider, pos).to_llvm();
-
-            result = builder.CreateFCmp(fp, lhs_casted, rhs_casted);
-            return Value(result, wider);
-
-        case PtrIntOp:
-        case IntPtrOp:
-            throw Error("type error", "cannot compare integers and pointers",
-                        fname, pos);
-
-        case PtrPtrOp:
-            // TODO: Add != operator.
-            if (!(lhs_ty == rhs_ty)) {
-                throw Error("type error", "cannot compare pointers to "
-                                          "different types", fname, pos);
-            }
-
-            result = builder.CreateICmp(uip, lhs.to_llvm(), rhs.to_llvm());
-            return Value(result, lhs_ty);
-
-        case IllegalOp:
-            throw Error("type error", "illegal operation", fname, pos);
+protected:
+    virtual llvm::Value *sint_perform(llvm::Value *l, llvm::Value *r) 
+         override {
+       return get_builder().CreateICmp(signed_int_predicate(), l, r);
     }
-}
+
+    virtual llvm::Value *uint_perform(llvm::Value *l, llvm::Value *r) 
+         override {
+       return get_builder().CreateICmp(unsigned_int_predicate(), l, r);
+    }
+
+    virtual llvm::Value *float_perform(llvm::Value *l, llvm::Value *r) 
+         override {
+       return get_builder().CreateFCmp(float_predicate(), l, r);
+    }
+
+    virtual llvm::CmpInst::Predicate signed_int_predicate(void) = 0;
+    virtual llvm::CmpInst::Predicate unsigned_int_predicate(void) = 0;
+    virtual llvm::CmpInst::Predicate float_predicate(void) = 0;
+};
+
+class EqualOperator: public ComparisonOperator {
+public:
+    EqualOperator(const Value &lhs, const Value &rhs,
+                  const SourcePos pos, const std::string &fname,
+                  llvm::Module &module,
+                  llvm::IRBuilder<> &builder)
+        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+
+    ~EqualOperator() override {}
+
+    std::string get_op(void) const override {
+        return "==";
+    }
+
+protected:
+    virtual llvm::CmpInst::Predicate signed_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_EQ;
+    }
+
+    virtual llvm::CmpInst::Predicate unsigned_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_EQ;
+
+    }
+    virtual llvm::CmpInst::Predicate float_predicate(void) override {
+        return llvm::CmpInst::FCMP_OEQ;
+    }
+};
 
 Value TranslatorImpl::equal(Value lhs, Value rhs, SourcePos pos) {
-    return build_comp(lhs, rhs, pos,
-                      llvm::CmpInst::ICMP_EQ,
-                      llvm::CmpInst::ICMP_EQ,
-                      llvm::CmpInst::FCMP_OEQ);
+    return EqualOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
 
-Value TranslatorImpl::nequal(Value lhs, Value rhs, SourcePos pos) {
-    return build_comp(lhs, rhs, pos,
-                      llvm::CmpInst::ICMP_NE,
-                      llvm::CmpInst::ICMP_NE,
-                      llvm::CmpInst::FCMP_ONE);
-}
+class LessOperator: public ComparisonOperator {
+public:
+    LessOperator(const Value &lhs, const Value &rhs,
+                  const SourcePos pos, const std::string &fname,
+                  llvm::Module &module,
+                  llvm::IRBuilder<> &builder)
+        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+
+    ~LessOperator() override {}
+
+    std::string get_op(void) const override {
+        return "<";
+    }
+
+protected:
+    virtual llvm::CmpInst::Predicate signed_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_SLT;
+    }
+
+    virtual llvm::CmpInst::Predicate unsigned_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_ULT;
+
+    }
+    virtual llvm::CmpInst::Predicate float_predicate(void) override {
+        return llvm::CmpInst::FCMP_OLT;
+    }
+};
 
 Value TranslatorImpl::less(Value lhs, Value rhs, SourcePos pos) {
-    return build_comp(lhs, rhs, pos,
-                      llvm::CmpInst::ICMP_SLT,
-                      llvm::CmpInst::ICMP_ULT,
-                      llvm::CmpInst::FCMP_OLT);
+    return LessOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
+
+class LessEqOperator: public ComparisonOperator {
+public:
+    LessEqOperator(const Value &lhs, const Value &rhs,
+                  const SourcePos pos, const std::string &fname,
+                  llvm::Module &module,
+                  llvm::IRBuilder<> &builder)
+        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+
+    ~LessEqOperator() override {}
+
+    std::string get_op(void) const override {
+        return "<=";
+    }
+
+protected:
+    virtual llvm::CmpInst::Predicate signed_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_SLE;
+    }
+
+    virtual llvm::CmpInst::Predicate unsigned_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_ULE;
+
+    }
+    virtual llvm::CmpInst::Predicate float_predicate(void) override {
+        return llvm::CmpInst::FCMP_OLE;
+    }
+};
 
 Value TranslatorImpl::lesseq(Value lhs, Value rhs, SourcePos pos) {
-    return build_comp(lhs, rhs, pos,
-                      llvm::CmpInst::ICMP_SLE,
-                      llvm::CmpInst::ICMP_ULE,
-                      llvm::CmpInst::FCMP_OLE);
+    return LessEqOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
+
+class NequalOperator: public ComparisonOperator {
+public:
+    NequalOperator(const Value &lhs, const Value &rhs,
+                  const SourcePos pos, const std::string &fname,
+                  llvm::Module &module,
+                  llvm::IRBuilder<> &builder)
+        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+
+    ~NequalOperator() override {}
+
+    std::string get_op(void) const override {
+        return "!=";
+    }
+
+protected:
+    virtual llvm::CmpInst::Predicate signed_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_NE;
+    }
+
+    virtual llvm::CmpInst::Predicate unsigned_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_NE;
+
+    }
+    virtual llvm::CmpInst::Predicate float_predicate(void) override {
+        return llvm::CmpInst::FCMP_ONE;
+    }
+};
+
+Value TranslatorImpl::nequal(Value lhs, Value rhs, SourcePos pos) {
+    return NequalOperator(lhs, rhs, pos, fname, *module, builder).apply();
+}
+
+class GreaterOperator: public ComparisonOperator {
+public:
+    GreaterOperator(const Value &lhs, const Value &rhs,
+                  const SourcePos pos, const std::string &fname,
+                  llvm::Module &module,
+                  llvm::IRBuilder<> &builder)
+        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+
+    ~GreaterOperator() override {}
+
+    std::string get_op(void) const override {
+        return ">";
+    }
+
+protected:
+    virtual llvm::CmpInst::Predicate signed_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_SGT;
+    }
+
+    virtual llvm::CmpInst::Predicate unsigned_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_UGT;
+
+    }
+    virtual llvm::CmpInst::Predicate float_predicate(void) override {
+        return llvm::CmpInst::FCMP_OGT;
+    }
+};
 
 Value TranslatorImpl::greater(Value lhs, Value rhs, SourcePos pos) {
-    return build_comp(lhs, rhs, pos,
-                      llvm::CmpInst::ICMP_SGT,
-                      llvm::CmpInst::ICMP_UGT,
-                      llvm::CmpInst::FCMP_OGT);
+    return GreaterOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
+
+class GreaterEqOperator: public ComparisonOperator {
+public:
+    GreaterEqOperator(const Value &lhs, const Value &rhs,
+                  const SourcePos pos, const std::string &fname,
+                  llvm::Module &module,
+                  llvm::IRBuilder<> &builder)
+        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+
+    ~GreaterEqOperator() override {}
+
+    std::string get_op(void) const override {
+        return ">=";
+    }
+
+protected:
+    virtual llvm::CmpInst::Predicate signed_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_SGE;
+    }
+
+    virtual llvm::CmpInst::Predicate unsigned_int_predicate(void) override {
+        return llvm::CmpInst::ICMP_UGE;
+
+    }
+    virtual llvm::CmpInst::Predicate float_predicate(void) override {
+        return llvm::CmpInst::FCMP_OGE;
+    }
+};
 
 Value TranslatorImpl::greatereq(Value lhs, Value rhs, SourcePos pos) {
-    return build_comp(lhs, rhs, pos,
-                      llvm::CmpInst::ICMP_SGE,
-                      llvm::CmpInst::ICMP_UGE,
-                      llvm::CmpInst::FCMP_OGE);
+    return GreaterEqOperator(lhs, rhs, pos, fname, *module, builder).apply();
 }
-
 static inline bool is_u1(Value v) {
     auto ty = v.get_type();
     auto *lt = boost::get<UnsignedInt>(&ty);
@@ -1232,7 +1225,7 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
     }
 
     auto fbinding = env.lookup_identifier(func, pos, fname);
-	auto ty = fbinding.get_type();
+    auto ty = fbinding.get_type();
     auto *ftype = boost::get<Function<> >(&ty);
 
     if (!ftype) {
@@ -1244,8 +1237,6 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
         auto lhs_ty = args[i].get_type();
         auto rhs_ty = *ftype->get_args()[i];
         if (!(lhs_ty == rhs_ty)) {
-            auto lhs_pointed = boost::get<Pointer<> >(lhs_ty).get_pointed();
-            auto rhs_pointed = boost::get<Pointer<> >(rhs_ty).get_pointed();
             throw Error("type error", "argument does not match function type",
                         fname, pos);
         }

@@ -128,15 +128,6 @@ public:
     llvm::LLVMContext &get_ctx(void) { return context; }
 
 private:
-    Value apply_to_wider_integer(Value lhs, Value rhs, SourcePos pos,
-                                 std::function<llvm::Value *(
-                                        llvm::Value *, llvm::Value *)>);
-
-    Value build_comp(Value lhs, Value rhs, SourcePos pos,
-                     llvm::CmpInst::Predicate sip,
-                     llvm::CmpInst::Predicate uip,
-                     llvm::CmpInst::Predicate fp);
-
     inline std::pair<unsigned, Type *>
     get_field_idx(Type t, std::string field, SourcePos pos);
 
