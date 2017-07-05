@@ -67,7 +67,7 @@ public:
     TemplateTypeCodegen(Translator &translator,
                         std::string &fname,
                         std::vector<std::string> args)
-        : translator(translator), fname(fname), args(args) {}
+        : translator(translator), args(args) {}
     /**
      * @brief Get the LLVM type corresponding to the given Craeft type.
      */
@@ -82,7 +82,6 @@ public:
 private:
     Translator &translator;
     std::vector<std::string> args;
-    std::string &fname;
 };
 
 class ExpressionCodegen;
@@ -92,8 +91,7 @@ public:
     LValueCodegen(Translator &translator,
                   std::string &fname,
                   ExpressionCodegen &eg)
-        : translator(translator),
-          fname(fname), eg(eg) {}
+        : translator(translator), eg(eg) {}
     /**
      * @brief Generate an instruction yielding an address to the given
      *        l-value.
@@ -106,7 +104,6 @@ public:
 
 private:
     Translator &translator;
-    std::string &fname;
     ExpressionCodegen &eg;
 };
 
@@ -164,7 +161,6 @@ private:
     Translator &translator;
 
     std::string &fname;
-    llvm::Type *ret_type;
 
     /**
      * @brief The code generator for expressions.
