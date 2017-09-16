@@ -142,10 +142,7 @@ private:
      * Error-handling utilities.
      */
 
-    template<typename T>
-    inline void find_and_shift(std::string at_place);
-
-    inline void find_and_shift_op(std::string op, std::string at_place);
+    inline void find_and_shift(const Tok::Token&, std::string at_place);
 
     inline bool at_open_generic(void);
     inline bool at_close_generic(void);

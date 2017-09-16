@@ -55,7 +55,7 @@ public:
     /**
      * @brief Return the last lexed token.
      */
-    Tok::Token get_tok(void) const;
+    const Tok::Token &get_tok(void) const;
 
     /**
      * @brief Return whether the lexer has reached the end of the stream.
@@ -73,7 +73,7 @@ private:
     boost::variant<double, uint64_t> lex_number(void);
 
     bool eof;
-    Tok::Token tok;
+    std::unique_ptr<Tok::Token> tok;
     SourcePos pos;
     std::ifstream stream;
 };

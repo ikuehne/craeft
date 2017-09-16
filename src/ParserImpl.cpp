@@ -43,7 +43,7 @@ static inline AstLiteral get_literal(TokLiteral tok, SourcePos pos) {
  */
 
 bool is_arrow(const Tok::Token &tok) {
-    auto *op = boost::get<Tok::Operator>(&tok);
+    auto op = llvm::dyn_cast<Tok::Operator>(&tok);
 
     if (!op) return false;
 
@@ -197,29 +197,29 @@ AST::Expression ParserImpl::parse_expression(void) {
 }
 
 AST::Statement ParserImpl::parse_statement(void) {
-    if (is_type<Tok::TypeName>(lexer.get_tok())) {
+    if (llvm::isa<Tok::TypeName>(lexer.get_tok())) {
         auto result = parse_declaration();
-        find_and_shift<Tok::Semicolon>("after declaration");
+        find_and_shift(Tok::Semicolon(), "after declaration");
         return result;
-    } else if (is_type<Tok::Return>(lexer.get_tok())) {
+    } else if (llvm::isa<Tok::Return>(lexer.get_tok())) {
         auto result = parse_return();
-        find_and_shift<Tok::Semicolon>("after return statement");
+        find_and_shift(Tok::Semicolon(), "after return statement");
         return result;
-    } else if (is_type<Tok::If>(lexer.get_tok())) {
+    } else if (llvm::isa<Tok::If>(lexer.get_tok())) {
         return parse_if_statement();
     } else {
         auto result = parse_expression();
-        find_and_shift<Tok::Semicolon>("after top-level expression");
+        find_and_shift(Tok::Semicolon(), "after top-level expression");
         return extract_assignments(result);
     }
 }
 
 AST::TopLevel ParserImpl::parse_toplevel(void) {
-    if (is_type<Tok::Fn>(lexer.get_tok())) {
+    if (llvm::isa<Tok::Fn>(lexer.get_tok())) {
         return parse_function();
-    } else if (is_type<Tok::Struct>(lexer.get_tok())) {
+    } else if (llvm::isa<Tok::Struct>(lexer.get_tok())) {
         return parse_struct_declaration();
-    } else if (is_type<Tok::Type>(lexer.get_tok())) {
+    } else if (llvm::isa<Tok::Type>(lexer.get_tok())) {
         return parse_type_declaration();
     } else {
         _throw("expected function or type declaration at top level");
@@ -242,7 +242,7 @@ std::vector<AST::Expression> ParserImpl::parse_expr_list(void) {
         cont = false;
         exprs.push_back(parse_expression());
 
-        if (is_type<Tok::Comma>(lexer.get_tok())) {
+        if (llvm::isa<Tok::Comma>(lexer.get_tok())) {
             lexer.shift();
             cont = true;
         }
@@ -259,7 +259,7 @@ std::vector<AST::Type> ParserImpl::parse_type_list(void) {
         cont = false;
         types.push_back(parse_type());
 
-        if (is_type<Tok::Comma>(lexer.get_tok())) {
+        if (llvm::isa<Tok::Comma>(lexer.get_tok())) {
             lexer.shift();
             cont = true;
         }
@@ -269,7 +269,7 @@ std::vector<AST::Type> ParserImpl::parse_type_list(void) {
 }
 
 AST::Expression ParserImpl::parse_variable(void) {
-    auto tok = boost::get<Tok::Identifier>(lexer.get_tok());
+    auto tok = llvm::cast<Tok::Identifier>(lexer.get_tok());
 
     std::string id = tok.name;
 
@@ -288,25 +288,25 @@ AST::Expression ParserImpl::parse_variable(void) {
             assert(t_args.size() > 0);
         }
 
-        find_and_shift_op(":>", "after template argument list");
+        find_and_shift(Tok::Operator(":>"), "after template argument list");
 
-        find_and_shift<Tok::OpenParen>("in template function call");
+        find_and_shift(Tok::OpenParen(), "in template function call");
 
         std::vector<AST::Expression> args;
 
-        if (!is_type<Tok::CloseParen>(lexer.get_tok())) {
+        if (!llvm::isa<Tok::CloseParen>(lexer.get_tok())) {
             args = parse_expr_list();
         }
 
         // Shift the close paren.
-        find_and_shift<Tok::CloseParen>("after function argument list");
+        find_and_shift(Tok::CloseParen(), "after function argument list");
 
         return std::make_unique<AST::TemplateFunctionCall>
                 (id, std::move(t_args), std::move(args), lexer.get_pos());
     }
 
     /* Case not function call. */
-    if (!is_type<Tok::OpenParen>(lexer.get_tok())) {
+    if (!llvm::isa<Tok::OpenParen>(lexer.get_tok())) {
         return AST::Variable(id, lexer.get_pos());
     }
 
@@ -316,13 +316,13 @@ AST::Expression ParserImpl::parse_variable(void) {
     // Accumulate vector of args.
     std::vector<AST::Expression> args;
 
-    if (!is_type<Tok::CloseParen>(lexer.get_tok())) {
+    if (!llvm::isa<Tok::CloseParen>(lexer.get_tok())) {
         args = parse_expr_list();
 
     }
 
     // Shift the close paren.
-    find_and_shift<Tok::CloseParen>("after function argument list");
+    find_and_shift(Tok::CloseParen(), "after function argument list");
 
     return std::make_unique<AST::FunctionCall>(
             std::move(id), std::move(args), lexer.get_pos());
@@ -331,12 +331,12 @@ AST::Expression ParserImpl::parse_variable(void) {
 AST::Expression ParserImpl::parse_unary(void) {
     auto start = lexer.get_pos();
 
-    if (!is_type<Tok::Operator>(lexer.get_tok())) {
+    if (!llvm::isa<Tok::Operator>(lexer.get_tok())) {
         return parse_primary();
     }
 
     // Save and shift the operator.
-    auto op = boost::get<Tok::Operator>(lexer.get_tok());
+    auto op = llvm::cast<Tok::Operator>(lexer.get_tok());
     lexer.shift();
 
     // Parse the operand.
@@ -362,11 +362,11 @@ AST::Expression ParserImpl::parse_binop(int prec, AST::Expression lhs) {
         if (old_prec < prec) return lhs;
 
         // Thing in expression was not an operator.
-        if (!is_type<Tok::Operator>(lexer.get_tok())) {
+        if (!llvm::isa<Tok::Operator>(lexer.get_tok())) {
             _throw("expected operator in arithmetic expression");
         }
 
-        auto op = boost::get<Tok::Operator>(lexer.get_tok());
+        auto op = llvm::cast<Tok::Operator>(lexer.get_tok());
 
         lexer.shift();
 
@@ -389,7 +389,7 @@ std::unique_ptr<AST::Cast> ParserImpl::parse_cast(void) {
     auto type = std::make_unique<AST::Type>(parse_type());
 
     // No closing parenthesis.
-    find_and_shift<Tok::CloseParen>("after type in cast");
+    find_and_shift(Tok::CloseParen(), "after type in cast");
 
     auto expr = parse_expression();
 
@@ -404,7 +404,7 @@ AST::Expression ParserImpl::parse_parens(void) {
     lexer.shift();
 
     // Might be a cast.
-    if (is_type<Tok::TypeName>(lexer.get_tok())) {
+    if (llvm::isa<Tok::TypeName>(lexer.get_tok())) {
         auto cast = parse_cast();
 
         // Fix starting position of cast to opening paren.
@@ -415,40 +415,48 @@ AST::Expression ParserImpl::parse_parens(void) {
 
     auto contents = parse_expression();
 
-    find_and_shift<Tok::CloseParen>("in parenthesized expression");
+    find_and_shift(Tok::CloseParen(), "in parenthesized expression");
 
     return contents;
 }
 
 AST::Expression ParserImpl::parse_primary(void) {
-    auto tok = lexer.get_tok();
-    if        (is_type<Tok::Identifier>(tok)) {
-        return parse_variable();
-    } else if (auto *i_lit = boost::get<Tok::IntLiteral>(&tok)) {
-        auto result = get_literal<AST::IntLiteral>
-                                 (*i_lit, lexer.get_pos());
-        lexer.shift();
-        return result;
-    } else if (auto *u_lit = boost::get<Tok::UIntLiteral>(&tok)) {
-        auto result = get_literal<AST::UIntLiteral>
-                                 (*u_lit, lexer.get_pos());
-        lexer.shift();
-        return result;
-    } else if (auto *f_lit = boost::get<Tok::FloatLiteral>(&tok)) {
-        auto result = get_literal<AST::FloatLiteral>
-                                 (*f_lit, lexer.get_pos());
-        lexer.shift();
-        return result;
-    } else if (is_type<Tok::OpenParen>(tok)) {
-        return parse_parens();
-    } else {
-        _throw("expected expression");
+    const auto &tok = lexer.get_tok();
+    switch (tok.kind()) {
+        case Tok::Token::TokenKind::Identifier:
+            return parse_variable();
+        case Tok::Token::TokenKind::IntLiteral: {
+            auto i_lit = llvm::cast<Tok::IntLiteral>(tok);
+            auto result = get_literal<AST::IntLiteral>
+                                     (i_lit, lexer.get_pos());
+            lexer.shift();
+            return result;
+        }
+
+        case Tok::Token::TokenKind::UIntLiteral: {
+            auto u_lit = llvm::cast<Tok::UIntLiteral>(tok);
+            auto result = get_literal<AST::UIntLiteral>
+                                     (u_lit, lexer.get_pos());
+            lexer.shift();
+            return result;
+        }
+
+        case Tok::Token::TokenKind::FloatLiteral: {
+            auto f_lit = llvm::cast<Tok::FloatLiteral>(tok);
+            auto result = get_literal<AST::FloatLiteral>
+                                     (f_lit, lexer.get_pos());
+            lexer.shift();
+            return result;
+        }
+
+        default:
+            _throw("expected expression");
     }
 }
 
 AST::Type ParserImpl::parse_type(void) {
     /* TODO: Handle parentheses, array types, etc. */
-    auto tname = boost::get<Tok::TypeName>(lexer.get_tok()).name;
+    auto tname = llvm::cast<Tok::TypeName>(lexer.get_tok()).name;
 
     // Shift off the typename.
     lexer.shift();
@@ -463,13 +471,13 @@ AST::Type ParserImpl::parse_type(void) {
             args = parse_type_list();
         }
 
-        find_and_shift_op(":>", "after template type");
+        find_and_shift(Tok::Operator(":>"), "after template type");
 
         result = std::make_unique<AST::TemplatedType>(tname, std::move(args));
     }
 
-    while (is_type<Tok::Operator>(lexer.get_tok())) {
-        auto op = boost::get<Tok::Operator>(lexer.get_tok());
+    while (llvm::isa<Tok::Operator>(lexer.get_tok())) {
+        auto op = llvm::cast<Tok::Operator>(lexer.get_tok());
         if (op.op != "*") break;
 
         result = std::make_unique<AST::Pointer>(std::move(result));
@@ -482,34 +490,34 @@ AST::Type ParserImpl::parse_type(void) {
 AST::Statement ParserImpl::parse_declaration(void) {
     auto start = lexer.get_pos();
 
-    if (!is_type<Tok::TypeName>(lexer.get_tok())) {
+    if (!llvm::isa<Tok::TypeName>(lexer.get_tok())) {
         _throw("expected type name in declaration");
     }
 
     auto type = parse_type();
 
-    if (!is_type<Tok::Identifier>(lexer.get_tok())) {
+    if (!llvm::isa<Tok::Identifier>(lexer.get_tok())) {
         _throw("expected identifier in declaration.");
     }
 
-    auto ident = boost::get<Tok::Identifier>(lexer.get_tok());
+    auto ident = llvm::cast<Tok::Identifier>(lexer.get_tok());
 
     auto var = AST::Variable(ident.name, lexer.get_pos());
 
     lexer.shift();
 
-    if (is_type<Tok::Semicolon>(lexer.get_tok())
-     || is_type<Tok::CloseParen>(lexer.get_tok())
-     || is_type<Tok::Comma>(lexer.get_tok())) {
+    if (llvm::isa<Tok::Semicolon>(lexer.get_tok())
+     || llvm::isa<Tok::CloseParen>(lexer.get_tok())
+     || llvm::isa<Tok::Comma>(lexer.get_tok())) {
         return std::make_unique<AST::Declaration>(std::move(type), var,
                                                   start);
     }
 
-    if (!is_type<Tok::Operator>(lexer.get_tok())) {
+    if (!llvm::isa<Tok::Operator>(lexer.get_tok())) {
         _throw("expected equals sign in compound assignment");
     }
 
-    auto op = boost::get<Tok::Operator>(lexer.get_tok());
+    auto op = llvm::cast<Tok::Operator>(lexer.get_tok());
 
     if (op.op != "=") {
         _throw("expected equals sign in compound assignment");
@@ -535,7 +543,7 @@ std::unique_ptr<AST::IfStatement> ParserImpl::parse_if_statement(void) {
 
     std::vector<AST::Statement> else_block;
 
-    if (!is_type<Tok::Else>(lexer.get_tok())) {
+    if (!llvm::isa<Tok::Else>(lexer.get_tok())) {
         // No else block.
         return std::make_unique<AST::IfStatement>(std::move(cond),
                                                   std::move(if_block),
@@ -560,7 +568,7 @@ AST::Statement ParserImpl::parse_return(void) {
     // Shift the return.
     lexer.shift();
 
-    if (is_type<Tok::Semicolon>(lexer.get_tok())) {
+    if (llvm::isa<Tok::Semicolon>(lexer.get_tok())) {
         return AST::VoidReturn(start);
     }
 
@@ -574,8 +582,8 @@ AST::TypeDeclaration ParserImpl::parse_type_declaration(void) {
     // Shift the `type`.
     lexer.shift();
 
-    auto tok = lexer.get_tok();
-    auto *tname = boost::get<Tok::TypeName>(&tok);
+    const auto &tok = lexer.get_tok();
+    auto *tname = llvm::dyn_cast<Tok::TypeName>(&tok);
 
     if (!tname) {
         _throw("expected type name in type declaration.");
@@ -589,12 +597,12 @@ AST::TypeDeclaration ParserImpl::parse_type_declaration(void) {
 
 std::vector<std::unique_ptr<AST::Declaration> >
       ParserImpl::parse_declarations(void) {
-    find_and_shift<Tok::OpenBrace>("in declaration block");
+    find_and_shift(Tok::OpenBrace(), "in declaration block");
 
     std::vector<std::unique_ptr<AST::Declaration> > result;
 
     // Until we get to the closing brace,
-    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
+    while (!llvm::isa<Tok::CloseBrace>(lexer.get_tok())) {
         auto decl_tmp = parse_declaration();
         auto *decl = boost::get<std::unique_ptr<AST::Declaration>>(&decl_tmp);
 
@@ -602,7 +610,7 @@ std::vector<std::unique_ptr<AST::Declaration> >
             _throw("expected variable declaration in struct definition");
         }
 
-        if (!is_type<Tok::Semicolon>(lexer.get_tok())) {
+        if (!llvm::isa<Tok::Semicolon>(lexer.get_tok())) {
             _throw("expected semicolon after struct member declaration");
         }
 
@@ -624,12 +632,10 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
     // Shift the `struct`.
     lexer.shift();
 
-    auto tok = lexer.get_tok();
-
     if (at_open_generic()) {
         lexer.shift();
 
-        tok = lexer.get_tok();
+        const auto& tname_tok = lexer.get_tok();
 
         std::vector<std::string> type_list;
 
@@ -637,7 +643,7 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
             bool cont;
             do {
                 cont = false;
-                auto *tname = boost::get<Tok::TypeName>(&tok);
+                auto *tname = llvm::dyn_cast<Tok::TypeName>(&tname_tok);
 
                 if (!tname) {
                     _throw("expected type name in template argument list");
@@ -647,18 +653,18 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
 
                 lexer.shift();
 
-                if (is_type<Tok::Comma>(lexer.get_tok())) {
+                if (llvm::isa<Tok::Comma>(lexer.get_tok())) {
                     lexer.shift();
                     cont = true;
                 }
             } while (cont);
         }
 
-        find_and_shift_op(":>", "after template argument list");
+        find_and_shift(Tok::Operator(":>"), "after template argument list");
 
-        tok = lexer.get_tok();
+        const auto& struct_tok = lexer.get_tok();
 
-        auto *tname = boost::get<Tok::TypeName>(&tok);
+        auto *tname = llvm::dyn_cast<Tok::TypeName>(&struct_tok);
 
         if (!tname) {
             _throw("expected type name in template struct declaration");
@@ -675,7 +681,8 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
                                               start);
     }
 
-    auto *tname = boost::get<Tok::TypeName>(&tok);
+    const auto &tok = lexer.get_tok();
+    auto *tname = llvm::dyn_cast<Tok::TypeName>(&tok);
 
     if (!tname) {
         _throw("expected type name in type declaration");
@@ -708,8 +715,8 @@ AST::TopLevel ParserImpl::parse_function(void) {
             bool cont;
             do {
                 cont = false;
-                auto tok = lexer.get_tok();
-                auto *tname = boost::get<Tok::TypeName>(&tok);
+                const auto &tok = lexer.get_tok();
+                auto *tname = llvm::dyn_cast<Tok::TypeName>(&tok);
 
                 if (!tname) {
                     _throw("expected type name in function template "
@@ -720,19 +727,19 @@ AST::TopLevel ParserImpl::parse_function(void) {
 
                 lexer.shift();
 
-                if (is_type<Tok::Comma>(lexer.get_tok())) {
+                if (llvm::isa<Tok::Comma>(lexer.get_tok())) {
                     lexer.shift();
                     cont = true;
                 }
             } while (cont);
         }
 
-        find_and_shift_op(":>", "after template argument list");
+        find_and_shift(Tok::Operator(":>"), "after template argument list");
     }
 
-    auto tok = lexer.get_tok();
+    const auto &tok = lexer.get_tok();
 
-    auto *ident = boost::get<Tok::Identifier>(&tok);
+    auto *ident = llvm::dyn_cast<Tok::Identifier>(&tok);
 
     if (!ident) {
         _throw("expected identifier as function name");
@@ -758,7 +765,7 @@ AST::TopLevel ParserImpl::parse_function(void) {
                                   std::move(ret_type), start);
 
     // If semicolon, this is just a forward declaration.
-    if (is_type<Tok::Semicolon>(lexer.get_tok())) {
+    if (llvm::isa<Tok::Semicolon>(lexer.get_tok())) {
         // Shift the semicolon.
         lexer.shift();
         return std::move(decl);
@@ -778,11 +785,11 @@ AST::TopLevel ParserImpl::parse_function(void) {
 }
 
 std::vector<AST::Statement> ParserImpl::parse_block(void) {
-    find_and_shift<Tok::OpenBrace>("before block");
+    find_and_shift(Tok::OpenBrace(), "before block");
 
     std::vector<AST::Statement> result;
 
-    while (!is_type<Tok::CloseBrace>(lexer.get_tok())) {
+    while (!llvm::isa<Tok::CloseBrace>(lexer.get_tok())) {
         result.push_back(parse_statement());
     }
 
@@ -792,9 +799,9 @@ std::vector<AST::Statement> ParserImpl::parse_block(void) {
 }
 
 int ParserImpl::get_token_precedence(void) const {
-    auto tok = lexer.get_tok();
+    const auto &tok = lexer.get_tok();
 
-    if (auto *op = boost::get<Tok::Operator>(&tok)) {
+    if (auto *op = llvm::dyn_cast<Tok::Operator>(&tok)) {
         auto i = precedences.find(op->op);
         if (i != precedences.end()) {
             return i->second;
@@ -806,11 +813,11 @@ int ParserImpl::get_token_precedence(void) const {
 
 std::vector<std::unique_ptr<AST::Declaration> >
       ParserImpl::parse_arg_list(void) {
-    find_and_shift<Tok::OpenParen>("before argument list");
+    find_and_shift(Tok::OpenParen(), "before argument list");
 
     std::vector<std::unique_ptr<AST::Declaration> > args;
 
-    while (!is_type<Tok::CloseParen>(lexer.get_tok())) {
+    while (!llvm::isa<Tok::CloseParen>(lexer.get_tok())) {
         auto decl_tmp = parse_declaration();
         auto *decl = boost::get<std::unique_ptr<AST::Declaration>>(&decl_tmp);
 
@@ -820,8 +827,8 @@ std::vector<std::unique_ptr<AST::Declaration> >
 
         args.push_back(std::move(*decl));
 
-        if (is_type<Tok::CloseParen>(lexer.get_tok())) break;
-        find_and_shift<Tok::Comma>("in function declaration");
+        if (llvm::isa<Tok::CloseParen>(lexer.get_tok())) break;
+        find_and_shift(Tok::Comma(), "in function declaration");
     }
 
     // Shift the closing paren.
@@ -830,39 +837,27 @@ std::vector<std::unique_ptr<AST::Declaration> >
     return args;
 }
 
-template<typename T>
-inline void ParserImpl::find_and_shift(std::string at_place) {
-    if (!is_type<T>(lexer.get_tok())) {
-        _throw("expected \"" + T::repr() + "\" " + at_place);
-    }
-
-    lexer.shift();
-}
-
-inline void ParserImpl::find_and_shift_op(std::string op,
-                                          std::string at_place) {
-    auto tok = lexer.get_tok();
-
-    auto *_op = boost::get<Tok::Operator>(&tok);
-    if (!_op || _op->op != op) {
-        _throw("expected \"" + op + "\" " + at_place);
+inline void ParserImpl::find_and_shift(const Tok::Token& expected,
+                                       std::string at_place) {
+    if (expected != lexer.get_tok()) {
+        _throw("expected \"" + expected.repr() + "\" " + at_place);
     }
 
     lexer.shift();
 }
 
 inline bool ParserImpl::at_open_generic(void) {
-    auto tok = lexer.get_tok();
+    const auto &tok = lexer.get_tok();
 
-    auto *_op = boost::get<Tok::Operator>(&tok);
+    auto *_op = llvm::dyn_cast<Tok::Operator>(&tok);
 
     return _op && _op->op == "<:";
 }
 
 inline bool ParserImpl::at_close_generic(void) {
-    auto tok = lexer.get_tok();
+    const auto &tok = lexer.get_tok();
 
-    auto *_op = boost::get<Tok::Operator>(&tok);
+    auto *_op = llvm::dyn_cast<Tok::Operator>(&tok);
 
     return _op && _op->op == ":>";
 }

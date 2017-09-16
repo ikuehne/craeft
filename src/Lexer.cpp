@@ -33,7 +33,11 @@
 namespace Craeft {
 
 Lexer::Lexer(std::string fname)
-    : c(' '), eof(false), tok(Tok::OpenParen()), pos(0, 0), stream(fname) {
+    : c(' '),
+      eof(false),
+      tok(std::make_unique<Tok::OpenParen>()),
+      pos(0, 0),
+      stream(fname) {
     shift();
 }
 
@@ -149,7 +153,7 @@ void Lexer::shift(void) {
             get();
         }
 
-        tok = Tok::TypeName(tname);
+        tok = std::make_unique<Tok::TypeName>(tname);
     /* Identifiers and identifier-like keywords. */
     } else if (islower(c)) {
         std::string ident;
@@ -160,22 +164,33 @@ void Lexer::shift(void) {
         }
 
         /* Keywords that otherwise look like identifiers. */
-        if      (ident == "fn")     tok =  Tok::Fn();
-        else if (ident == "struct") tok =  Tok::Struct();
-        else if (ident == "type")   tok =  Tok::Type();
-        else if (ident == "return") tok =  Tok::Return();
-        else if (ident == "if")     tok =  Tok::If();
-        else if (ident == "else")   tok =  Tok::Else();
-        else if (ident == "while")  tok =  Tok::While();
-        /* If none  of those, an identifier. */
-        else                         tok = Tok::Identifier(ident);
+        if (ident == "fn") {
+            tok = std::make_unique<Tok::Fn>();
+        } else if (ident == "struct") {
+            tok = std::make_unique<Tok::Struct>();
+        } else if (ident == "type") {
+            tok =  std::make_unique<Tok::Type>();
+        } else if (ident == "return") {
+            tok =  std::make_unique<Tok::Return>();
+        } else if (ident == "if") {
+            tok =  std::make_unique<Tok::If>();
+        } else if (ident == "else") {
+                tok = std::make_unique<Tok::Else>();
+        } else if (ident == "while") {
+            tok = std::make_unique<Tok::While>();
+        /* If none of those, an identifier. */
+        } else {
+            tok = std::make_unique<Tok::Identifier>(ident);
+        }
     /* Numeric literal. */
     } else if (isdigit(c)) {
         auto result = lex_number();
         if (result.which() == 0) {
-            tok = Tok::FloatLiteral(boost::get<double>(result));
+            auto literal = boost::get<double>(result);
+            tok = std::make_unique<Tok::FloatLiteral>(literal);
         } else {
-            tok = Tok::UIntLiteral(boost::get<uint64_t>(result));
+            auto literal = boost::get<uint64_t>(result);
+            tok = std::make_unique<Tok::UIntLiteral>(literal);
         }
     /* Operators.  This is easily extensible to user-defined operators. */
     } else if (is_opchar(c)) {
@@ -186,33 +201,33 @@ void Lexer::shift(void) {
             result.push_back(c);
         }
 
-        tok = Tok::Operator(result);
+        tok = std::make_unique<Tok::Operator>(result);
     /* Some random syntax. */
     } else if (c == '(') {
-        tok = Tok::OpenParen();
+        tok = std::make_unique<Tok::OpenParen>();
         get();
     } else if (c == ')') {
-        tok = Tok::CloseParen();
+        tok = std::make_unique<Tok::CloseParen>();
         get();
     } else if (c == '{') {
-        tok = Tok::OpenBrace();
+        tok = std::make_unique<Tok::OpenBrace>();
         get();
     } else if (c == '}') {
-        tok = Tok::CloseBrace();
+        tok = std::make_unique<Tok::CloseBrace>();
         get();
     } else if (c == ';') {
-        tok = Tok::Semicolon();
+        tok = std::make_unique<Tok::Semicolon>();
         get();
     } else if (c == ',') {
-        tok = Tok::Comma();
+        tok = std::make_unique<Tok::Comma>();
         get();
     } else throw Error("lexer error",
                        std::string("character \"") + c + "\" not recognized",
                        "TODO", pos);
 }
 
-Tok::Token Lexer::get_tok(void) const {
-    return tok;
+const Tok::Token &Lexer::get_tok(void) const {
+    return *tok;
 }
 
 void Lexer::get(void) {

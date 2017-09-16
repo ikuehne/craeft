@@ -30,6 +30,8 @@
 #include <cstdint>
 #include <string>
 
+#include "llvm/Support/Casting.h"
+
 #include <boost/variant.hpp>
 
 namespace Craeft {
@@ -50,117 +52,241 @@ namespace Tok {
  * @{
  */
 
+class Token {
+public:
+    enum TokenKind {
+        TypeName,
+        Identifier,
+        IntLiteral,
+        UIntLiteral,
+        FloatLiteral,
+        Operator,
+        OpenParen,
+        CloseParen,
+        OpenBrace,
+        CloseBrace,
+        Comma,
+        Semicolon,
+        Fn,
+        Struct,
+        Type,
+        Return,
+        If,
+        Else,
+        While,
+        InvalidToken
+    };
+
+    Token(TokenKind kind): _kind(kind) {}
+
+    TokenKind kind(void) const {
+        return _kind;
+    }
+
+    virtual bool operator==(const Token& other) const = 0;
+
+    bool operator!=(const Token& other) const {
+        return !(operator==(other));
+    }
+
+    virtual ~Token() {}
+
+    virtual std::string repr(void) const = 0;
+
+private:
+    TokenKind _kind;
+};
+
+#define TOK_CLASS(X)\
+    static bool classof(const Token *t) {\
+        return t->kind() == TokenKind::X;\
+    }\
+    virtual bool operator==(const Token&) const override;
+
 /**
  * @brief Names of types.
  */
-struct TypeName {
+struct TypeName: public Token {
     std::string name;
 
-    TypeName(std::string name): name(std::move(name)) {}
+    ~TypeName(void) override {}
+
+    virtual std::string repr(void) const override;
+
+    TypeName(std::string name)
+        : Token(TokenKind::TypeName), name(std::move(name)) {}
+
+    TOK_CLASS(TypeName);
 };
 
 /**
  * @brief Non-type identifiers.
  */
-struct Identifier {
+struct Identifier: public Token {
     std::string name;
 
-    Identifier(std::string name): name(std::move(name)) {}
+    ~Identifier(void) override {}
+
+    virtual std::string repr(void) const override;
+
+    Identifier(std::string name)
+        : Token(TokenKind::Identifier), name(std::move(name)) {}
+
+    TOK_CLASS(Identifier);
 };
 
 /**
  * @brief Signed integer literals.
  */
-struct IntLiteral {
+struct IntLiteral: public Token {
     int64_t value;
 
-    IntLiteral(int64_t value): value(value) {}
+    ~IntLiteral(void) override {}
+
+    virtual std::string repr(void) const override;
+
+    IntLiteral(int64_t value): Token(TokenKind::IntLiteral), value(value) {}
+
+    TOK_CLASS(IntLiteral);
 };
 
 /**
  * @brief Unsigned integer literals.
  */
-struct UIntLiteral {
+struct UIntLiteral: public Token {
     uint64_t value;
 
-    UIntLiteral(uint64_t value): value(value) {}
+    ~UIntLiteral(void) override {}
+
+    virtual std::string repr(void) const override;
+
+    UIntLiteral(uint64_t value):
+        Token(TokenKind::UIntLiteral),
+        value(value) {}
+
+    TOK_CLASS(UIntLiteral);
 };
 
 /**
  * @brief Floating-point literals.
  */
-struct FloatLiteral {
+struct FloatLiteral: public Token {
     double value;
 
-    FloatLiteral(double value): value(value) {}
+    ~FloatLiteral(void) override {}
+
+    virtual std::string repr(void) const override;
+
+    FloatLiteral(double value):
+        Token(TokenKind::FloatLiteral),
+        value(value) {}
+
+    TOK_CLASS(FloatLiteral);
 };
 
 /**
  * @brief Operators.
  */
-struct Operator {
+struct Operator: public Token {
     std::string op;
 
-    Operator(std::string op): op(std::move(op)) {}
+    ~Operator(void) override {}
+
+    virtual std::string repr(void) const override;
+
+    Operator(std::string op): Token(TokenKind::Operator), op(std::move(op)) {}
+
+    TOK_CLASS(Operator);
 };
 
 /**
  * @defgroup Empty Tokens with no meaning other than disambiguating syntax.
  */
 
-struct OpenParen {
-    static inline std::string repr(void) { return "("; }
+#define TOK_SIMPLE(X)\
+    X(): Token(TokenKind::X) {}\
+    virtual bool operator==(const Token& other) const override {\
+        return llvm::isa<X>(other);\
+    }\
+    static bool classof(const Token *t) {\
+        return t->kind() == TokenKind::X;\
+    }\
+
+struct OpenParen: public Token {
+    ~OpenParen(void) override {}
+    virtual std::string repr(void) const override { return "("; }
+    TOK_SIMPLE(OpenParen);
 };
-struct CloseParen {
-    static inline std::string repr(void) { return ")"; }
+struct CloseParen: public Token {
+    ~CloseParen(void) override {}
+    virtual std::string repr(void) const override { return ")"; }
+    TOK_SIMPLE(CloseParen);
 };
-struct OpenBrace {
-    static inline std::string repr(void) { return "{"; }
+struct OpenBrace: public Token {
+    ~OpenBrace(void) override {}
+    virtual std::string repr(void) const override { return "{"; }
+    TOK_SIMPLE(OpenBrace);
 };
-struct CloseBrace {
-    static inline std::string repr(void) { return "}"; }
+struct CloseBrace: public Token {
+    ~CloseBrace(void) override {}
+    virtual std::string repr(void) const override { return "}"; }
+    TOK_SIMPLE(CloseBrace);
 };
-struct Comma {
-    static inline std::string repr(void) { return ","; }
+struct Comma: public Token {
+    ~Comma(void) override {}
+    virtual std::string repr(void) const override { return ","; }
+    TOK_SIMPLE(Comma);
 };
-struct Semicolon {
-    static inline std::string repr(void) { return ";"; }
+struct Semicolon: public Token {
+    ~Semicolon(void) override {}
+    virtual std::string repr(void) const override { return ";"; }
+    TOK_SIMPLE(Semicolon);
 };
-struct Fn {
-    static inline std::string repr(void) { return "fn"; }
+struct Fn: public Token {
+    ~Fn(void) override {}
+    virtual std::string repr(void) const override { return "fn"; }
+    TOK_SIMPLE(Fn);
 };
-struct Struct {
-    static inline std::string repr(void) { return "struct"; }
+struct Struct: public Token {
+    ~Struct(void) override {}
+    virtual std::string repr(void) const override { return "struct"; }
+    TOK_SIMPLE(Struct);
 };
-struct Type {
-    static inline std::string repr(void) { return "type"; }
+struct Type: public Token {
+    ~Type(void) override {}
+    virtual std::string repr(void) const override { return "type"; }
+    TOK_SIMPLE(Type);
 };
-struct Return {
-    static inline std::string repr(void) { return "return"; }
+struct Return: public Token {
+    ~Return(void) override {}
+    virtual std::string repr(void) const override { return "return"; }
+    TOK_SIMPLE(Return);
 };
-struct If {
-    static inline std::string repr(void) { return "if"; }
+struct If: public Token {
+    ~If(void) override {}
+    virtual std::string repr(void) const override { return "if"; }
+    TOK_SIMPLE(If);
 };
-struct Else {
-    static inline std::string repr(void) { return "else"; }
+struct Else: public Token {
+    ~Else(void) override {}
+    virtual std::string repr(void) const override { return "else"; }
+    TOK_SIMPLE(Else);
 };
-struct While {
-    static inline std::string repr(void) { return "while"; }
+struct While: public Token {
+    ~While(void) override {}
+    virtual std::string repr(void) const override { return "while"; }
+    TOK_SIMPLE(While);
 };
+struct InvalidToken: public Token {
+    ~InvalidToken(void) override {}
+    virtual std::string repr(void) const override { return "[INVALID]"; }
+    TOK_SIMPLE(InvalidToken);
+};
+
+#undef TOK_CLASS
+#undef TOK_SIMPLE
 
 /** @} */
-
-/** The actual `Token` class: a discriminated union of token types. */
-typedef boost::variant< TypeName,
-                        Identifier,
-                        IntLiteral, UIntLiteral, FloatLiteral,
-                        Operator,
-                        OpenParen, CloseParen,
-                        OpenBrace, CloseBrace,
-                        Comma, Semicolon,
-                        Fn, Struct, Type,
-                        Return,
-                        If, Else, While > Token;
 
 }
 
