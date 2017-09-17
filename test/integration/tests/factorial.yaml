@@ -1,0 +1,8 @@
+code:
+        factorial.cr
+harness:
+        factorial_harness.c
+output:
+        factorial_output
+name:
+        factorial
