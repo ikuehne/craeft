@@ -116,6 +116,10 @@ Value Translator::call(std::string func, std::vector<Type> &templ_args,
     return pimpl->call(func, templ_args, v_args, pos);
 }
 
+Value Translator::string_literal(const std::string &str) {
+    return pimpl->string_literal(str);
+}
+
 Variable Translator::declare(const std::string &name, const Type &t) {
     return pimpl->declare(name, t);
 }

@@ -122,6 +122,7 @@ public:
     Value operator()(const AST::IntLiteral &);
     Value operator()(const AST::UIntLiteral &);
     Value operator()(const AST::FloatLiteral &);
+    Value operator()(const AST::StringLiteral &);
     Value operator()(const AST::Variable &);
     Value operator()(const std::unique_ptr<AST::Reference> &);
     Value operator()(const std::unique_ptr<AST::Dereference> &);

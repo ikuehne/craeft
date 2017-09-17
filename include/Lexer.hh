@@ -45,7 +45,7 @@ public:
      *
      * @param fname The name of the file to tokenize.
      */
-    Lexer(std::string fname);
+    Lexer(const std::string &fname);
 
     /**
      * @brief Get the position the lexer is currently at.
@@ -71,10 +71,12 @@ private:
     char c;
     void get(void);
     boost::variant<double, uint64_t> lex_number(void);
+    std::string lex_string(void);
 
     bool eof;
     std::unique_ptr<Tok::Token> tok;
     SourcePos pos;
+    std::string fname;
     std::ifstream stream;
 };
 

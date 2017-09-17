@@ -135,6 +135,17 @@ struct FloatLiteral {
 };
 
 /**
+ * @brief String literals.
+ */
+struct StringLiteral {
+    std::string value;
+    SourcePos pos;
+
+    StringLiteral(const std::string &value, SourcePos pos)
+        : value(value), pos(pos) {}
+};
+
+/**
  * @brief Variables.
  */
 struct Variable {
@@ -161,6 +172,7 @@ struct Cast;
 typedef boost::variant< IntLiteral,
                         UIntLiteral,
                         FloatLiteral,
+                        StringLiteral,
                         Variable,
                         std::unique_ptr<Reference>,
                         std::unique_ptr<Dereference>,

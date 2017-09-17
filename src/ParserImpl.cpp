@@ -449,6 +449,14 @@ AST::Expression ParserImpl::parse_primary(void) {
             return result;
         }
 
+        case Tok::Token::TokenKind::StringLiteral: {
+            auto s_lit = llvm::cast<Tok::StringLiteral>(tok);
+            auto result = get_literal<AST::StringLiteral>
+                                     (s_lit, lexer.get_pos());
+            lexer.shift();
+            return result;
+        }
+
         case Tok::Token::TokenKind::OpenParen: {
             return parse_parens();
         }

@@ -212,6 +212,11 @@ public:
                std::vector<Value> &v_args, SourcePos pos);
 
     /**
+     * Get a string literal as a char pointer.
+     */
+    Value string_literal(const std::string &str);
+
+    /**
      * @brief Create a variable with the given name and type.
      */
     Variable declare(const std::string &name, const Type &t);

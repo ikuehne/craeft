@@ -173,7 +173,7 @@ public:
      */
     Variable lookup_identifier(const std::string &name,
                                SourcePos pos, std::string &fname) {
-        assert(islower(name[0]));
+        assert(!isupper(name[0]));
 
         try {
             return ident_map[name];

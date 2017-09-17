@@ -1287,6 +1287,11 @@ Value TranslatorImpl::call(std::string func, std::vector<Type> &templ_args,
 
 }
 
+Value TranslatorImpl::string_literal(const std::string &str) {
+    auto *result = builder.CreateGlobalStringPtr(str);
+    return Value(result, Pointer<Type>(UnsignedInt(8)));
+}
+
 Variable TranslatorImpl::declare(const std::string &varname, const Type &t) {
     auto *alloca = builder.CreateAlloca(to_llvm_type(t, *module),
                                         nullptr, varname);

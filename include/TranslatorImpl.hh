@@ -78,6 +78,7 @@ public:
     Value call(std::string func, std::vector<Value> &args, SourcePos pos);
     Value call(std::string func, std::vector<Type> &templ_args,
                std::vector<Value> &v_args, SourcePos pos);
+    Value string_literal(const std::string &str);
     Variable declare(const std::string &name, const Type &t);
     void assign(const std::string &varname, Value val, SourcePos pos);
     void return_(Value val, SourcePos pos);

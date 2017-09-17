@@ -155,6 +155,10 @@ Value ExpressionCodegen::operator()(const AST::FloatLiteral &lit) {
                  type);
 }
 
+Value ExpressionCodegen::operator()(const AST::StringLiteral &lit) {
+    return translator.string_literal(lit.value);
+}
+
 Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::Dereference> &deref) {
     return translator.add_load(codegen(deref->referand), deref->pos);

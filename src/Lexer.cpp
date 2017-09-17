@@ -22,8 +22,20 @@
 
 #include <cmath>
 #include <cctype>
+#include <sstream>
 
 #include "Lexer.hh"
+
+namespace {
+
+/**
+ * Check if the given char is part of a UTF-8.
+ */
+inline bool is_unicode(char c) {
+    return (uint8_t)c >= 128;
+}
+
+}
 
 /**
  * @brief Contains all interfaces internal to the compiler.
@@ -32,11 +44,12 @@
  */
 namespace Craeft {
 
-Lexer::Lexer(std::string fname)
+Lexer::Lexer(const std::string &fname)
     : c(' '),
       eof(false),
       tok(std::make_unique<Tok::OpenParen>()),
       pos(0, 0),
+      fname(fname),
       stream(fname) {
     shift();
 }
@@ -119,6 +132,57 @@ boost::variant<double, uint64_t> Lexer::lex_number(void) {
     }
 }
 
+std::string Lexer::lex_string(void) {
+    std::ostringstream result;
+
+    while (true) {
+        get();
+
+        if (eof) {
+            throw Error("lexer error", "unterminated string", fname, pos);
+        }
+
+        if (c == '\\') {
+            get();
+
+            switch (c) {
+                case 'a':
+                    result << '\a';
+                    break;
+                case 'b':
+                    result << '\b';
+                    break;
+                case 'f':
+                    result << '\f';
+                    break;
+                case 'n':
+                    result << '\n';
+                    break;
+                case 'r':
+                    result << '\r';
+                    break;
+                case 't':
+                    result << '\t';
+                    break;
+                case 'v':
+                    result << '\v';
+                    break;
+                default:
+                    result << c;
+                    break;
+            }
+
+            continue;
+        } else if (c == '"') {
+            break;
+        }
+
+        result << c;
+    }
+
+    return result.str();
+}
+
 bool Lexer::at_eof(void) const {
     return eof;
 }
@@ -137,17 +201,17 @@ void Lexer::shift(void) {
     if (isupper(c)) {
         std::string tname;
 
-        while (isalpha(c) || isdigit(c) || c == '_') {
+        while (isalpha(c) || isdigit(c) || c == '_' || is_unicode(c)) {
             tname.push_back(c);
             get();
         }
 
         tok = std::make_unique<Tok::TypeName>(tname);
     /* Identifiers and identifier-like keywords. */
-    } else if (islower(c)) {
+    } else if (islower(c) || is_unicode(c)) {
         std::string ident;
 
-        while (isalpha(c) || isdigit(c) || c == '_') {
+        while (isalpha(c) || isdigit(c) || c == '_' || is_unicode(c)) {
             ident.push_back(c);
             get();
         }
@@ -210,9 +274,12 @@ void Lexer::shift(void) {
     } else if (c == ',') {
         tok = std::make_unique<Tok::Comma>();
         get();
+    } else if (c == '"') {
+        tok = std::make_unique<Tok::StringLiteral>(lex_string());
+        get();
     } else throw Error("lexer error",
                        std::string("character \"") + c + "\" not recognized",
-                       "TODO", pos);
+                       fname, pos);
 }
 
 const Tok::Token &Lexer::get_tok(void) const {
