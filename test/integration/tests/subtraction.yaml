@@ -1,0 +1,11 @@
+name:
+    subtraction
+code: subtraction.cr
+harness: subtraction_harness.c
+output_text: |
+    20
+    20
+    20
+    20
+    20
+    20
