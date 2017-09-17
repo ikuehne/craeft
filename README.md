@@ -175,16 +175,14 @@ Cr&#230;ft supports UTF-8 identifiers and strings.  The following code:
 fn puts(U8 *str) -> I32;
 
 fn main() -> I32 {
-    U8 *cr&#230; = "&#128525";
+    U8 *cr&#230; = "&#128525;";
     return puts(cræft);
 }
 ```
 
 Prints
 
-```
-&#128525
-```
+&#128525;
 
 Linking with C Code
 -------------------
