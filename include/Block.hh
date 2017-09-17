@@ -57,26 +57,9 @@ public:
      */
     Block(llvm::Function *f, std::string name);
 
-    /**
-     * @brief Create a new Craeft block associated with no function.
-     *
-     * Note that the block will need to be associated with a function for its
-     * code to end up in the resulting module.
-     *
-     * @param name The name of the block.
-     */
-    Block(llvm::LLVMContext &, std::string name);
-
     // Explicitly declare destructor because we have forward-declared pointer
     // members.
     ~Block(void);
-
-    /**
-     * @brief Associate this block with the given function.
-     *
-     * The block will be appended to the end of the function.
-     */
-    void associate(llvm::Function *f);
 
     /**
      * @brief Jump to the other block.

@@ -29,18 +29,7 @@ Block::Block(llvm::Function *f, std::string name)
       f(f),
       terminated(false) {}
 
-Block::Block(llvm::LLVMContext &ctx, std::string name)
-    : underlying(llvm::BasicBlock::Create(ctx, name)),
-      f(NULL),
-      terminated(false) {}
-
 Block::~Block(void) {}
-
-void Block::associate(llvm::Function *f) {
-    this->f = f;
-
-    f->getBasicBlockList().push_back(to_llvm());
-}
 
 void Block::jump_to(Block other) {
     assert(!terminated);

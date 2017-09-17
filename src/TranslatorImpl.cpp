@@ -1450,8 +1450,8 @@ IfThenElse TranslatorImpl::create_ifthenelse(Value cond, SourcePos pos) {
     auto *f = builder.GetInsertBlock()->getParent();
 
     auto result = std::make_unique<IfThenElseImpl>(Block(f, "then"),
-                                                   Block(context, "else"),
-                                                   Block(context, "merge"));
+                                                   Block(f, "else"),
+                                                   Block(f, "merge"));
 
     current->cond_jump(cond, result->then_b, result->else_b);
 
@@ -1474,8 +1474,6 @@ void TranslatorImpl::point_to_else(IfThenElse &structure) {
         current->jump_to(pimpl->else_b);
     }
 
-    pimpl->else_b.associate(pimpl->then_b.get_parent());
-
     // Push a namespace for "else".
     env.push();
     point(pimpl->else_b);
@@ -1489,8 +1487,6 @@ void TranslatorImpl::end_ifthenelse(IfThenElse structure) {
     if (!current->is_terminated()) {
         current->jump_to(pimpl->merge_b);
     }
-
-    pimpl->merge_b.associate(pimpl->then_b.get_parent());
 
     point(pimpl->merge_b);
 }
