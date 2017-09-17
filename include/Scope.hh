@@ -35,9 +35,9 @@ class EmptyPopException {};
 template<typename T>
 class Scope {
 public:
-    bool present(const std::string &key) {
-        for (auto &vec: boost::adaptors::reverse(map)) {
-            for (auto &pair: vec) {
+    bool present(const std::string &key) const {
+        for (const auto &vec: boost::adaptors::reverse(map)) {
+            for (const auto &pair: vec) {
                 if (pair.first == key) {
                     return true;
                 }
@@ -63,9 +63,9 @@ public:
         map.back().push_back(std::pair<std::string, T>(key, binding));
     }
 
-    const T &operator[](const std::string &key) {
-        for (auto &vec: boost::adaptors::reverse(map)) {
-            for (auto &pair: boost::adaptors::reverse(vec)) {
+    const T &operator[](const std::string &key) const {
+        for (const auto &vec: boost::adaptors::reverse(map)) {
+            for (const auto &pair: boost::adaptors::reverse(vec)) {
                 if (pair.first == key) {
                     return pair.second;
                 }

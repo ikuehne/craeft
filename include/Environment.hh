@@ -50,28 +50,17 @@ namespace Craeft {
 /**
  * @brief Information to be associated with a variable in an environment.
  */
-struct Variable {
+class Variable {
+public:
     /**
      * @brief Create a new `Variable` based on the given instruction.
      */
-    Variable(Value val): val(val) {
-        /* Must be a pointer type.  All variables live in memory during
-         * translation. */
-        //assert(is_type<Pointer>(val.get_type()));
-    }
+    Variable(Value val): val(val) {}
 
     /**
      * @brief Get the type of this binding.
      */
-    Type get_type(void) {
-        if (is_type<Function<> >(val.get_type())) {
-            return val.get_type();
-        }
-
-        /* We actually only hold a *pointer* to the value, so we have to get
-         * the pointed type. */
-        return *boost::get<Pointer<> >(val.get_type()).get_pointed();
-    }
+    Type get_type(void) const;
 
     /**
      * @brief Get the value of this variable.
@@ -117,52 +106,22 @@ public:
     /**
      * @brief Create a new, empty environment.
      */
-    Environment(llvm::LLVMContext &ctx) {
-        // Should always have at least one scope.
-        push();
-
-        // Add all of the built-in types.
-        add_type("Float", Float(SinglePrecision));
-        add_type("Double", Float(DoublePrecision));
-
-        for (int i = 1; i <= 64; ++i) {
-            add_type("I" + std::to_string(i), SignedInt(i));
-            add_type("U" + std::to_string(i), UnsignedInt(i));
-        }
-    }
+    Environment(llvm::LLVMContext &ctx);
 
     /**
      * @brief Pop the most recently entered (deepest) scope.
      */
-    void pop(void) {
-        ident_map.pop();
-        type_map.pop();
-        template_map.pop();
-        templatefunc_map.pop();
-    }
+    void pop(void);
 
     /**
      * @brief Push a new, empty scope.
      */
-    void push(void) {
-        ident_map.push();
-        type_map.push();
-        template_map.push();
-        templatefunc_map.push();
-    }
+    void push(void);
 
     /**
      * @brief Get whether the given name is bound in any scope.
      */
-    bool bound(const std::string &name) {
-        if (islower(name[0]) && ident_map.present(name)) {
-            return true;
-        } else {
-            return type_map.present(name);
-        }
-
-        return false;
-    }
+    bool bound(const std::string &name) const;
 
     /**
      * @brief Find the given name in the map.
@@ -172,29 +131,11 @@ public:
      * @param name Must be a valid identifier.
      */
     Variable lookup_identifier(const std::string &name,
-                               SourcePos pos, std::string &fname) {
-        assert(!isupper(name[0]));
+                               SourcePos pos, std::string &fname) const;
 
-        try {
-            return ident_map[name];
-        } catch (KeyNotPresentException) {
-            throw Error("name error", "variable \"" + name + "\" not found",
-                        fname, pos);
-        }
-    }
+    Variable add_identifier(std::string name, Value val);
 
-    Variable add_identifier(std::string name, Value val) {
-        Variable result(val);
-        ident_map.bind(name, result);
-        return result;
-    }
-
-    void add_type(std::string name, Type t) {
-        type_map.bind(name, t);
-
-        std::string fname("hello, there!");
-        lookup_type(name, SourcePos(0, 0), fname);
-    }
+    void add_type(std::string name, Type t);
 
     void add_template_type(std::string name, TemplateStruct t) {
         template_map.bind(name, t);
@@ -211,43 +152,15 @@ public:
      */
     const Type &lookup_type(const std::string &tname,
                             SourcePos pos,
-                            std::string &fname) {
-        assert(isupper(tname[0]));
-
-        try {
-            return type_map[tname];
-        } catch (KeyNotPresentException) {
-            throw Error("name error", "type \"" + tname + "\" not found",
-                        fname, pos);
-        }
-    }
+                            std::string &fname) const;
 
     const TemplateStruct &lookup_template(const std::string &tname,
                                           SourcePos pos,
-                                          std::string &fname) {
-        assert(isupper(tname[0]));
-
-        try {
-            return template_map[tname];
-        } catch (KeyNotPresentException) {
-            throw Error("name error", "template type \"" + tname + "\" not "
-                        "found",
-                        fname, pos);
-        }
-    }
+                                          std::string &fname) const;
 
     const TemplateValue &lookup_template_func(const std::string &func_name,
                                               SourcePos pos,
-                                              std::string &fname) {
-        assert(islower(func_name[0]));
-
-        try {
-            return templatefunc_map[func_name];
-        } catch (KeyNotPresentException) {
-            throw Error("name error", "template function \"" + func_name
-                                    + "\" not found", fname, pos);
-        }
-    }
+                                              std::string &fname) const;
 
 private:
     Scope<Variable> ident_map;
