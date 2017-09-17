@@ -40,69 +40,59 @@ namespace Craeft {
  * Code generation for types.
  */
 
-Type TypeCodegen::codegen(const AST::Type &ty) {
-    return boost::apply_visitor(*this, ty);
-}
-
 Type TypeCodegen::operator()(const AST::NamedType &it) {
     // TODO: Annotate type names with source positions.
-    return translator.lookup_type(it.name, SourcePos(0, 0));
+    return translator.lookup_type(it.name(), SourcePos(0, 0));
 }
 
 Type TypeCodegen::operator()(const AST::Void &_) {
     return Void();
 }
 
-Type TypeCodegen::operator()(const std::unique_ptr<AST::Pointer> &ut) {
-    return Pointer<>(codegen(ut->pointed));
+Type TypeCodegen::operator()(const AST::Pointer &ut) {
+    return Pointer<>(visit(ut.pointed()));
 }
 
-Type TypeCodegen::operator()(const std::unique_ptr<AST::TemplatedType> &t) {
+Type TypeCodegen::operator()(const AST::TemplatedType &t) {
     std::vector<Type> args;
 
-    for (const auto &arg: t->args) {
-        args.push_back(codegen(arg));
+    for (const auto &arg: t.args()) {
+        args.push_back(visit(*arg));
     }
 
-    return translator.specialize_template(t->name, args, SourcePos(0, 0));
+    return translator.specialize_template(t.name(), args, SourcePos(0, 0));
 }
 
 /*****************************************************************************
  * Code generation for template types.
  */
 
-TemplateType TemplateTypeCodegen::codegen(const AST::Type &ty) {
-    return boost::apply_visitor(*this, ty);
-}
-
 TemplateType TemplateTypeCodegen::operator()(const AST::NamedType &it) {
     for (int i = 0; i < (int)args.size(); ++i) {
-        if (it.name == args[i]) {
+        if (it.name() == args[i]) {
             return i;
         }
     }
     
-    return to_template(translator.lookup_type(it.name, SourcePos(0, 0)));
+    return to_template(translator.lookup_type(it.name(), SourcePos(0, 0)));
 }
 
 TemplateType TemplateTypeCodegen::operator()(const AST::Void &_) {
     return Void();
 }
 
-TemplateType TemplateTypeCodegen::operator()(
-        const std::unique_ptr<AST::Pointer> &ut) {
-    return Pointer<TemplateType>(codegen(ut->pointed));
+TemplateType TemplateTypeCodegen::operator()(const AST::Pointer &ut) {
+    return Pointer<TemplateType>(visit(ut.pointed()));
 }
 
-TemplateType TemplateTypeCodegen::operator()(
-        const std::unique_ptr<AST::TemplatedType> &t) {
+TemplateType TemplateTypeCodegen::operator()(const AST::TemplatedType &t) {
     std::vector<TemplateType> args;
 
-    for (const auto &arg: t->args) {
-        args.push_back(codegen(arg));
+    for (const auto &arg: t.args()) {
+        args.push_back(visit(*arg));
     }
 
-    return translator.respecialize_template(t->name, args, SourcePos(0, 0));
+    return translator.respecialize_template(t.name(), args, SourcePos(0, 0));
 }
 
 
@@ -279,7 +269,7 @@ Value ExpressionCodegen::operator()(
     std::vector<Type> tmpl_args;
 
     for (const auto &arg: call->tmpl_args) {
-        tmpl_args.push_back(tg.codegen(arg));
+        tmpl_args.push_back(tg.visit(*arg));
     }
 
     std::vector<Value> args;
@@ -293,7 +283,7 @@ Value ExpressionCodegen::operator()(
 
 Value ExpressionCodegen::operator()(
         const std::unique_ptr<AST::Cast> &cast) {
-    auto dest_ty = TypeCodegen(translator, fname).codegen(*cast->t);
+    auto dest_ty = TypeCodegen(translator, fname).visit(*cast->t);
 
     auto cast_val = codegen(cast->arg);
 
@@ -335,7 +325,7 @@ void StatementCodegen::operator()(
         const std::unique_ptr<AST::Declaration> &decl) {
 
     auto tg = TypeCodegen(translator, fname);
-    auto t = tg.codegen(decl->type);
+    auto t = tg.visit(*decl->type);
     translator.declare(decl->name.name, t);
 }
 
@@ -343,7 +333,7 @@ void StatementCodegen::operator()(
         const std::unique_ptr<AST::CompoundDeclaration> &cdecl) {
     std::string name = cdecl->name.name;
     auto tg = TypeCodegen(translator, fname);
-    auto t = tg.codegen(cdecl->type);
+    auto t = tg.visit(*cdecl->type);
     Variable result = translator.declare(name, t);
     translator.add_store(result.get_val(),
                          expr_codegen.codegen(cdecl->rhs),
@@ -408,7 +398,7 @@ void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
     TypeCodegen tg(translator, fname);
 
     for (const auto &decl: sd.members) {
-        auto t = std::make_shared<Type>(tg.codegen(decl->type));
+        auto t = std::make_shared<Type>(tg.visit(*decl->type));
         fields.push_back(std::pair<std::string, std::shared_ptr<Type> >
                                   (decl->name.name, t));
     }
@@ -423,7 +413,7 @@ void ModuleCodegenImpl::operator()(const AST::TemplateStructDeclaration &s) {
     TemplateTypeCodegen tg(translator, fname, s.argnames);
 
     for (const auto &decl: s.decl.members) {
-        auto t = std::make_shared<TemplateType>(tg.codegen(decl->type));
+        auto t = std::make_shared<TemplateType>(tg.visit(*decl->type));
         fields.push_back(std::pair<std::string,
                                   std::shared_ptr<TemplateType> >
                                   (decl->name.name, t));
@@ -442,12 +432,10 @@ Function<> ModuleCodegenImpl::type_of_ast_decl(
     TypeCodegen tg(translator, fname);
 
     for (const auto &decl: fd.args) {
-        arg_types.push_back(std::make_shared<Type>
-                                            (tg.codegen(decl->type)));
+        arg_types.push_back(std::make_shared<Type>(tg.visit(*decl->type)));
     }
 
-    auto ret_type = std::make_shared<Type>
-                                    (tg.codegen(fd.ret_type));
+    auto ret_type = std::make_shared<Type>(tg.visit(*fd.ret_type));
 
     return Function<>(ret_type, arg_types);
 }
@@ -517,11 +505,11 @@ void ModuleCodegenImpl::operator()(const AST::TemplateFunctionDefinition &f) {
 
     for (const auto &decl: f.def->signature.args) {
         arg_types.push_back(std::make_shared<TemplateType>
-                                            (tg.codegen(decl->type)));
+                                            (tg.visit(*decl->type)));
     }
 
     auto ret_type = std::make_shared<TemplateType>
-                                    (tg.codegen(f.def->signature.ret_type));
+                                    (tg.visit(*f.def->signature.ret_type));
 
     auto t = Function<TemplateType>(ret_type, arg_types);
 

@@ -102,15 +102,14 @@ private:
     static bool classof(const Token *t) {\
         return t->kind() == TokenKind::X;\
     }\
-    virtual bool operator==(const Token&) const override;
+    virtual bool operator==(const Token&) const override;\
+    ~X(void) override {}
 
 /**
  * @brief Names of types.
  */
 struct TypeName: public Token {
     std::string name;
-
-    ~TypeName(void) override {}
 
     virtual std::string repr(void) const override;
 
@@ -126,8 +125,6 @@ struct TypeName: public Token {
 struct Identifier: public Token {
     std::string name;
 
-    ~Identifier(void) override {}
-
     virtual std::string repr(void) const override;
 
     Identifier(std::string name)
@@ -142,8 +139,6 @@ struct Identifier: public Token {
 struct IntLiteral: public Token {
     int64_t value;
 
-    ~IntLiteral(void) override {}
-
     virtual std::string repr(void) const override;
 
     IntLiteral(int64_t value): Token(TokenKind::IntLiteral), value(value) {}
@@ -156,8 +151,6 @@ struct IntLiteral: public Token {
  */
 struct UIntLiteral: public Token {
     uint64_t value;
-
-    ~UIntLiteral(void) override {}
 
     virtual std::string repr(void) const override;
 
@@ -174,8 +167,6 @@ struct UIntLiteral: public Token {
 struct FloatLiteral: public Token {
     double value;
 
-    ~FloatLiteral(void) override {}
-
     virtual std::string repr(void) const override;
 
     FloatLiteral(double value):
@@ -191,8 +182,6 @@ struct FloatLiteral: public Token {
 struct StringLiteral: public Token {
     std::string value;
 
-    ~StringLiteral(void) override {}
-
     virtual std::string repr(void) const override;
 
     StringLiteral(const std::string &value):
@@ -207,8 +196,6 @@ struct StringLiteral: public Token {
  */
 struct Operator: public Token {
     std::string op;
-
-    ~Operator(void) override {}
 
     virtual std::string repr(void) const override;
 
@@ -229,74 +216,61 @@ struct Operator: public Token {
     static bool classof(const Token *t) {\
         return t->kind() == TokenKind::X;\
     }\
+    ~X(void) override {}
 
 struct OpenParen: public Token {
-    ~OpenParen(void) override {}
     virtual std::string repr(void) const override { return "("; }
     TOK_SIMPLE(OpenParen);
 };
 struct CloseParen: public Token {
-    ~CloseParen(void) override {}
     virtual std::string repr(void) const override { return ")"; }
     TOK_SIMPLE(CloseParen);
 };
 struct OpenBrace: public Token {
-    ~OpenBrace(void) override {}
     virtual std::string repr(void) const override { return "{"; }
     TOK_SIMPLE(OpenBrace);
 };
 struct CloseBrace: public Token {
-    ~CloseBrace(void) override {}
     virtual std::string repr(void) const override { return "}"; }
     TOK_SIMPLE(CloseBrace);
 };
 struct Comma: public Token {
-    ~Comma(void) override {}
     virtual std::string repr(void) const override { return ","; }
     TOK_SIMPLE(Comma);
 };
 struct Semicolon: public Token {
-    ~Semicolon(void) override {}
     virtual std::string repr(void) const override { return ";"; }
     TOK_SIMPLE(Semicolon);
 };
 struct Fn: public Token {
-    ~Fn(void) override {}
     virtual std::string repr(void) const override { return "fn"; }
     TOK_SIMPLE(Fn);
 };
 struct Struct: public Token {
-    ~Struct(void) override {}
     virtual std::string repr(void) const override { return "struct"; }
     TOK_SIMPLE(Struct);
 };
 struct Type: public Token {
-    ~Type(void) override {}
     virtual std::string repr(void) const override { return "type"; }
     TOK_SIMPLE(Type);
 };
 struct Return: public Token {
-    ~Return(void) override {}
     virtual std::string repr(void) const override { return "return"; }
     TOK_SIMPLE(Return);
 };
 struct If: public Token {
-    ~If(void) override {}
     virtual std::string repr(void) const override { return "if"; }
     TOK_SIMPLE(If);
 };
 struct Else: public Token {
-    ~Else(void) override {}
     virtual std::string repr(void) const override { return "else"; }
     TOK_SIMPLE(Else);
 };
 struct While: public Token {
-    ~While(void) override {}
     virtual std::string repr(void) const override { return "while"; }
     TOK_SIMPLE(While);
 };
 struct InvalidToken: public Token {
-    ~InvalidToken(void) override {}
     virtual std::string repr(void) const override { return "[INVALID]"; }
     TOK_SIMPLE(InvalidToken);
 };

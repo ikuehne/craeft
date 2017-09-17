@@ -100,7 +100,7 @@ private:
     /**
      * @brief Parse a type.
      */
-    AST::Type parse_type(void);
+    std::unique_ptr<AST::Type> parse_type(void);
 
     /**
      * @brief Parse a variable declaration.
@@ -125,7 +125,7 @@ private:
 
     std::vector<AST::Expression> parse_expr_list(void);
 
-    std::vector<AST::Type> parse_type_list(void);
+    std::vector<std::unique_ptr<AST::Type>> parse_type_list(void);
 
     std::vector<std::unique_ptr<AST::Declaration> >parse_declarations(void);
 

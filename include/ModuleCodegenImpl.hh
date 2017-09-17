@@ -41,45 +41,39 @@
 
 namespace Craeft {
 
-class TypeCodegen: public boost::static_visitor<Type> {
+class TypeCodegen: public AST::TypeVisitor<Type> {
 public:
     TypeCodegen(Translator &translator,
                 std::string &fname)
         : translator(translator), fname(fname) {}
-    /**
-     * @brief Get the LLVM type corresponding to the given Craeft type.
-     */
-    Type codegen(const AST::Type &);
 
-    // Visitors for Type nodes.
-    Type operator()(const AST::NamedType &);
-    Type operator()(const AST::Void &);
-    Type operator()(const std::unique_ptr<AST::Pointer> &);
-    Type operator()(const std::unique_ptr<AST::TemplatedType> &);
+    ~TypeCodegen(void) override {}
 
 private:
+    Type operator()(const AST::NamedType &) override;
+    Type operator()(const AST::Void &) override;
+    Type operator()(const AST::Pointer &) override;
+    Type operator()(const AST::TemplatedType &) override;
+
     Translator &translator;
     std::string &fname;
 };
 
-class TemplateTypeCodegen: public boost::static_visitor<TemplateType> {
+class TemplateTypeCodegen: public AST::TypeVisitor<TemplateType> {
 public:
     TemplateTypeCodegen(Translator &translator,
                         std::string &fname,
                         std::vector<std::string> args)
         : translator(translator), args(args) {}
-    /**
-     * @brief Get the LLVM type corresponding to the given Craeft type.
-     */
-    TemplateType codegen(const AST::Type &);
 
-    // Visitors for Type nodes.
-    TemplateType operator()(const AST::NamedType &);
-    TemplateType operator()(const AST::Void &);
-    TemplateType operator()(const std::unique_ptr<AST::Pointer> &);
-    TemplateType operator()(const std::unique_ptr<AST::TemplatedType> &);
+    ~TemplateTypeCodegen(void) override {}
 
 private:
+    TemplateType operator()(const AST::NamedType &) override;
+    TemplateType operator()(const AST::Void &) override;
+    TemplateType operator()(const AST::Pointer &) override;
+    TemplateType operator()(const AST::TemplatedType &) override;
+
     Translator &translator;
     std::vector<std::string> args;
 };

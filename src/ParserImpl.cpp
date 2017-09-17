@@ -251,8 +251,8 @@ std::vector<AST::Expression> ParserImpl::parse_expr_list(void) {
     return exprs;
 }
 
-std::vector<AST::Type> ParserImpl::parse_type_list(void) {
-    std::vector<AST::Type> types;
+std::vector<std::unique_ptr<AST::Type>> ParserImpl::parse_type_list(void) {
+    std::vector<std::unique_ptr<AST::Type>> types;
 
     bool cont;
     do {
@@ -280,7 +280,7 @@ AST::Expression ParserImpl::parse_variable(void) {
         // Shift the <:.
         lexer.shift();
 
-        std::vector<AST::Type> t_args;
+        std::vector<std::unique_ptr<AST::Type>> t_args;
 
         if (!at_close_generic()) {
             t_args = parse_type_list();
@@ -386,7 +386,7 @@ AST::Expression ParserImpl::parse_binop(int prec, AST::Expression lhs) {
 std::unique_ptr<AST::Cast> ParserImpl::parse_cast(void) {
 
     auto start = lexer.get_pos();
-    auto type = std::make_unique<AST::Type>(parse_type());
+    auto type = parse_type();
 
     // No closing parenthesis.
     find_and_shift(Tok::CloseParen(), "after type in cast");
@@ -466,19 +466,20 @@ AST::Expression ParserImpl::parse_primary(void) {
     }
 }
 
-AST::Type ParserImpl::parse_type(void) {
+std::unique_ptr<AST::Type> ParserImpl::parse_type(void) {
     /* TODO: Handle parentheses, array types, etc. */
     auto tname = llvm::cast<Tok::TypeName>(lexer.get_tok()).name;
 
     // Shift off the typename.
     lexer.shift();
 
-    AST::Type result = AST::NamedType(tname);
+    std::unique_ptr<AST::Type> result
+        = std::make_unique<AST::NamedType>(tname);
 
     if (at_open_generic()) {
         lexer.shift();
 
-        std::vector<AST::Type> args;
+        std::vector<std::unique_ptr<AST::Type>> args;
         if (!at_close_generic()) {
             args = parse_type_list();
         }
@@ -771,7 +772,7 @@ AST::TopLevel ParserImpl::parse_function(void) {
     auto args = parse_arg_list();
 
     // Default to void type;
-    AST::Type ret_type = AST::Void();
+    std::unique_ptr<AST::Type> ret_type = std::make_unique<AST::Void>();
 
     // parse another return type if present.
     if (is_arrow(lexer.get_tok())) {

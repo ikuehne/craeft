@@ -37,29 +37,33 @@ namespace AST {
 /** 
  * @brief Visitor for printing AST::Types.
  */
-struct TypePrintVisitor: boost::static_visitor<void> {
+class TypePrintVisitor: public TypeVisitor<void> {
+public:
     TypePrintVisitor(std::ostream &out): out(out) {}
 
-    void operator()(const Void &_) { out << "Type {Void}"; }
+    ~TypePrintVisitor(void) override {}
 
-    void operator()(const NamedType &nt) {
-        out << "Type {" << nt.name << "}";
+private:
+    void operator()(const NamedType &nt) override {
+        out << "Type {" << nt.name() << "}";
     }
 
-    void operator()(const std::unique_ptr<Pointer> &pt) {
-        out << "Pointer {";
-        boost::apply_visitor(*this, pt->pointed);
-        out << "}";
-    }
+    void operator()(const Void &_) override { out << "Type {Void}"; }
 
-    void operator()(const std::unique_ptr<TemplatedType> &t) {
-        out << "TemplatedType {" << t->name;
+    void operator()(const TemplatedType &t) override {
+        out << "TemplatedType {" << t.name();
 
-        for (const auto &arg: t->args) {
-            boost::apply_visitor(*this, arg);
+        for (const auto &arg: t.args()) {
+            visit(*arg);
             out << ", ";
         }
 
+        out << "}";
+    }
+
+    void operator()(const Pointer &pt) override {
+        out << "Pointer {";
+        visit(pt.pointed());
         out << "}";
     }
 
@@ -125,12 +129,12 @@ struct ExpressionPrintVisitor: boost::static_visitor<void> {
         TypePrintVisitor tv(out);
 
         if (fc->tmpl_args.size()) {
-            boost::apply_visitor(tv, fc->tmpl_args[0]);
+            tv.visit(*fc->tmpl_args[0]);
         }
 
         for (unsigned i = 1; i < fc->tmpl_args.size(); ++i) {
             out << ", ";
-            boost::apply_visitor(tv, fc->tmpl_args[i]);
+            tv.visit(*fc->tmpl_args[i]);
         }
 
         for (const auto &arg: fc->val_args) {
@@ -144,7 +148,7 @@ struct ExpressionPrintVisitor: boost::static_visitor<void> {
     void operator()(const std::unique_ptr<Cast> &c) {
         out << "Cast {";
         TypePrintVisitor type_printer(out);
-        boost::apply_visitor(type_printer, *c->t);
+        type_printer.visit(*c->t);
         out << ", ";
         boost::apply_visitor(*this, c->arg);
         out << "}";
@@ -182,7 +186,7 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
 
         out << "Declaration {";
 
-        boost::apply_visitor(tv, decl->type);
+        tv.visit(*decl->type);
 
         out << ", ";
 
@@ -197,7 +201,7 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
 
         out << "Declaration {";
 
-        boost::apply_visitor(tv, decl->type);
+        tv.visit(*decl->type);
 
         out << ", ";
 
@@ -293,7 +297,7 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
 
         TypePrintVisitor tv(out);
 
-        boost::apply_visitor(tv, fdecl.ret_type);
+        tv.visit(*fdecl.ret_type);
 
         out << "}";
     }

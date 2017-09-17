@@ -29,6 +29,7 @@
 
 #include <boost/variant.hpp>
 
+#include "ASTTypes.hh"
 #include "Error.hh"
 
 /* Architectural note: leaves of the AST are represented as small structs,
@@ -48,55 +49,6 @@ namespace Craeft {
  * tree.
  */
 namespace AST {
-
-/**
- * @defgroup Types Classes for types as represented in the AST.
- */
-
-/**
- * @brief Named types (e.g. structs).
- */
-struct NamedType {
-    std::string name;
-
-    NamedType(std::string n): name(n) {}
-};
-
-/**
- * @brief The void type.
- */
-struct Void {};
-
-struct TemplatedType;
-
-struct Pointer;
-
-typedef boost::variant< NamedType, Void,
-                        std::unique_ptr<Pointer>,
-                        std::unique_ptr<TemplatedType> > Type;
-
-/**
- * @brief A pointer to another type.
- */
-struct Pointer {
-    Type pointed;
-
-    Pointer(Type pointed): pointed(std::move(pointed)) {}
-};
-
-/**
- * @brief A type with template arguments.
- */
-struct TemplatedType {
-    std::string name;
-
-    std::vector<Type> args;
-
-    TemplatedType(std::string name, std::vector<Type> args)
-        : name(name), args(std::move(args)) {}
-};
-
-/** @} */
 
 /**
  * @defgroup Expressions Classes for expressions as represented in the AST.
@@ -235,13 +187,13 @@ struct FunctionCall {
 struct TemplateFunctionCall {
     std::string fname;
 
-    std::vector<Type> tmpl_args;
+    std::vector<std::unique_ptr<Type>> tmpl_args;
     std::vector<Expression> val_args;
 
     SourcePos pos;
 
     TemplateFunctionCall(std::string fname,
-                         std::vector<Type> tmpl_args,
+                         std::vector<std::unique_ptr<Type>> tmpl_args,
                          std::vector<Expression> val_args,
                          SourcePos pos)
         : fname(fname), tmpl_args(std::move(tmpl_args)),
@@ -340,12 +292,12 @@ struct VoidReturn {
  * @brief Variable declarations.
  */
 struct Declaration {
-    Type type;
+    std::unique_ptr<Type> type;
     Variable name;
 
     SourcePos pos;
 
-    Declaration(Type type, Variable name, SourcePos pos)
+    Declaration(std::unique_ptr<Type> type, Variable name, SourcePos pos)
         : type(std::move(type)), name(name), pos(pos) {}
 };
 
@@ -368,13 +320,15 @@ struct Assignment {
  * I.e. Typename varname = expression;
  */
 struct CompoundDeclaration {
-    Type type;
+    std::unique_ptr<Type> type;
     Variable name;
     Expression rhs;
 
     SourcePos pos;
 
-    CompoundDeclaration(Type type, Variable name, Expression rhs,
+    CompoundDeclaration(std::unique_ptr<Type> type,
+                        Variable name,
+                        Expression rhs,
                         SourcePos pos)
         : type(std::move(type)), name(name),
           rhs(std::move(rhs)), pos(pos) {}
@@ -469,13 +423,13 @@ struct TemplateStructDeclaration {
 struct FunctionDeclaration {
     std::string name;
     std::vector<std::unique_ptr<Declaration> > args;
-    Type ret_type;
+    std::unique_ptr<Type> ret_type;
 
     SourcePos pos;
 
     FunctionDeclaration(std::string name,
                         std::vector<std::unique_ptr<Declaration> > args,
-                        Type ret_type, SourcePos pos)
+                        std::unique_ptr<Type> ret_type, SourcePos pos)
         : name(std::move(name)), args(std::move(args)),
           ret_type(std::move(ret_type)), pos(pos) {}
 };
