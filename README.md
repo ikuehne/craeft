@@ -29,9 +29,9 @@ The syntax is simple, and largely familiar to any C programmer.  Roughly, in
 EBNF:
 
 ```
-identifier: [a-z][a-zA-Z0-9_]*
+identifier: [a-z|non-ascii][a-zA-Z0-9_|non-ascii]*
 
-TypeName: [A-Z][a-zA-Z0-9_]*
+TypeName: [A-Z][a-zA-Z0-9_|non-ascii]*
 
 Type: TypeName
     | TypeName<:[Type,]* Type:>
@@ -82,7 +82,8 @@ operators are actually allowed (all C operators except the ternary operator and
 the assignment operators) and the precedences and fixities (which follow C).
 I've also omitted the definition of `literal`, simply because it is boring and
 new literals are likely to be added soon.  C numeric literals are currently
-supported, except for hexadecimal literals.
+supported, except for hexadecimal literals.  Double-quoted strings are also
+supported.
 
 An Example
 ----------
@@ -165,6 +166,26 @@ nominally a "zero-cost" abstraction.  Of course, that could easily lead to an
 explosion in compile times and code size, so a short term goal is to add support
 for runtime polymorphism, which has no such drawbacks.
 
+Unicode
+-------
+
+Cr&#230;ft supports UTF-8 identifiers and strings.  The following code:
+
+```
+fn puts(U8 *str) -> I32;
+
+fn main() -> I32 {
+    U8 *cr&#230; = "&#128525";
+    return puts(cræft);
+}
+```
+
+Prints
+
+```
+&#128525
+```
+
 Linking with C Code
 -------------------
 
@@ -197,7 +218,7 @@ the `--ll`, `--asm`, and `-c` flags respectively.  So to compile the
 ./craeftc ../examples/factorial.cr -c factorial.o
 ```
 
-Each of the examples has a corresponding C "harness" which calls the Cr&#230;ft
+Most of the examples have a corresponding C "harness" which calls the Cr&#230;ft
 functions.  So, to compile and run `factorial.cr` with the harness:
 
 ```
