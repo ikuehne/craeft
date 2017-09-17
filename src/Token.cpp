@@ -81,6 +81,12 @@ std::string FloatLiteral::repr(void) const {
 
 TOK_EQUALS(FloatLiteral, lhs, value == lhs->value);
 
+std::string StringLiteral::repr(void) const {
+    return value;
+}
+
+TOK_EQUALS(StringLiteral, lhs, value == lhs->value);
+
 std::string Operator::repr(void) const {
     return op;
 }

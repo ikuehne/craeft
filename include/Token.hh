@@ -60,6 +60,7 @@ public:
         IntLiteral,
         UIntLiteral,
         FloatLiteral,
+        StringLiteral,
         Operator,
         OpenParen,
         CloseParen,
@@ -182,6 +183,23 @@ struct FloatLiteral: public Token {
         value(value) {}
 
     TOK_CLASS(FloatLiteral);
+};
+
+/**
+ * @brief String literals.
+ */
+struct StringLiteral: public Token {
+    std::string value;
+
+    ~StringLiteral(void) override {}
+
+    virtual std::string repr(void) const override;
+
+    StringLiteral(const std::string &value):
+        Token(TokenKind::StringLiteral),
+        value(value) {}
+
+    TOK_CLASS(StringLiteral);
 };
 
 /**
