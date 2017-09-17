@@ -206,6 +206,17 @@ cc factorial_harness.o factorial.o -o factorial
 ./factorial
 ```
 
+Testing
+=======
+
+Cr&#230;ft currently comes with a tiny suite of integration tests, in the
+process of being expanded.  They may be run with the `test/integration/run.py`
+script:
+
+```
+python3 test/integration/run.py
+```
+
 License
 =======
 
