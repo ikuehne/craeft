@@ -169,20 +169,9 @@ for runtime polymorphism, which has no such drawbacks.
 Unicode
 -------
 
-Cr&#230;ft supports UTF-8 identifiers and strings.  The following code:
-
-```
-fn puts(U8 *str) -> I32;
-
-fn main() -> I32 {
-    U8 *cr&#230; = "&#128525;";
-    return puts(cræft);
-}
-```
-
-Prints
-
-&#128525;
+Cr&#230;ft supports non-ASCII identifiers and strings by treating any characters
+which are not valid ASCII as unknown lower-case characters.  Thus, code may use
+non-ASCII UTF-8 characters, or characters from an extended ASCII encoding.
 
 Linking with C Code
 -------------------
