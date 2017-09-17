@@ -15,6 +15,7 @@ import yaml
 DIR = os.path.dirname(__file__)
 CRAEFT_PATH = os.path.join(DIR, '../../build/craeftc')
 CC = "cc"
+CFLAGS = ["-x", "c"]
 
 def temporary_filename():
     (obj, result) = tempfile.mkstemp()
@@ -39,12 +40,29 @@ class IntegrationTest(object):
         """Parse the file named by `fname` into an IntegrationTest."""
         with open(fname, "r") as f:
             parsed = yaml.load(f)
-        self.code = abs_of_conf_path(parsed["code"])
-        self.harness = abs_of_conf_path(parsed["harness"])
+
         self.name = parsed["name"]
 
-        with open(abs_of_conf_path(parsed["output"]), "r") as f:
-            self.expected = bytes(f.read(), 'utf-8')
+        self.del_code = False
+        self.del_harness = False
+
+        def try_file(field):
+            try:
+                self.__dict__[field] = abs_of_conf_path(parsed[field])
+            except KeyError:
+                self.__dict__[field]= temporary_filename()
+                self.__dict__["del_" + field] = True
+                with open(self.__dict__[field], 'w') as f:
+                    f.write(parsed[field + "_text"])
+
+        try_file("code")
+        try_file("harness")
+
+        try:
+            with open(abs_of_conf_path(parsed["output"]), "r") as f:
+                self.expected = bytes(f.read(), 'utf-8')
+        except KeyError:
+            self.expected = bytes(parsed["output_text"], 'utf-8')
 
         self.code_obj = temporary_filename()
         self.harness_obj = temporary_filename()
@@ -58,13 +76,20 @@ class IntegrationTest(object):
         try_rm(self.harness_obj)
         try_rm(self.exc)
 
+        if self.del_code:
+            try_rm(self.code)
+
+        if self.del_harness:
+            try_rm(self.harness)
+
     def compile_craeft(self):
         assert_succeeded([CRAEFT_PATH, self.code, "--obj", self.code_obj],
                          "craeftc invocation failed")
 
     def compile_harness(self):
-        assert_succeeded([CC, self.harness, "-c", "-o", self.harness_obj],
-                         "compiler invocation failed")
+        args = [CC] + CFLAGS
+        args += [self.harness, "-c", "-o", self.harness_obj]
+        assert_succeeded(args, "compiler invocation failed")
 
     def link(self):
         assert_succeeded([CC, self.code_obj, self.harness_obj, "-o", self.exc],

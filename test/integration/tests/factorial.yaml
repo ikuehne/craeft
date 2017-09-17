@@ -1,8 +1,20 @@
-code:
-        factorial.cr
-harness:
-        factorial_harness.c
-output:
-        factorial_output
 name:
-        factorial
+    factorial
+code_text: |
+    fn fact(U64 n) -> U64 {
+        if n == 0 {
+            return 1;
+        }
+        return n * fact(n - 1);
+    }
+harness_text: |
+    #include <stdio.h>
+    #include <stdint.h>
+    
+    uint64_t fact(uint64_t n);
+    
+    int main(void) {
+        printf("%llu\n", fact(10));
+        return 0;
+    }
+output_text: "3628800\n"

@@ -449,6 +449,10 @@ AST::Expression ParserImpl::parse_primary(void) {
             return result;
         }
 
+        case Tok::Token::TokenKind::OpenParen: {
+            return parse_parens();
+        }
+
         default:
             _throw("expected expression");
     }
@@ -583,16 +587,18 @@ AST::TypeDeclaration ParserImpl::parse_type_declaration(void) {
     lexer.shift();
 
     const auto &tok = lexer.get_tok();
-    auto *tname = llvm::dyn_cast<Tok::TypeName>(&tok);
+    auto *tname_ptr = llvm::dyn_cast<Tok::TypeName>(&tok);
 
-    if (!tname) {
+    if (!tname_ptr) {
         _throw("expected type name in type declaration.");
     }
+
+    auto tname = *tname_ptr;
 
     // Shift the type name.
     lexer.shift();
 
-    return AST::TypeDeclaration(tname->name, start);
+    return AST::TypeDeclaration(tname.name, start);
 }
 
 std::vector<std::unique_ptr<AST::Declaration> >
@@ -664,36 +670,40 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
 
         const auto& struct_tok = lexer.get_tok();
 
-        auto *tname = llvm::dyn_cast<Tok::TypeName>(&struct_tok);
+        auto *tname_ptr = llvm::dyn_cast<Tok::TypeName>(&struct_tok);
 
-        if (!tname) {
+        if (!tname_ptr) {
             _throw("expected type name in template struct declaration");
         }
+
+        auto tname = *tname_ptr;
 
         // Shift the type name.
         lexer.shift();
 
         auto members = parse_declarations();
 
-        return AST::TemplateStructDeclaration(tname->name,
+        return AST::TemplateStructDeclaration(tname.name,
                                               type_list,
                                               std::move(members),
                                               start);
     }
 
     const auto &tok = lexer.get_tok();
-    auto *tname = llvm::dyn_cast<Tok::TypeName>(&tok);
+    auto *tname_ptr = llvm::dyn_cast<Tok::TypeName>(&tok);
 
-    if (!tname) {
+    if (!tname_ptr) {
         _throw("expected type name in type declaration");
     }
+
+    auto tname = *tname_ptr;
 
     // Shift the type name.
     lexer.shift();
 
     auto members = parse_declarations();
 
-    return AST::StructDeclaration(tname->name, std::move(members), start);
+    return AST::StructDeclaration(tname.name, std::move(members), start);
 }
 
 AST::TopLevel ParserImpl::parse_function(void) {
