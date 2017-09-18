@@ -73,84 +73,88 @@ private:
 /**
  * @brief Visitor for printing `AST::Expression`s.
  */
-struct ExpressionPrintVisitor: boost::static_visitor<void> {
+class ExpressionPrintVisitor: public ExpressionVisitor<void> {
+public:
     ExpressionPrintVisitor(std::ostream &out): out(out) {}
 
-    template<typename T>
-    void operator()(const T &lit) {
-        out << boost::typeindex::type_id<T>().pretty_name()
-            << " {" << lit.value << "}";
+private:
+    void operator()(const IntLiteral &lit) override {
+        out << "IntLiteral {" << lit.value() << "}";
     }
 
-    void operator()(const Variable &var) {
-        out << "Variable {" << var.name << "}";
+    void operator()(const UIntLiteral &lit) override {
+        out << "UIntLiteral {" << lit.value() << "}";
     }
 
-    void operator()(const std::unique_ptr<Reference> &ref) {
-        out << "Reference {";
-        boost::apply_visitor(*this, ref->referand);
-        out << "}";
+    void operator()(const FloatLiteral &lit) override {
+        out << "FloatLiteral {" << lit.value() << "}";
     }
 
-    void operator()(const std::unique_ptr<FieldAccess> &fa) {
-        out << "FieldAccess {";
-        boost::apply_visitor(*this, fa->structure);
-        out << ", " << fa->field << "}";
+    void operator()(const StringLiteral &lit) override {
+        out << "StringLiteral {" << lit.value() << "}";
     }
 
-    void operator()(const std::unique_ptr<Dereference> &deref) {
+    void operator()(const Variable &var) override {
+        out << "Variable {" << var.name() << "}";
+    }
+
+    void operator()(const Reference &ref) override {
+        out << "Reference {[lvalue TODO]}";
+    }
+
+    void operator()(const Dereference &deref) override {
         out << "Dereference {";
-        boost::apply_visitor(*this, deref->referand);
+        visit(deref.referand());
         out << "}";
     }
 
-    void operator()(const std::unique_ptr<Binop> &bin) {
-        out << "Binop {" << bin->op << ", ";
-        boost::apply_visitor(*this, bin->lhs);
+    void operator()(const Binop &bin) override {
+        out << "Binop {" << bin.op() << ", ";
+        visit(bin.lhs());
         out << ", ";
-        boost::apply_visitor(*this, bin->rhs);
+        visit(bin.rhs());
         out << "}";
     }
 
-    void operator()(const std::unique_ptr<FunctionCall> &fc) {
-        out << "FunctionCall {" << fc->fname;
-        for (const auto &arg: fc->args) {
+    void operator()(const FunctionCall &fc) override {
+        out << "FunctionCall {" << fc.fname();
+        for (const auto &arg: fc.args()) {
             out << ", ";
-            boost::apply_visitor(*this, arg);
+            visit(*arg);
         }
         out << "}";
     }
 
-    void operator()(const std::unique_ptr<TemplateFunctionCall> &fc) {
-        out << "TemplateFunctionCall {" << fc->fname << ", ";
+    void operator()(const TemplateFunctionCall &fc) override {
+        out << "TemplateFunctionCall {" << fc.fname() << ", ";
 
         out << "TemplateArgs {";
 
         TypePrintVisitor tv(out);
 
-        if (fc->tmpl_args.size()) {
-            tv.visit(*fc->tmpl_args[0]);
+        if (fc.type_args().size()) {
+            tv.visit(*fc.type_args()[0]);
         }
 
-        for (unsigned i = 1; i < fc->tmpl_args.size(); ++i) {
+        for (unsigned i = 1; i < fc.type_args().size(); ++i) {
             out << ", ";
-            tv.visit(*fc->tmpl_args[i]);
+            tv.visit(*fc.type_args()[i]);
         }
 
-        for (const auto &arg: fc->val_args) {
+        for (const auto &arg: fc.value_args()) {
             out << ", ";
-            boost::apply_visitor(*this, arg);
+            visit(*arg);
         }
 
         out << "}";
     }
 
-    void operator()(const std::unique_ptr<Cast> &c) {
+    void operator()(const Cast &c) override {
         out << "Cast {";
         TypePrintVisitor type_printer(out);
-        type_printer.visit(*c->t);
+        type_printer.visit(c.type());
         out << ", ";
-        boost::apply_visitor(*this, c->arg);
+        visit(c.arg());
         out << "}";
     }
 
@@ -163,19 +167,18 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
     void operator()(const std::unique_ptr<AST::Assignment> &assgnt) {
         ExpressionPrintVisitor ev(out);
 
-        out << "Assignment {";
-        boost::apply_visitor(ev, assgnt->lhs);
+        out << "Assignment {[lvalue TODO]";
         out << ", ";
-        boost::apply_visitor(ev, assgnt->rhs);
+        ev.visit(*assgnt->rhs);
         out << "}";
     }
 
-    void operator()(const Expression &expr) {
+    void operator()(const std::unique_ptr<Expression> &expr) {
         ExpressionPrintVisitor ev(out);
 
         out << "Statement {";
 
-        boost::apply_visitor(ev, expr);
+        ev.visit(*expr);
 
         out << "}";
     }
@@ -190,7 +193,7 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
 
         out << ", ";
 
-        ev(decl->name);
+        ev.visit(decl->name);
 
         out << "}";
     }
@@ -205,11 +208,11 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
 
         out << ", ";
 
-        ev(decl->name);
+        ev.visit(decl->name);
 
         out << ", ";
 
-        boost::apply_visitor(ev, decl->rhs);
+        ev.visit(*decl->rhs);
 
         out << "}";
     }
@@ -219,7 +222,7 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
 
         out << "Return {";
 
-        boost::apply_visitor(ev, *ret.retval);
+        ev.visit(*ret.retval);
 
         out << "}";
     }
@@ -233,7 +236,7 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
 
         out << "IfStatement {";
 
-        boost::apply_visitor(ev, ifstmt->condition);
+        ev.visit(*ifstmt->condition);
 
         out << ", ";
 
@@ -357,7 +360,7 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
 
 void print_expr(const Expression &expr, std::ostream &out) {
     ExpressionPrintVisitor printer(out);
-    boost::apply_visitor(printer, expr);
+    printer.visit(expr);
 }
 
 void print_statement(const Statement &stmt, std::ostream &out) {

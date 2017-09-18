@@ -29,7 +29,8 @@
 
 #include <boost/variant.hpp>
 
-#include "ASTTypes.hh"
+#include "AST/Expressions.hh"
+#include "AST/Types.hh"
 #include "Error.hh"
 
 /* Architectural note: leaves of the AST are represented as small structs,
@@ -49,217 +50,6 @@ namespace Craeft {
  * tree.
  */
 namespace AST {
-
-/**
- * @defgroup Expressions Classes for expressions as represented in the AST.
- *
- * @{
- */
-
-/**
- * @brief Signed integer literals.
- */
-struct IntLiteral {
-    int64_t value;
-    SourcePos pos;
-
-    IntLiteral(int64_t value, SourcePos pos): value(value), pos(pos) {}
-};
-
-/**
- * @brief Unsigned integer literals.
- */
-struct UIntLiteral {
-    uint64_t value;
-    SourcePos pos;
-
-    UIntLiteral(uint64_t value, SourcePos pos): value(value), pos(pos) {}
-};
-
-/**
- * @brief Floating-point literals.
- */
-struct FloatLiteral {
-    double value;
-    SourcePos pos;
-
-    FloatLiteral(double value, SourcePos pos): value(value), pos(pos) {}
-};
-
-/**
- * @brief String literals.
- */
-struct StringLiteral {
-    std::string value;
-    SourcePos pos;
-
-    StringLiteral(const std::string &value, SourcePos pos)
-        : value(value), pos(pos) {}
-};
-
-/**
- * @brief Variables.
- */
-struct Variable {
-    std::string name;
-    SourcePos pos;
-
-    Variable(std::string name, SourcePos pos)
-        : name(std::move(name)), pos(pos) {}
-};
-
-/* Forward declarations. */
-struct Dereference;
-struct Reference;
-struct Binop;
-struct FunctionCall;
-struct TemplateFunctionCall;
-struct Cast;
-
-/**
- * @brief Expressions.
- *
- * Use move semantics.
- */
-typedef boost::variant< IntLiteral,
-                        UIntLiteral,
-                        FloatLiteral,
-                        StringLiteral,
-                        Variable,
-                        std::unique_ptr<Reference>,
-                        std::unique_ptr<Dereference>,
-                        std::unique_ptr<Binop>,
-                        std::unique_ptr<FunctionCall>,
-                        std::unique_ptr<TemplateFunctionCall>,
-                        std::unique_ptr<Cast> > Expression;
-
-/**
- * @brief Application of the dereference operator "*".
- */
-struct Dereference {
-    /**
-     * @brief Expression being dereferenced.
-     */
-    Expression referand;
-    SourcePos pos;
-
-    Dereference(Expression referand, SourcePos pos)
-        : referand(std::move(referand)), pos(pos) {}
-};
-
-
-/**
- * @brief Binary operator application.
- */
-struct Binop {
-    std::string op;
-
-    Expression lhs;
-    Expression rhs;
-
-    SourcePos pos;
-
-    Binop(std::string op, Expression lhs, Expression rhs, SourcePos pos)
-        : op(std::move(op)),
-          lhs(std::move(lhs)), rhs(std::move(rhs)),
-          pos(pos) {}
-};
-
-/**
- * @brief Function calls.
- */
-struct FunctionCall {
-    std::string fname;
-
-    std::vector<Expression> args;
-
-    SourcePos pos;
-
-    FunctionCall(std::string fname,
-                 std::vector<Expression> args,
-                 SourcePos pos)
-        : fname(std::move(fname)), args(std::move(args)), pos(pos) {}
-};
-
-/**
- * @brief Calls to templated function calls with type arguments.
- */
-struct TemplateFunctionCall {
-    std::string fname;
-
-    std::vector<std::unique_ptr<Type>> tmpl_args;
-    std::vector<Expression> val_args;
-
-    SourcePos pos;
-
-    TemplateFunctionCall(std::string fname,
-                         std::vector<std::unique_ptr<Type>> tmpl_args,
-                         std::vector<Expression> val_args,
-                         SourcePos pos)
-        : fname(fname), tmpl_args(std::move(tmpl_args)),
-          val_args(std::move(val_args)), pos(pos) {}
-};
-
-/**
- * @brief Casts, from the syntactic form (Typename)expression.
- */
-struct Cast {
-    std::unique_ptr<Type> t;
-
-    Expression arg;
-
-    SourcePos pos;
-
-    Cast(std::unique_ptr<Type> t, Expression arg, SourcePos pos)
-        : t(std::move(t)), arg(std::move(arg)), pos(pos) {}
-};
-
-/**
- * @brief Print a representation of the expression to the given stream.
- *
- * Intended for debugging.
- */
-void print_expr(const Expression &, std::ostream &);
-
-/** @} */
-
-/**
- * @defgroup LValues Classes for l-values as represented in the AST.
- *
- * @{
- */
-
-struct FieldAccess;
-/* TODO: Expand to include arrays, etc. */
-typedef boost::variant < Variable,
-                         std::unique_ptr<Dereference>,
-                         std::unique_ptr<FieldAccess> > LValue;
-
-struct FieldAccess {
-    LValue structure;
-    std::string field;
-
-    SourcePos pos;
-
-    FieldAccess(LValue structure, std::string field, SourcePos pos)
-        : structure(std::move(structure)), field(field), pos(pos) {}
-};
-
-/**
- * @brief Application of the address-of operator.
- */
-struct Reference {
-    /**
-     * @brief L-value having its address taken.
-     */
-    LValue referand;
-    SourcePos pos;
-
-    Reference(LValue referand, SourcePos pos)
-        : referand(std::move(referand)), pos(pos) {}
-};
-
-/** @} */
 
 /**
  * @defgroup Statements Classes for statements as represented in the AST.
@@ -305,12 +95,14 @@ struct Declaration {
  * @brief Assignments.
  */
 struct Assignment {
-    LValue lhs;
-    Expression rhs;
+    std::unique_ptr<LValue> lhs;
+    std::unique_ptr<Expression> rhs;
 
     SourcePos pos;
 
-    Assignment(LValue lhs, Expression rhs, SourcePos pos)
+    Assignment(std::unique_ptr<LValue> lhs,
+               std::unique_ptr<Expression> rhs,
+               SourcePos pos)
         : lhs(std::move(lhs)), rhs(std::move(rhs)), pos(pos) {}
 };
 
@@ -322,13 +114,13 @@ struct Assignment {
 struct CompoundDeclaration {
     std::unique_ptr<Type> type;
     Variable name;
-    Expression rhs;
+    std::unique_ptr<Expression> rhs;
 
     SourcePos pos;
 
     CompoundDeclaration(std::unique_ptr<Type> type,
                         Variable name,
-                        Expression rhs,
+                        std::unique_ptr<Expression> rhs,
                         SourcePos pos)
         : type(std::move(type)), name(name),
           rhs(std::move(rhs)), pos(pos) {}
@@ -336,7 +128,7 @@ struct CompoundDeclaration {
 
 struct IfStatement;
 
-typedef boost::variant< Expression,
+typedef boost::variant< std::unique_ptr<Expression>,
                         Return,
                         VoidReturn,
                         std::unique_ptr<Assignment>,
@@ -346,13 +138,13 @@ typedef boost::variant< Expression,
     Statement;
 
 struct IfStatement {
-    Expression condition;
+    std::unique_ptr<Expression> condition;
     std::vector<Statement> if_block;
     std::vector<Statement> else_block;
 
     SourcePos pos;
 
-    IfStatement(Expression cond,
+    IfStatement(std::unique_ptr<Expression> cond,
                 std::vector<Statement> if_block,
                 std::vector<Statement> else_block,
                 SourcePos pos)

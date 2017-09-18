@@ -1,5 +1,5 @@
 /**
- * @file ASTTypes.hh
+ * @file Types.hh
  *
  * @brief The AST nodes that represent types.
  */
@@ -47,7 +47,7 @@ public:
         return _kind;
     }
 
-    virtual ~Type() {};
+    virtual ~Type() {}
 
     Type(TypeKind kind): _kind(kind) {}
 
@@ -117,14 +117,13 @@ public:
 
     Result visit(const Type &type) {
         switch (type.kind()) {
-            case Type::TypeKind::NamedType:
-                return operator()(llvm::cast<NamedType>(type));
-            case Type::TypeKind::Void:
-                return operator()(llvm::cast<Void>(type));
-            case Type::TypeKind::TemplatedType:
-                return operator()(llvm::cast<TemplatedType>(type));
-            case Type::TypeKind::Pointer:
-                return operator()(llvm::cast<Pointer>(type));
+#define HANDLE(X) case Type::TypeKind::X:\
+                      return operator()(llvm::cast<X>(type));
+            HANDLE(NamedType);
+            HANDLE(Void);
+            HANDLE(TemplatedType);
+            HANDLE(Pointer);
+#undef HANDLE
         }
     }
 

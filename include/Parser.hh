@@ -48,7 +48,7 @@ public:
     /**
      * @brief Parse the next expression from the stream.
      */
-    AST::Expression parse_expression(void);
+    std::unique_ptr<AST::Expression> parse_expression(void);
 
     /**
      * @brief Parse the next statement from the stream.

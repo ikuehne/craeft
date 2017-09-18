@@ -80,52 +80,44 @@ private:
 
 class ExpressionCodegen;
 
-class LValueCodegen: public boost::static_visitor<Value> {
+class LValueCodegen: public AST::LValueVisitor<Value> {
 public:
     LValueCodegen(Translator &translator,
                   std::string &fname,
                   ExpressionCodegen &eg)
         : translator(translator), eg(eg) {}
-    /**
-     * @brief Generate an instruction yielding an address to the given
-     *        l-value.
-     */
-    Value codegen(const AST::LValue &);
 
-    Value operator()(const AST::Variable &);
-    Value operator()(const std::unique_ptr<AST::Dereference> &);
-    Value operator()(const std::unique_ptr<AST::FieldAccess> &);
 
 private:
+    Value operator()(const AST::Variable &) override;
+    Value operator()(const AST::Dereference &) override;
+    Value operator()(const AST::FieldAccess &) override;
+
     Translator &translator;
     ExpressionCodegen &eg;
 };
 
-class ExpressionCodegen: public boost::static_visitor<Value> {
+class ExpressionCodegen: public AST::ExpressionVisitor<Value> {
 public:
     ExpressionCodegen(Translator &translator,
                       std::string &fname)
         : translator(translator), fname(fname) {}
 
-    /**
-     * @brief Generate code for the given statement.
-     */
-    Value codegen(const AST::Expression &expr);
-
-    // Visitors of different AST statement types.
-    Value operator()(const AST::IntLiteral &);
-    Value operator()(const AST::UIntLiteral &);
-    Value operator()(const AST::FloatLiteral &);
-    Value operator()(const AST::StringLiteral &);
-    Value operator()(const AST::Variable &);
-    Value operator()(const std::unique_ptr<AST::Reference> &);
-    Value operator()(const std::unique_ptr<AST::Dereference> &);
-    Value operator()(const std::unique_ptr<AST::Binop> &);
-    Value operator()(const std::unique_ptr<AST::FunctionCall> &);
-    Value operator()(const std::unique_ptr<AST::TemplateFunctionCall> &);
-    Value operator()(const std::unique_ptr<AST::Cast> &);
 
 private:
+    // Visitors of different AST statement types.
+    Value operator()(const AST::IntLiteral &) override;
+    Value operator()(const AST::UIntLiteral &) override;
+    Value operator()(const AST::FloatLiteral &) override;
+    Value operator()(const AST::StringLiteral &) override;
+    Value operator()(const AST::Variable &) override;
+    Value operator()(const AST::Reference &) override;
+    Value operator()(const AST::Dereference &) override;
+    Value operator()(const AST::Binop &) override;
+    Value operator()(const AST::FunctionCall &) override;
+    Value operator()(const AST::TemplateFunctionCall &) override;
+    Value operator()(const AST::Cast &) override;
+
     Translator &translator;
     std::string &fname;
 };
@@ -144,7 +136,7 @@ public:
           expr_codegen(translator, fname) {}
 
     // Visitors of different AST statement types.
-    void operator()(const AST::Expression &);
+    void operator()(const std::unique_ptr<AST::Expression> &);
     void operator()(const AST::VoidReturn &);
     void operator()(const AST::Return &);
     void operator()(const std::unique_ptr<AST::Assignment> &assignment);

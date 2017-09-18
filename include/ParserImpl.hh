@@ -45,7 +45,7 @@ public:
      *
      * Start at the token the lexer is *currently* on.
      */
-    AST::Expression parse_expression(void);
+    std::unique_ptr<AST::Expression> parse_expression(void);
 
     /**
      * Note: starts at the token the lexer is *currently* on.
@@ -58,24 +58,27 @@ public:
      * AST-handling utilities.
      */
     inline void verify_expression(const AST::Expression &) const;
-    inline AST::LValue to_lvalue(AST::Expression, SourcePos pos) const;
-    inline AST::Statement extract_assignments(AST::Expression &) const;
+    inline std::unique_ptr<AST::LValue> to_lvalue(
+            std::unique_ptr<AST::Expression>, SourcePos pos) const;
+    inline AST::Statement extract_assignments(
+            std::unique_ptr<AST::Expression>) const;
 
 private:
     /**
      * @brief Parse a variable or a function call.
      */
-    AST::Expression parse_variable(void);
+    std::unique_ptr<AST::Expression> parse_variable(void);
 
     /**
      * @brief Parse a unary operator invocation.
      */
-    AST::Expression parse_unary(void);
+    std::unique_ptr<AST::Expression> parse_unary(void);
 
     /**
      * @brief Parse a series of binops, given the first one.
      */
-    AST::Expression parse_binop(int prec, AST::Expression lhs);
+    std::unique_ptr<AST::Expression> parse_binop(
+            int prec, std::unique_ptr<AST::Expression> lhs);
 
     /**
      * @brief Parse a cast.
@@ -90,12 +93,12 @@ private:
     /**
      * @brief Parse a parenthesized expression.
      */
-    AST::Expression parse_parens(void);
+    std::unique_ptr<AST::Expression> parse_parens(void);
 
     /**
      * @brief Parse anything but an operator application.
      */
-    AST::Expression parse_primary(void);
+    std::unique_ptr<AST::Expression> parse_primary(void);
 
     /**
      * @brief Parse a type.
@@ -123,7 +126,7 @@ private:
 
     AST::TopLevel parse_function(void);
 
-    std::vector<AST::Expression> parse_expr_list(void);
+    std::vector<std::unique_ptr<AST::Expression>> parse_expr_list(void);
 
     std::vector<std::unique_ptr<AST::Type>> parse_type_list(void);
 

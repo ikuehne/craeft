@@ -29,7 +29,7 @@ Parser::Parser(std::string fname): pimpl(new ParserImpl(fname)) {}
 
 Parser::~Parser() {}
 
-AST::Expression Parser::parse_expression(void) {
+std::unique_ptr<AST::Expression> Parser::parse_expression(void) {
     return pimpl->parse_expression();
 }
 

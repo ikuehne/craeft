@@ -34,8 +34,9 @@
 namespace Craeft {
 
 template <typename AstLiteral, typename TokLiteral>
-static inline AstLiteral get_literal(TokLiteral tok, SourcePos pos) {
-    return AstLiteral(tok.value, pos);
+static inline std::unique_ptr<AstLiteral> get_literal(
+        TokLiteral tok, SourcePos pos) {
+    return std::make_unique<AstLiteral>(tok.value, pos);
 }
 
 /*****************************************************************************
@@ -60,46 +61,48 @@ bool is_arrow(const Tok::Token &tok) {
  * The parser cannot distinguish between the two at parse-time, so expressions
  * must be verified after the fact.
  */
-class ExpressionVerifier: public boost::static_visitor<void> {
+class ExpressionVerifier: public AST::ExpressionVisitor<void> {
 public:
     ExpressionVerifier(const std::string &fname): fname(fname) {}
 
+private:
     /* By default, do nothing. */
-    template<typename T>
-    void operator()(const T &_) const {}
+    void operator()(const AST::IntLiteral &) override {}
+    void operator()(const AST::UIntLiteral &) override {}
+    void operator()(const AST::FloatLiteral &) override {}
+    void operator()(const AST::StringLiteral &) override {}
+    void operator()(const AST::Variable &) override {}
+    void operator()(const AST::Reference &) override {}
+    void operator()(const AST::Dereference &) override {}
 
     /* On a binop, check if it is an `=`.  `=` are returned by the expression
      * parser, but they are not actually part of an expression, so this
      * results in an error. */
-    void operator()(const std::unique_ptr<AST::Binop> &op) const {
-        if (op->op == "=") {
+    void operator()(const AST::Binop &op) override {
+        if (op.op() == "=") {
             throw Error("parse error",
                         "\"=\" may not appear in an expression",
-                        fname, op->pos);
+                        fname, op.pos());
         }
 
-        boost::apply_visitor(*this, op->lhs);
-        boost::apply_visitor(*this, op->rhs);
+        visit(op.lhs());
+        visit(op.rhs());
     }
 
     /* For other nodes, just visit their children. */
-    void operator()(const std::unique_ptr<AST::FunctionCall> &fc) const {
-        std::for_each(fc->args.begin(), fc->args.end(), [&](const auto &arg) {
-                          boost::apply_visitor(*this, arg);
-                      });
+    void operator()(const AST::FunctionCall &fc) override {
+        std::for_each(fc.args().begin(), fc.args().end(),
+                      [this](const auto &arg) { visit(*arg); });
     }
 
-    void operator()(const std::unique_ptr<AST::TemplateFunctionCall> &fc)
-          const {
-        std::for_each(fc->val_args.begin(), fc->val_args.end(),
-                      [&](const auto &arg) {
-                          boost::apply_visitor(*this, arg);
-                      });
+    void operator()(const AST::TemplateFunctionCall &fc) override {
+        std::for_each(fc.value_args().begin(), fc.value_args().end(),
+                      [this](const auto &arg) { visit(*arg); });
     }
 
 
-    void operator()(const std::unique_ptr<AST::Cast> &cast) const {
-        boost::apply_visitor(*this, cast->arg);
+    void operator()(const AST::Cast &cast) override {
+        visit(cast.arg());
     }
 
 private:
@@ -108,69 +111,93 @@ private:
 
 inline void ParserImpl::verify_expression(const AST::Expression &expr) const {
     /* Just a thin wrapper over the ExpressionVerifier visitor. */
-    boost::apply_visitor(ExpressionVerifier(fname), expr);
+    ExpressionVerifier(fname).visit(expr);
 }
 
-inline AST::LValue ParserImpl::to_lvalue(AST::Expression expr, SourcePos pos)
-        const {
-    if (is_type<AST::Variable>(expr)) {
-        return std::move(boost::get<AST::Variable>(expr));
-    } else if (is_type<std::unique_ptr<AST::Dereference> >(expr)) {
-        return std::move(boost::get<std::unique_ptr<AST::Dereference> >
-                                   (expr));
-    } else if (is_type<std::unique_ptr<AST::Binop> >(expr)) {
-        auto binop = std::move(boost::get<std::unique_ptr<AST::Binop> >
-                                         (expr));
-
-        if (binop->op == ".") {
-            auto *var = boost::get<AST::Variable>(&binop->rhs);
-            if (var) {
-                return std::make_unique<AST::FieldAccess>
-                                       (to_lvalue(std::move(binop->lhs),
-                                                  binop->pos),
-                                        var->name, binop->pos);
-            } else { 
-                throw Error("parser error",
-                            "expected field name in field access",
-                            fname, pos);
-            }
-        } else if (binop->op == "->") {
-            auto *var = boost::get<AST::Variable>(&binop->rhs);
-            if (var) {
-                auto lvalue = std::make_unique<AST::Dereference>
-                                              (std::move(binop->lhs),
-                                               binop->pos);
-                return std::make_unique<AST::FieldAccess>
-                                       (std::move(lvalue), var->name,
-                                        binop->pos);
-            } else { 
-                throw Error("parser error",
-                            "expected field name in field access",
-                            fname, pos);
-            }
-        }
+inline std::unique_ptr<AST::LValue> ParserImpl::to_lvalue(
+        std::unique_ptr<AST::Expression> expr, SourcePos pos) const {
+    if (auto result = llvm::dyn_cast<AST::LValue>(expr.get())) {
+        expr.release();
+        result->set_pos(pos);
+        return std::unique_ptr<AST::LValue>(result);
+    }
+   
+    if (auto binop = llvm::dyn_cast<AST::Binop>(expr.get())) {
+        if (binop->op() == ".") {
+             if (auto *name = llvm::dyn_cast<AST::Variable>(&binop->rhs())) {
+                 SourcePos lhs_pos = binop->lhs().pos();
+                 auto lvalue = to_lvalue(binop->release_lhs(), lhs_pos);
+                 return std::make_unique<AST::FieldAccess>(
+                         std::move(lvalue), name->name(), binop->pos());
+             } else { 
+                 throw Error("parser error",
+                             "expected field name in field access",
+                             fname, pos);
+             }
+         } else if (binop->op() == "->") {
+             if (auto *name = llvm::dyn_cast<AST::Variable>(&binop->rhs())) {
+                 SourcePos lhs_pos = binop->lhs().pos();
+                 auto lvalue = std::make_unique<AST::Dereference>
+                                               (binop->release_lhs(),
+                                                lhs_pos);
+                 return std::make_unique<AST::FieldAccess>(
+                         std::move(lvalue), name->name(), binop->pos());
+             } else { 
+                 throw Error("parser error",
+                             "expected field name in field access",
+                             fname, pos);
+             }
+         } 
     }
 
     throw Error("parser error", "expected l-value", fname, pos);
 }
 
-class AssignmentFactorizer: public boost::static_visitor<AST::Statement> {
+class AssignmentFactorizer
+      : public AST::ConsumingExpressionVisitor<AST::Statement> {
 public:
     AssignmentFactorizer(const ParserImpl *p): parser(p) {}
-
+private:
     /* By default, do nothing. */
-    template<typename T>
-    AST::Statement operator()(T &expr) const {
-        return std::move(expr);
+    AST::Statement operator()(std::unique_ptr<AST::IntLiteral> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::UIntLiteral> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::FloatLiteral>x ) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::StringLiteral> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::Variable> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::Reference> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::Dereference> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::FunctionCall> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(
+            std::unique_ptr<AST::TemplateFunctionCall> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::Cast> x) override {
+        return std::move(x);
     }
 
-    AST::Statement operator()(std::unique_ptr<AST::Binop> &op) const {
-        if (op->op == "=") {
-            parser->verify_expression(op->lhs);
-            parser->verify_expression(op->rhs);
+    AST::Statement operator()(std::unique_ptr<AST::Binop> op) override {
+        if (op->op() == "=") {
+            parser->verify_expression(op->lhs());
+            parser->verify_expression(op->rhs());
             return std::make_unique<AST::Assignment>(
-                    parser->to_lvalue(std::move(op->lhs), op->pos),
-                                      std::move(op->rhs), op->pos);
+                    parser->to_lvalue(op->release_lhs(), op->pos()),
+                    op->release_rhs(), op->pos());
         }
 
         return std::move(op);
@@ -181,9 +208,9 @@ private:
 };
 
 inline AST::Statement ParserImpl::extract_assignments(
-        AST::Expression &expr) const {
+        std::unique_ptr<AST::Expression> expr) const {
     AssignmentFactorizer af(this);
-    return boost::apply_visitor(af, expr);
+    return af.visit(std::move(expr));
 }
 
 /*****************************************************************************
@@ -192,7 +219,7 @@ inline AST::Statement ParserImpl::extract_assignments(
 
 ParserImpl::ParserImpl(std::string fname): lexer(fname), fname(fname) {}
 
-AST::Expression ParserImpl::parse_expression(void) {
+std::unique_ptr<AST::Expression> ParserImpl::parse_expression(void) {
     return parse_binop(0, parse_unary());
 }
 
@@ -210,7 +237,7 @@ AST::Statement ParserImpl::parse_statement(void) {
     } else {
         auto result = parse_expression();
         find_and_shift(Tok::Semicolon(), "after top-level expression");
-        return extract_assignments(result);
+        return extract_assignments(std::move(result));
     }
 }
 
@@ -234,8 +261,9 @@ bool ParserImpl::at_eof(void) const {
  * Parser methods for dealing with particular forms.
  */
 
-std::vector<AST::Expression> ParserImpl::parse_expr_list(void) {
-    std::vector<AST::Expression> exprs;
+std::vector<std::unique_ptr<AST::Expression>> ParserImpl::parse_expr_list(
+        void) {
+    std::vector<std::unique_ptr<AST::Expression>> exprs;
 
     bool cont;
     do {
@@ -268,7 +296,7 @@ std::vector<std::unique_ptr<AST::Type>> ParserImpl::parse_type_list(void) {
     return types;
 }
 
-AST::Expression ParserImpl::parse_variable(void) {
+std::unique_ptr<AST::Expression> ParserImpl::parse_variable(void) {
     auto tok = llvm::cast<Tok::Identifier>(lexer.get_tok());
 
     std::string id = tok.name;
@@ -292,7 +320,7 @@ AST::Expression ParserImpl::parse_variable(void) {
 
         find_and_shift(Tok::OpenParen(), "in template function call");
 
-        std::vector<AST::Expression> args;
+        std::vector<std::unique_ptr<AST::Expression>> args;
 
         if (!llvm::isa<Tok::CloseParen>(lexer.get_tok())) {
             args = parse_expr_list();
@@ -307,18 +335,17 @@ AST::Expression ParserImpl::parse_variable(void) {
 
     /* Case not function call. */
     if (!llvm::isa<Tok::OpenParen>(lexer.get_tok())) {
-        return AST::Variable(id, lexer.get_pos());
+        return std::make_unique<AST::Variable>(id, lexer.get_pos());
     }
 
     // Shift the opening paren.
     lexer.shift();
 
     // Accumulate vector of args.
-    std::vector<AST::Expression> args;
+    std::vector<std::unique_ptr<AST::Expression>> args;
 
     if (!llvm::isa<Tok::CloseParen>(lexer.get_tok())) {
         args = parse_expr_list();
-
     }
 
     // Shift the close paren.
@@ -328,7 +355,7 @@ AST::Expression ParserImpl::parse_variable(void) {
             std::move(id), std::move(args), lexer.get_pos());
 }
 
-AST::Expression ParserImpl::parse_unary(void) {
+std::unique_ptr<AST::Expression> ParserImpl::parse_unary(void) {
     auto start = lexer.get_pos();
 
     if (!llvm::isa<Tok::Operator>(lexer.get_tok())) {
@@ -353,7 +380,8 @@ AST::Expression ParserImpl::parse_unary(void) {
                               + "\"", fname, start);
 }
 
-AST::Expression ParserImpl::parse_binop(int prec, AST::Expression lhs) {
+std::unique_ptr<AST::Expression> ParserImpl::parse_binop(
+        int prec, std::unique_ptr<AST::Expression> lhs) {
     auto start = lexer.get_pos();
 
     while (true) {
@@ -397,7 +425,7 @@ std::unique_ptr<AST::Cast> ParserImpl::parse_cast(void) {
                                        start);
 }
 
-AST::Expression ParserImpl::parse_parens(void) {
+std::unique_ptr<AST::Expression> ParserImpl::parse_parens(void) {
     auto start = lexer.get_pos();
 
     // Shift the opening paren.
@@ -408,7 +436,7 @@ AST::Expression ParserImpl::parse_parens(void) {
         auto cast = parse_cast();
 
         // Fix starting position of cast to opening paren.
-        cast->pos = start;
+        cast->set_pos(start);
 
         return std::move(cast);
     }
@@ -420,7 +448,7 @@ AST::Expression ParserImpl::parse_parens(void) {
     return contents;
 }
 
-AST::Expression ParserImpl::parse_primary(void) {
+std::unique_ptr<AST::Expression> ParserImpl::parse_primary(void) {
     const auto &tok = lexer.get_tok();
     switch (tok.kind()) {
         case Tok::Token::TokenKind::Identifier:
@@ -430,7 +458,7 @@ AST::Expression ParserImpl::parse_primary(void) {
             auto result = get_literal<AST::IntLiteral>
                                      (i_lit, lexer.get_pos());
             lexer.shift();
-            return result;
+            return std::move(result);
         }
 
         case Tok::Token::TokenKind::UIntLiteral: {
@@ -438,7 +466,7 @@ AST::Expression ParserImpl::parse_primary(void) {
             auto result = get_literal<AST::UIntLiteral>
                                      (u_lit, lexer.get_pos());
             lexer.shift();
-            return result;
+            return std::move(result);
         }
 
         case Tok::Token::TokenKind::FloatLiteral: {
@@ -446,7 +474,7 @@ AST::Expression ParserImpl::parse_primary(void) {
             auto result = get_literal<AST::FloatLiteral>
                                      (f_lit, lexer.get_pos());
             lexer.shift();
-            return result;
+            return std::move(result);
         }
 
         case Tok::Token::TokenKind::StringLiteral: {
@@ -454,7 +482,7 @@ AST::Expression ParserImpl::parse_primary(void) {
             auto result = get_literal<AST::StringLiteral>
                                      (s_lit, lexer.get_pos());
             lexer.shift();
-            return result;
+            return std::move(result);
         }
 
         case Tok::Token::TokenKind::OpenParen: {
@@ -585,7 +613,7 @@ AST::Statement ParserImpl::parse_return(void) {
         return AST::VoidReturn(start);
     }
 
-    auto retval = std::make_unique<AST::Expression>(parse_expression());
+    auto retval = parse_expression();
 
     return AST::Return(std::move(retval), start);
 }

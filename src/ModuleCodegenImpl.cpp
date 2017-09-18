@@ -100,24 +100,20 @@ TemplateType TemplateTypeCodegen::operator()(const AST::TemplatedType &t) {
  * Code generation for L-Values.
  */
 
-Value LValueCodegen::codegen(const AST::LValue &val){
-    return boost::apply_visitor(*this, val);
-}
-
 Value LValueCodegen::operator()(const AST::Variable &var) {
-    return translator.get_identifier_addr(var.name, var.pos);
+    return translator.get_identifier_addr(var.name(), var.pos());
 }
 
 Value LValueCodegen::operator()(
-        const std::unique_ptr<AST::Dereference> &deref) {
+        const AST::Dereference &deref) {
     /* If the dereference is an l-value, return just the referand. */
-    return eg.codegen(deref->referand);
+    return eg.visit(deref.referand());
 }
 
-Value LValueCodegen::operator()(const std::unique_ptr<AST::FieldAccess> &fa) {
-    auto st = codegen(fa->structure);
+Value LValueCodegen::operator()(const AST::FieldAccess &fa) {
+    auto st = visit(fa.structure());
 
-    return translator.field_address(st, fa->field, fa->pos);
+    return translator.field_address(st, fa.field(), fa.pos());
 }
 
 /*****************************************************************************
@@ -127,167 +123,156 @@ Value LValueCodegen::operator()(const std::unique_ptr<AST::FieldAccess> &fa) {
 Value ExpressionCodegen::operator()(const AST::IntLiteral &lit) {
     SignedInt type(64);
     auto &ctx = translator.get_ctx();
-    return Value(llvm::ConstantInt::get(type.to_llvm(ctx), lit.value, true),
+    return Value(llvm::ConstantInt::get(type.to_llvm(ctx), lit.value(), true),
                  type);
 }
 
 Value ExpressionCodegen::operator()(const AST::UIntLiteral &lit) {
     UnsignedInt type(64);
     auto &ctx = translator.get_ctx();
-    return Value(llvm::ConstantInt::get(type.to_llvm(ctx), lit.value, true),
+    return Value(llvm::ConstantInt::get(type.to_llvm(ctx), lit.value(), true),
                  type);
 }
 
 Value ExpressionCodegen::operator()(const AST::FloatLiteral &lit) {
     Float type(DoublePrecision);
     auto &ctx = translator.get_ctx();
-    return Value(llvm::ConstantFP::get(ctx, llvm::APFloat(lit.value)),
+    return Value(llvm::ConstantFP::get(ctx, llvm::APFloat(lit.value())),
                  type);
 }
 
 Value ExpressionCodegen::operator()(const AST::StringLiteral &lit) {
-    return translator.string_literal(lit.value);
+    return translator.string_literal(lit.value());
 }
 
-Value ExpressionCodegen::operator()(
-        const std::unique_ptr<AST::Dereference> &deref) {
-    return translator.add_load(codegen(deref->referand), deref->pos);
+Value ExpressionCodegen::operator()(const AST::Dereference &deref) {
+    return translator.add_load(visit(deref.referand()), deref.pos());
 }
 
-Value ExpressionCodegen::operator()(
-        const std::unique_ptr<AST::Reference> &ref) {
+Value ExpressionCodegen::operator()(const AST::Reference &ref) {
     /* LValue codegenerators return addresses to the l-value. */
     LValueCodegen lc(translator, fname, *this);
     /* So just use one of those to codegen the referand. */
-    return lc.codegen(ref->referand);
+    return lc.visit(ref.referand());
 }
 
 Value ExpressionCodegen::operator()(const AST::Variable &var) {
-    return translator.get_identifier_value(var.name, var.pos);
+    return translator.get_identifier_value(var.name(), var.pos());
 }
 
 /*****************************************************************************
  * Arithmetic expressions.
  */
 
-Value ExpressionCodegen::codegen(const AST::Expression &expr) {
-    return boost::apply_visitor(*this, expr);
-}
-
-Value ExpressionCodegen::operator()(
-        const std::unique_ptr<AST::Binop> &binop) {
+Value ExpressionCodegen::operator()(const AST::Binop &binop) {
     // Special cases: for now, just struct field accesses.
-    if (binop->op == ".") {
-        auto lhs = codegen(binop->lhs);
+    if (binop.op() == ".") {
+        auto lhs = visit(binop.lhs());
 
-        auto v = boost::get<AST::Variable>(&binop->rhs);
-
-        if (!v) {
-            throw Error("parse error", "expected name in struct field access",
-                        fname, binop->pos);
-        }
-
-        return translator.field_access(lhs, v->name, binop->pos);
-    } else if (binop->op == "->") {
-        auto lhs = codegen(binop->lhs);
-
-        auto v = boost::get<AST::Variable>(&binop->rhs);
+        auto v = llvm::dyn_cast<AST::Variable>(&binop.rhs());
 
         if (!v) {
             throw Error("parse error", "expected name in struct field access",
-                        fname, binop->pos);
+                        fname, binop.pos());
         }
 
-        auto derefed = translator.add_load(lhs, binop->pos);
+        return translator.field_access(lhs, v->name(), binop.pos());
+    } else if (binop.op() == "->") {
+        auto lhs = visit(binop.lhs());
 
-        return translator.field_access(derefed, v->name, binop->pos);
+        auto v = llvm::dyn_cast<AST::Variable>(&binop.rhs());
+
+        if (!v) {
+            throw Error("parse error", "expected name in struct field access",
+                        fname, binop.pos());
+        }
+
+        auto derefed = translator.add_load(lhs, binop.pos());
+
+        return translator.field_access(derefed, v->name(), binop.pos());
     }
 
-    auto lhs = codegen(binop->lhs);
-    auto rhs = codegen(binop->rhs);
+    auto lhs = visit(binop.lhs());
+    auto rhs = visit(binop.rhs());
 
-    auto pos = binop->pos;
+    auto pos = binop.pos();
 
-    if (binop->op == "<<") {
+    if (binop.op() == "<<") {
         return translator.left_shift(lhs, rhs, pos);
-    } else if (binop->op == ">>") {
+    } else if (binop.op() == ">>") {
         return translator.right_shift(lhs, rhs, pos);
-    } else if (binop->op == "&") {
+    } else if (binop.op() == "&") {
         return translator.bit_and(lhs, rhs, pos);
-    } else if (binop->op == "|") {
+    } else if (binop.op() == "|") {
         return translator.bit_or(lhs, rhs, pos);
-    } else if (binop->op == "^") {
+    } else if (binop.op() == "^") {
         return translator.bit_xor(lhs, rhs, pos);
-    } else if (binop->op == "+") {
+    } else if (binop.op() == "+") {
         return translator.add(lhs, rhs, pos);
-    } else if (binop->op == "-") {
+    } else if (binop.op() == "-") {
         return translator.sub(lhs, rhs, pos);
-    } else if (binop->op == "*") {
+    } else if (binop.op() == "*") {
         return translator.mul(lhs, rhs, pos);
-    } else if (binop->op == "/") {
+    } else if (binop.op() == "/") {
         return translator.div(lhs, rhs, pos);
-    } else if (binop->op == "==") {
+    } else if (binop.op() == "==") {
         return translator.equal(lhs, rhs, pos);
-    } else if (binop->op == "!=") {
+    } else if (binop.op() == "!=") {
         return translator.nequal(lhs, rhs, pos);
-    } else if (binop->op == "<") {
+    } else if (binop.op() == "<") {
         return translator.less(lhs, rhs, pos);
-    } else if (binop->op == "<=") {
+    } else if (binop.op() == "<=") {
         return translator.lesseq(lhs, rhs, pos);
-    } else if (binop->op == ">") {
+    } else if (binop.op() == ">") {
         return translator.greater(lhs, rhs, pos);
-    } else if (binop->op == ">=") {
+    } else if (binop.op() == ">=") {
         return translator.greatereq(lhs, rhs, pos);
-    } else if (binop->op == "&&") {
+    } else if (binop.op() == "&&") {
         return translator.bool_and(lhs, rhs, pos);
-    } else if (binop->op == "||") {
+    } else if (binop.op() == "||") {
         return translator.bool_or(lhs, rhs, pos);
     } else {
-        throw Error("internal error", "unrecognized operator \"" + binop->op
+        throw Error("internal error", "unrecognized operator \"" + binop.op()
                                                                  + "\"",
                     fname, pos);
                     
     }
 }
 
-Value ExpressionCodegen::operator()(
-        const std::unique_ptr<AST::FunctionCall> &call) {
-
+Value ExpressionCodegen::operator()(const AST::FunctionCall &call) {
     std::vector<Value> args;
 
-    for (const auto &arg: call->args) {
-        args.push_back(codegen(arg));
+    for (const auto &arg: call.args()) {
+        args.push_back(visit(*arg));
     }
 
-    return translator.call(call->fname, args, call->pos);
+    return translator.call(call.fname(), args, call.pos());
 }
 
-Value ExpressionCodegen::operator()(
-        const std::unique_ptr<AST::TemplateFunctionCall> &call) {
+Value ExpressionCodegen::operator()(const AST::TemplateFunctionCall &call) {
     TypeCodegen tg(translator, fname);
 
     std::vector<Type> tmpl_args;
 
-    for (const auto &arg: call->tmpl_args) {
+    for (const auto &arg: call.type_args()) {
         tmpl_args.push_back(tg.visit(*arg));
     }
 
     std::vector<Value> args;
 
-    for (const auto &arg: call->val_args) {
-        args.push_back(codegen(arg));
+    for (const auto &arg: call.value_args()) {
+        args.push_back(visit(*arg));
     }
 
-    return translator.call(call->fname, tmpl_args, args, call->pos);
+    return translator.call(call.fname(), tmpl_args, args, call.pos());
 }
 
-Value ExpressionCodegen::operator()(
-        const std::unique_ptr<AST::Cast> &cast) {
-    auto dest_ty = TypeCodegen(translator, fname).visit(*cast->t);
+Value ExpressionCodegen::operator()(const AST::Cast &cast) {
+    auto dest_ty = TypeCodegen(translator, fname).visit(cast.type());
 
-    auto cast_val = codegen(cast->arg);
+    auto cast_val = visit(cast.arg());
 
-    return translator.cast(cast_val, dest_ty, cast->pos);
+    return translator.cast(cast_val, dest_ty, cast.pos());
 }
 
 /*****************************************************************************
@@ -298,8 +283,9 @@ void StatementCodegen::codegen(const AST::Statement &stmt) {
     boost::apply_visitor(*this, stmt);
 }
 
-void StatementCodegen::operator()(const AST::Expression &expr) {
-    expr_codegen.codegen(expr);
+void StatementCodegen::operator()(
+        const std::unique_ptr<AST::Expression> &expr) {
+    expr_codegen.visit(*expr);
 }
 
 void StatementCodegen::operator()(
@@ -307,14 +293,14 @@ void StatementCodegen::operator()(
 
     LValueCodegen lc(translator, fname, expr_codegen);
 
-    auto addr = lc.codegen(assignment->lhs);
-    auto rhs  = expr_codegen.codegen(assignment->rhs);
+    auto addr = lc.visit(*assignment->lhs);
+    auto rhs  = expr_codegen.visit(*assignment->rhs);
 
     translator.add_store(addr, rhs, assignment->pos);
 }
 
 void StatementCodegen::operator()(const AST::Return &ret) {
-    translator.return_(expr_codegen.codegen(*ret.retval), ret.pos);
+    translator.return_(expr_codegen.visit(*ret.retval), ret.pos);
 }
 
 void StatementCodegen::operator()(const AST::VoidReturn &ret) {
@@ -326,17 +312,17 @@ void StatementCodegen::operator()(
 
     auto tg = TypeCodegen(translator, fname);
     auto t = tg.visit(*decl->type);
-    translator.declare(decl->name.name, t);
+    translator.declare(decl->name.name(), t);
 }
 
 void StatementCodegen::operator()(
         const std::unique_ptr<AST::CompoundDeclaration> &cdecl) {
-    std::string name = cdecl->name.name;
+    std::string name = cdecl->name.name();
     auto tg = TypeCodegen(translator, fname);
     auto t = tg.visit(*cdecl->type);
     Variable result = translator.declare(name, t);
     translator.add_store(result.get_val(),
-                         expr_codegen.codegen(cdecl->rhs),
+                         expr_codegen.visit(*cdecl->rhs),
                          cdecl->pos);
 }
 
@@ -344,7 +330,7 @@ void StatementCodegen::operator()(
         const std::unique_ptr<AST::IfStatement> &if_stmt) {
 
     /* Generate code for the condition. */
-    auto cond = expr_codegen.codegen(if_stmt->condition);
+    auto cond = expr_codegen.visit(*if_stmt->condition);
 
     auto structure = translator.create_ifthenelse(cond, if_stmt->pos);
 
@@ -400,7 +386,7 @@ void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
     for (const auto &decl: sd.members) {
         auto t = std::make_shared<Type>(tg.visit(*decl->type));
         fields.push_back(std::pair<std::string, std::shared_ptr<Type> >
-                                  (decl->name.name, t));
+                                  (decl->name.name(), t));
     }
 
     Struct<> t(fields, sd.name);
@@ -416,7 +402,7 @@ void ModuleCodegenImpl::operator()(const AST::TemplateStructDeclaration &s) {
         auto t = std::make_shared<TemplateType>(tg.visit(*decl->type));
         fields.push_back(std::pair<std::string,
                                   std::shared_ptr<TemplateType> >
-                                  (decl->name.name, t));
+                                  (decl->name.name(), t));
     }
 
     Struct<TemplateType> t(fields, s.decl.name);
@@ -454,7 +440,7 @@ ModuleCodegenImpl::codegen_function_with_name(
     std::vector<std::string> arg_names;
 
     for (auto &decl: fd.signature.args) {
-        arg_names.push_back(decl->name.name);
+        arg_names.push_back(decl->name.name());
     }
 
     translator.create_and_start_function(ty, arg_names, name);
