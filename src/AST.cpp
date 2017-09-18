@@ -99,13 +99,21 @@ private:
     }
 
     void operator()(const Reference &ref) override {
-        out << "Reference {[lvalue TODO]}";
+        out << "Reference {";
+        visit(ref.referand());
+        out << "}";
     }
 
     void operator()(const Dereference &deref) override {
         out << "Dereference {";
         visit(deref.referand());
         out << "}";
+    }
+
+    void operator()(const FieldAccess &access) override {
+        out << "FieldAccess {";
+        visit(access.structure());
+        out << ", " << access.field() << "}";
     }
 
     void operator()(const Binop &bin) override {
@@ -167,7 +175,8 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
     void operator()(const std::unique_ptr<AST::Assignment> &assgnt) {
         ExpressionPrintVisitor ev(out);
 
-        out << "Assignment {[lvalue TODO]";
+        out << "Assignment {";
+        ExpressionPrintVisitor(out).visit(*assgnt->lhs);
         out << ", ";
         ev.visit(*assgnt->rhs);
         out << "}";

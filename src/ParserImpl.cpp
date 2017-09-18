@@ -74,6 +74,7 @@ private:
     void operator()(const AST::Variable &) override {}
     void operator()(const AST::Reference &) override {}
     void operator()(const AST::Dereference &) override {}
+    void operator()(const AST::FieldAccess &) override {}
 
     /* On a binop, check if it is an `=`.  `=` are returned by the expression
      * parser, but they are not actually part of an expression, so this
@@ -178,6 +179,9 @@ private:
         return std::move(x);
     }
     AST::Statement operator()(std::unique_ptr<AST::Dereference> x) override {
+        return std::move(x);
+    }
+    AST::Statement operator()(std::unique_ptr<AST::FieldAccess> x) override {
         return std::move(x);
     }
     AST::Statement operator()(std::unique_ptr<AST::FunctionCall> x) override {

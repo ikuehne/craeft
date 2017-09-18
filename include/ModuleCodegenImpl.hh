@@ -83,9 +83,9 @@ class ExpressionCodegen;
 class LValueCodegen: public AST::LValueVisitor<Value> {
 public:
     LValueCodegen(Translator &translator,
-                  std::string &fname,
+                  const std::string &fname,
                   ExpressionCodegen &eg)
-        : translator(translator), eg(eg) {}
+        : fname(fname), translator(translator), eg(eg) {}
 
 
 private:
@@ -93,6 +93,7 @@ private:
     Value operator()(const AST::Dereference &) override;
     Value operator()(const AST::FieldAccess &) override;
 
+    std::string fname;
     Translator &translator;
     ExpressionCodegen &eg;
 };
@@ -100,7 +101,7 @@ private:
 class ExpressionCodegen: public AST::ExpressionVisitor<Value> {
 public:
     ExpressionCodegen(Translator &translator,
-                      std::string &fname)
+                      const std::string &fname)
         : translator(translator), fname(fname) {}
 
 
@@ -113,13 +114,14 @@ private:
     Value operator()(const AST::Variable &) override;
     Value operator()(const AST::Reference &) override;
     Value operator()(const AST::Dereference &) override;
+    Value operator()(const AST::FieldAccess &) override;
     Value operator()(const AST::Binop &) override;
     Value operator()(const AST::FunctionCall &) override;
     Value operator()(const AST::TemplateFunctionCall &) override;
     Value operator()(const AST::Cast &) override;
 
     Translator &translator;
-    std::string &fname;
+    std::string fname;
 };
 
 class StatementCodegen: public boost::static_visitor<void> {
@@ -130,7 +132,7 @@ public:
     void codegen(const AST::Statement &stmt);
 
     StatementCodegen(Translator &translator,
-                     std::string &fname)
+                     const std::string &fname)
         : translator(translator),
           fname(fname),
           expr_codegen(translator, fname) {}
@@ -147,7 +149,7 @@ public:
 private:
     Translator &translator;
 
-    std::string &fname;
+    std::string fname;
 
     /**
      * @brief The code generator for expressions.

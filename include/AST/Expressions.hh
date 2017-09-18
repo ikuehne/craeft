@@ -286,20 +286,20 @@ private:
 
 class FieldAccess: public LValue {
 public:
-    FieldAccess(std::unique_ptr<LValue> structure,
+    FieldAccess(std::unique_ptr<Expression> structure,
                 const std::string &field,
                 SourcePos pos)
         : LValue(ExpressionKind::FieldAccess, pos),
           _structure(std::move(structure)),
           _field(field) {}
 
-    const LValue &structure(void) const { return *_structure; }
+    const Expression &structure(void) const { return *_structure; }
     const std::string &field(void) const { return _field; }
 
     LVALUE_CLASS(FieldAccess);
 
 private:
-    std::unique_ptr<LValue> _structure;
+    std::unique_ptr<Expression> _structure;
     std::string _field;
 };
 
@@ -322,6 +322,7 @@ public:
             HANDLE(Variable);
             HANDLE(Reference);
             HANDLE(Dereference);
+            HANDLE(FieldAccess);
             HANDLE(Binop);
             HANDLE(FunctionCall);
             HANDLE(TemplateFunctionCall);
@@ -337,6 +338,7 @@ private:
     virtual Result operator()(const Variable &) = 0;
     virtual Result operator()(const Reference &) = 0;
     virtual Result operator()(const Dereference &) = 0;
+    virtual Result operator()(const FieldAccess &) = 0;
     virtual Result operator()(const Binop &) = 0;
     virtual Result operator()(const FunctionCall &) = 0;
     virtual Result operator()(const TemplateFunctionCall &) = 0;
@@ -362,6 +364,7 @@ public:
             HANDLE(Variable);
             HANDLE(Reference);
             HANDLE(Dereference);
+            HANDLE(FieldAccess);
             HANDLE(Binop);
             HANDLE(FunctionCall);
             HANDLE(TemplateFunctionCall);
@@ -378,6 +381,7 @@ private:
     virtual Result operator()(std::unique_ptr<Variable>) = 0;
     virtual Result operator()(std::unique_ptr<Reference>) = 0;
     virtual Result operator()(std::unique_ptr<Dereference>) = 0;
+    virtual Result operator()(std::unique_ptr<FieldAccess>) = 0;
     virtual Result operator()(std::unique_ptr<Binop>) = 0;
     virtual Result operator()(std::unique_ptr<FunctionCall>) = 0;
     virtual Result operator()(std::unique_ptr<TemplateFunctionCall>) = 0;

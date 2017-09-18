@@ -111,9 +111,15 @@ Value LValueCodegen::operator()(
 }
 
 Value LValueCodegen::operator()(const AST::FieldAccess &fa) {
-    auto st = visit(fa.structure());
+    if (auto *structure = llvm::dyn_cast<AST::LValue>(&fa.structure())) {
+        return translator.field_address(
+                visit(*structure), fa.field(), fa.pos());
+    }
 
-    return translator.field_address(st, fa.field(), fa.pos());
+    throw Error("parser error",
+                "expected lvalue structure in lvalue access",
+                fname,
+                fa.pos());
 }
 
 /*****************************************************************************
@@ -147,6 +153,12 @@ Value ExpressionCodegen::operator()(const AST::StringLiteral &lit) {
 
 Value ExpressionCodegen::operator()(const AST::Dereference &deref) {
     return translator.add_load(visit(deref.referand()), deref.pos());
+}
+
+Value ExpressionCodegen::operator()(const AST::FieldAccess &access) {
+    auto lhs = visit(access.structure());
+
+    return translator.field_access(lhs, access.field(), access.pos());
 }
 
 Value ExpressionCodegen::operator()(const AST::Reference &ref) {
