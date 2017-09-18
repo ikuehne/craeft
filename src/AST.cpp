@@ -169,59 +169,60 @@ private:
     std::ostream &out;
 };
 
-struct StatementPrintVisitor: boost::static_visitor<void> {
+struct StatementPrintVisitor: StatementVisitor<void> {
     StatementPrintVisitor(std::ostream &out): out(out) {}
 
-    void operator()(const std::unique_ptr<AST::Assignment> &assgnt) {
+private:
+    void operator()(const AST::Assignment &assgnt) {
         ExpressionPrintVisitor ev(out);
 
         out << "Assignment {";
-        ExpressionPrintVisitor(out).visit(*assgnt->lhs);
+        ExpressionPrintVisitor(out).visit(assgnt.lhs());
         out << ", ";
-        ev.visit(*assgnt->rhs);
+        ev.visit(assgnt.rhs());
         out << "}";
     }
 
-    void operator()(const std::unique_ptr<Expression> &expr) {
+    void operator()(const ExpressionStatement &expr) {
         ExpressionPrintVisitor ev(out);
 
         out << "Statement {";
 
-        ev.visit(*expr);
+        ev.visit(expr.expr());
 
         out << "}";
     }
 
-    void operator()(const std::unique_ptr<Declaration> &decl) {
+    void operator()(const Declaration &decl) {
         TypePrintVisitor tv(out);
         ExpressionPrintVisitor ev(out);
 
         out << "Declaration {";
 
-        tv.visit(*decl->type);
+        tv.visit(decl.type());
 
         out << ", ";
 
-        ev.visit(decl->name);
+        ev.visit(decl.name());
 
         out << "}";
     }
 
-    void operator()(const std::unique_ptr<CompoundDeclaration> &decl) {
+    void operator()(const CompoundDeclaration &decl) {
         TypePrintVisitor tv(out);
         ExpressionPrintVisitor ev(out);
 
         out << "Declaration {";
 
-        tv.visit(*decl->type);
+        tv.visit(decl.type());
 
         out << ", ";
 
-        ev.visit(decl->name);
+        ev.visit(decl.name());
 
         out << ", ";
 
-        ev.visit(*decl->rhs);
+        ev.visit(decl.rhs());
 
         out << "}";
     }
@@ -231,7 +232,7 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
 
         out << "Return {";
 
-        ev.visit(*ret.retval);
+        ev.visit(ret.retval());
 
         out << "}";
     }
@@ -240,34 +241,34 @@ struct StatementPrintVisitor: boost::static_visitor<void> {
         out << "VoidReturn {}";
     }
 
-    void operator()(const std::unique_ptr<IfStatement> &ifstmt) {
+    void operator()(const IfStatement &ifstmt) {
         ExpressionPrintVisitor ev(out);
 
         out << "IfStatement {";
 
-        ev.visit(*ifstmt->condition);
+        ev.visit(ifstmt.condition());
 
         out << ", ";
 
         out << "IfTrue {";
 
-        if (ifstmt->if_block.size()) {
-            boost::apply_visitor(*this, *ifstmt->if_block.begin());
-            for (auto iter = ifstmt->if_block.begin() + 1;
-                 iter != ifstmt->if_block.end(); ++iter) {
+        if (ifstmt.if_block().size()) {
+            visit(**ifstmt.if_block().begin());
+            for (auto iter = ifstmt.if_block().begin() + 1;
+                 iter != ifstmt.if_block().end(); ++iter) {
                 out << ", ";
-                boost::apply_visitor(*this, *iter);
+                visit(**iter);
             }
         }
 
         out << "}, Else {";
 
-        if (ifstmt->else_block.size()) {
-            boost::apply_visitor(*this, *ifstmt->else_block.begin());
-            for (auto iter = ifstmt->else_block.begin() + 1;
-                 iter != ifstmt->else_block.end(); ++iter) {
+        if (ifstmt.else_block().size()) {
+            visit(**ifstmt.else_block().begin());
+            for (auto iter = ifstmt.else_block().begin() + 1;
+                 iter != ifstmt.else_block().end(); ++iter) {
                 out << ", ";
-                boost::apply_visitor(*this, *iter);
+                visit(**iter);
             }
         }
 
@@ -291,7 +292,7 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
 
         for (const auto &mem: sdecl.members) {
             out << ", ";
-            sv(mem);
+            sv.visit(*mem);
         }
 
         out << "}";
@@ -303,7 +304,7 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
         StatementPrintVisitor sv(out);
 
         for (const auto &arg: fdecl.args) {
-            sv(arg);
+            sv.visit(*arg);
             out << ", ";
         }
 
@@ -321,7 +322,7 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
         StatementPrintVisitor sv(out);
         for (const auto &arg: func->block) {
             out << ", ";
-            boost::apply_visitor(sv, arg);
+            sv.visit(*arg);
         }
 
         out << "}";
@@ -334,7 +335,7 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
         StatementPrintVisitor sv(out);
         for (const auto &arg: func->block) {
             out << ", ";
-            boost::apply_visitor(sv, arg);
+            sv.visit(*arg);
         }
 
         out << "}";
@@ -374,7 +375,7 @@ void print_expr(const Expression &expr, std::ostream &out) {
 
 void print_statement(const Statement &stmt, std::ostream &out) {
     StatementPrintVisitor printer(out);
-    boost::apply_visitor(printer, stmt);
+    printer.visit(stmt);
 }
 
 void print_toplevel(const TopLevel &top, std::ostream &out) {

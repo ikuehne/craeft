@@ -124,29 +124,23 @@ private:
     std::string fname;
 };
 
-class StatementCodegen: public boost::static_visitor<void> {
+class StatementCodegen: public AST::StatementVisitor<void> {
 public:
-    /**
-     * @brief Generate code for the given statement.
-     */
-    void codegen(const AST::Statement &stmt);
-
     StatementCodegen(Translator &translator,
                      const std::string &fname)
         : translator(translator),
           fname(fname),
           expr_codegen(translator, fname) {}
-
+private:
     // Visitors of different AST statement types.
-    void operator()(const std::unique_ptr<AST::Expression> &);
+    void operator()(const AST::ExpressionStatement &);
     void operator()(const AST::VoidReturn &);
     void operator()(const AST::Return &);
-    void operator()(const std::unique_ptr<AST::Assignment> &assignment);
-    void operator()(const std::unique_ptr<AST::Declaration> &);
-    void operator()(const std::unique_ptr<AST::CompoundDeclaration> &);
-    void operator()(const std::unique_ptr<AST::IfStatement> &);
+    void operator()(const AST::Assignment &assignment);
+    void operator()(const AST::Declaration &);
+    void operator()(const AST::CompoundDeclaration &);
+    void operator()(const AST::IfStatement &);
 
-private:
     Translator &translator;
 
     std::string fname;

@@ -155,48 +155,38 @@ inline std::unique_ptr<AST::LValue> ParserImpl::to_lvalue(
 }
 
 class AssignmentFactorizer
-      : public AST::ConsumingExpressionVisitor<AST::Statement> {
+      : public AST::ConsumingExpressionVisitor<
+            std::unique_ptr<AST::Statement>> {
 public:
     AssignmentFactorizer(const ParserImpl *p): parser(p) {}
 private:
     /* By default, do nothing. */
-    AST::Statement operator()(std::unique_ptr<AST::IntLiteral> x) override {
-        return std::move(x);
+#define IGNORE(X)\
+    std::unique_ptr<AST::Statement> operator()(\
+            std::unique_ptr<AST::X> _IGNORE_ARG_) override {\
+        return std::make_unique<AST::ExpressionStatement>(\
+                std::move(_IGNORE_ARG_));\
     }
-    AST::Statement operator()(std::unique_ptr<AST::UIntLiteral> x) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(std::unique_ptr<AST::FloatLiteral>x ) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(std::unique_ptr<AST::StringLiteral> x) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(std::unique_ptr<AST::Variable> x) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(std::unique_ptr<AST::Reference> x) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(std::unique_ptr<AST::Dereference> x) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(std::unique_ptr<AST::FieldAccess> x) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(std::unique_ptr<AST::FunctionCall> x) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(
-            std::unique_ptr<AST::TemplateFunctionCall> x) override {
-        return std::move(x);
-    }
-    AST::Statement operator()(std::unique_ptr<AST::Cast> x) override {
-        return std::move(x);
-    }
+    IGNORE(IntLiteral);
+    IGNORE(UIntLiteral);
+    IGNORE(FloatLiteral);
+    IGNORE(StringLiteral);
+    IGNORE(Variable);
+    IGNORE(Reference);
+    IGNORE(Dereference);
+    IGNORE(FieldAccess);
+    IGNORE(FunctionCall);
+    IGNORE(TemplateFunctionCall);
+    IGNORE(Cast);
+#undef IGNORE
 
-    AST::Statement operator()(std::unique_ptr<AST::Binop> op) override {
+    /*
+     * For binops, check if they are assignments.
+     */
+    std::unique_ptr<AST::Statement> operator()(
+            std::unique_ptr<AST::Binop> op) override {
         if (op->op() == "=") {
+            // If they are, convert them to AST::Assignments.
             parser->verify_expression(op->lhs());
             parser->verify_expression(op->rhs());
             return std::make_unique<AST::Assignment>(
@@ -204,14 +194,14 @@ private:
                     op->release_rhs(), op->pos());
         }
 
-        return std::move(op);
+        return std::make_unique<AST::ExpressionStatement>(std::move(op));
     }
 
 private:
     const ParserImpl *parser;
 };
 
-inline AST::Statement ParserImpl::extract_assignments(
+inline std::unique_ptr<AST::Statement> ParserImpl::extract_assignments(
         std::unique_ptr<AST::Expression> expr) const {
     AssignmentFactorizer af(this);
     return af.visit(std::move(expr));
@@ -227,7 +217,7 @@ std::unique_ptr<AST::Expression> ParserImpl::parse_expression(void) {
     return parse_binop(0, parse_unary());
 }
 
-AST::Statement ParserImpl::parse_statement(void) {
+std::unique_ptr<AST::Statement> ParserImpl::parse_statement(void) {
     if (llvm::isa<Tok::TypeName>(lexer.get_tok())) {
         auto result = parse_declaration();
         find_and_shift(Tok::Semicolon(), "after declaration");
@@ -549,7 +539,7 @@ std::unique_ptr<AST::Type> ParserImpl::parse_type(void) {
     return result;
 }
 
-AST::Statement ParserImpl::parse_declaration(void) {
+std::unique_ptr<AST::Statement> ParserImpl::parse_declaration(void) {
     auto start = lexer.get_pos();
 
     if (!llvm::isa<Tok::TypeName>(lexer.get_tok())) {
@@ -594,6 +584,18 @@ AST::Statement ParserImpl::parse_declaration(void) {
                                                       std::move(rhs), start);
 }
 
+std::unique_ptr<AST::Declaration> ParserImpl::parse_simple_declaration(void) {
+    auto decl_tmp = parse_declaration();
+    std::unique_ptr<AST::Declaration> decl(
+            llvm::dyn_cast<AST::Declaration>(decl_tmp.release()));
+
+    if (!decl) {
+        _throw("expected simple declaration");
+    }
+
+    return decl;
+}
+
 std::unique_ptr<AST::IfStatement> ParserImpl::parse_if_statement(void) {
     auto start = lexer.get_pos();
     // Shift the "if".
@@ -603,7 +605,7 @@ std::unique_ptr<AST::IfStatement> ParserImpl::parse_if_statement(void) {
 
     auto if_block = parse_block();
 
-    std::vector<AST::Statement> else_block;
+    std::vector<std::unique_ptr<AST::Statement>> else_block;
 
     if (!llvm::isa<Tok::Else>(lexer.get_tok())) {
         // No else block.
@@ -617,7 +619,7 @@ std::unique_ptr<AST::IfStatement> ParserImpl::parse_if_statement(void) {
     lexer.shift();
 
     // and parse the corresponding block.
-    else_block = parse_block();;
+    else_block = parse_block();
 
     return std::make_unique<AST::IfStatement>(std::move(cond),
                                               std::move(if_block),
@@ -625,18 +627,18 @@ std::unique_ptr<AST::IfStatement> ParserImpl::parse_if_statement(void) {
                                               start);
 }
 
-AST::Statement ParserImpl::parse_return(void) {
+std::unique_ptr<AST::Statement> ParserImpl::parse_return(void) {
     auto start = lexer.get_pos();
     // Shift the return.
     lexer.shift();
 
     if (llvm::isa<Tok::Semicolon>(lexer.get_tok())) {
-        return AST::VoidReturn(start);
+        return std::make_unique<AST::VoidReturn>(start);
     }
 
     auto retval = parse_expression();
 
-    return AST::Return(std::move(retval), start);
+    return std::make_unique<AST::Return>(std::move(retval), start);
 }
 
 AST::TypeDeclaration ParserImpl::parse_type_declaration(void) {
@@ -667,18 +669,15 @@ std::vector<std::unique_ptr<AST::Declaration> >
 
     // Until we get to the closing brace,
     while (!llvm::isa<Tok::CloseBrace>(lexer.get_tok())) {
-        auto decl_tmp = parse_declaration();
-        auto *decl = boost::get<std::unique_ptr<AST::Declaration>>(&decl_tmp);
+        // parse a declaration
+        auto decl = parse_simple_declaration();
 
-        if (!decl) {
-            _throw("expected variable declaration in struct definition");
-        }
-
+        // followed by a semicolon.
         if (!llvm::isa<Tok::Semicolon>(lexer.get_tok())) {
             _throw("expected semicolon after struct member declaration");
         }
 
-        result.push_back(std::move(*decl));
+        result.push_back(std::move(decl));
 
         // Shift the semicolon.
         lexer.shift();
@@ -852,10 +851,10 @@ AST::TopLevel ParserImpl::parse_function(void) {
                                                      start);
 }
 
-std::vector<AST::Statement> ParserImpl::parse_block(void) {
+std::vector<std::unique_ptr<AST::Statement>> ParserImpl::parse_block(void) {
     find_and_shift(Tok::OpenBrace(), "before block");
 
-    std::vector<AST::Statement> result;
+    std::vector<std::unique_ptr<AST::Statement>> result;
 
     while (!llvm::isa<Tok::CloseBrace>(lexer.get_tok())) {
         result.push_back(parse_statement());
@@ -886,16 +885,12 @@ std::vector<std::unique_ptr<AST::Declaration> >
     std::vector<std::unique_ptr<AST::Declaration> > args;
 
     while (!llvm::isa<Tok::CloseParen>(lexer.get_tok())) {
-        auto decl_tmp = parse_declaration();
-        auto *decl = boost::get<std::unique_ptr<AST::Declaration>>(&decl_tmp);
+        auto decl = parse_simple_declaration();
 
-        if (!decl) {
-            _throw("expected variable declaration in argument list");
-        }
-
-        args.push_back(std::move(*decl));
+        args.push_back(std::move(decl));
 
         if (llvm::isa<Tok::CloseParen>(lexer.get_tok())) break;
+
         find_and_shift(Tok::Comma(), "in function declaration");
     }
 

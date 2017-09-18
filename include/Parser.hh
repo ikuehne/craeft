@@ -53,7 +53,7 @@ public:
     /**
      * @brief Parse the next statement from the stream.
      */
-    AST::Statement parse_statement(void);
+    std::unique_ptr<AST::Statement> parse_statement(void);
 
     /**
      * @brief Parse the next top-level AST node from the stream.

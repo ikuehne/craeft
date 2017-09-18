@@ -50,7 +50,7 @@ public:
     /**
      * Note: starts at the token the lexer is *currently* on.
      */
-    AST::Statement parse_statement(void);
+    std::unique_ptr<AST::Statement> parse_statement(void);
     AST::TopLevel parse_toplevel(void);
     bool at_eof(void) const;
 
@@ -60,7 +60,7 @@ public:
     inline void verify_expression(const AST::Expression &) const;
     inline std::unique_ptr<AST::LValue> to_lvalue(
             std::unique_ptr<AST::Expression>, SourcePos pos) const;
-    inline AST::Statement extract_assignments(
+    inline std::unique_ptr<AST::Statement> extract_assignments(
             std::unique_ptr<AST::Expression>) const;
 
 private:
@@ -107,8 +107,15 @@ private:
 
     /**
      * @brief Parse a variable declaration.
+     *
+     * May be a compound declaration.
      */
-    AST::Statement parse_declaration(void);
+    std::unique_ptr<AST::Statement> parse_declaration(void);
+
+    /**
+     * @brief Parse a simple declaration.
+     */
+    std::unique_ptr<AST::Declaration> parse_simple_declaration(void);
 
     /**
      * @brief Parse an if statement.
@@ -118,7 +125,7 @@ private:
     /**
      * @brief Parse a return statement.
      */
-    AST::Statement parse_return(void);
+    std::unique_ptr<AST::Statement> parse_return(void);
     
     AST::TypeDeclaration parse_type_declaration(void);
 
@@ -130,11 +137,11 @@ private:
 
     std::vector<std::unique_ptr<AST::Type>> parse_type_list(void);
 
-    std::vector<std::unique_ptr<AST::Declaration> >parse_declarations(void);
+    std::vector<std::unique_ptr<AST::Declaration>> parse_declarations(void);
 
-    std::vector<AST::Statement> parse_block(void);
+    std::vector<std::unique_ptr<AST::Statement>> parse_block(void);
 
-    std::vector<std::unique_ptr<AST::Declaration> >parse_arg_list(void);
+    std::vector<std::unique_ptr<AST::Declaration>> parse_arg_list(void);
 
     /**
      * @brief Look up the precedence of an operator.

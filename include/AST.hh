@@ -31,6 +31,7 @@
 
 #include "AST/Expressions.hh"
 #include "AST/Types.hh"
+#include "AST/Statements.hh"
 #include "Error.hh"
 
 /* Architectural note: leaves of the AST are represented as small structs,
@@ -50,113 +51,6 @@ namespace Craeft {
  * tree.
  */
 namespace AST {
-
-/**
- * @defgroup Statements Classes for statements as represented in the AST.
- *
- * @{
- */
-
-/**
- * @brief Return statements.
- */
-struct Return {
-    std::unique_ptr<Expression> retval;
-
-    SourcePos pos;
-
-    Return(std::unique_ptr<Expression> retval, SourcePos pos)
-        : retval(std::move(retval)), pos(pos) {}
-};
-
-/**
- * @brief Empty return statements.
- */
-struct VoidReturn {
-    SourcePos pos;
-
-    VoidReturn(SourcePos pos): pos(pos) {}
-};
-
-/**
- * @brief Variable declarations.
- */
-struct Declaration {
-    std::unique_ptr<Type> type;
-    Variable name;
-
-    SourcePos pos;
-
-    Declaration(std::unique_ptr<Type> type, Variable name, SourcePos pos)
-        : type(std::move(type)), name(name), pos(pos) {}
-};
-
-/**
- * @brief Assignments.
- */
-struct Assignment {
-    std::unique_ptr<LValue> lhs;
-    std::unique_ptr<Expression> rhs;
-
-    SourcePos pos;
-
-    Assignment(std::unique_ptr<LValue> lhs,
-               std::unique_ptr<Expression> rhs,
-               SourcePos pos)
-        : lhs(std::move(lhs)), rhs(std::move(rhs)), pos(pos) {}
-};
-
-/**
- * @brief Compound variable declarations.
- *
- * I.e. Typename varname = expression;
- */
-struct CompoundDeclaration {
-    std::unique_ptr<Type> type;
-    Variable name;
-    std::unique_ptr<Expression> rhs;
-
-    SourcePos pos;
-
-    CompoundDeclaration(std::unique_ptr<Type> type,
-                        Variable name,
-                        std::unique_ptr<Expression> rhs,
-                        SourcePos pos)
-        : type(std::move(type)), name(name),
-          rhs(std::move(rhs)), pos(pos) {}
-};
-
-struct IfStatement;
-
-typedef boost::variant< std::unique_ptr<Expression>,
-                        Return,
-                        VoidReturn,
-                        std::unique_ptr<Assignment>,
-                        std::unique_ptr<Declaration>,
-                        std::unique_ptr<CompoundDeclaration>,
-                        std::unique_ptr<IfStatement> >
-    Statement;
-
-struct IfStatement {
-    std::unique_ptr<Expression> condition;
-    std::vector<Statement> if_block;
-    std::vector<Statement> else_block;
-
-    SourcePos pos;
-
-    IfStatement(std::unique_ptr<Expression> cond,
-                std::vector<Statement> if_block,
-                std::vector<Statement> else_block,
-                SourcePos pos)
-        : condition(std::move(cond)),
-          if_block(std::move(if_block)),
-          else_block(std::move(else_block)),
-          pos(pos) {}
-};
-
-void print_statement(const Statement &, std::ostream &out);
-
-/** @} */
 
 /**
  * @defgroup Toplevel Forms that may be used at the source level.
@@ -231,12 +125,12 @@ struct FunctionDeclaration {
  */
 struct FunctionDefinition {
     FunctionDeclaration signature;
-    std::vector<Statement> block;
+    std::vector<std::unique_ptr<Statement>> block;
 
     SourcePos pos;
 
     FunctionDefinition(FunctionDeclaration signature,
-                       std::vector<Statement> block,
+                       std::vector<std::unique_ptr<Statement>> block,
                        SourcePos pos)
         : signature(std::move(signature)), block(std::move(block)),
           pos(pos) {}
@@ -251,7 +145,7 @@ struct TemplateFunctionDefinition {
 
     TemplateFunctionDefinition(FunctionDeclaration signature,
                                std::vector<std::string> argnames,
-                               std::vector<Statement> block,
+                               std::vector<std::unique_ptr<Statement>> block,
                                SourcePos pos)
         : argnames(std::move(argnames)),
           def(new FunctionDefinition(std::move(signature),

@@ -264,70 +264,59 @@ Value ExpressionCodegen::operator()(const AST::Cast &cast) {
  * Statement codegen.
  */
 
-void StatementCodegen::codegen(const AST::Statement &stmt) {
-    boost::apply_visitor(*this, stmt);
+void StatementCodegen::operator()(const AST::ExpressionStatement &expr) {
+    expr_codegen.visit(expr.expr());
 }
 
-void StatementCodegen::operator()(
-        const std::unique_ptr<AST::Expression> &expr) {
-    expr_codegen.visit(*expr);
-}
-
-void StatementCodegen::operator()(
-        const std::unique_ptr<AST::Assignment> &assignment) {
+void StatementCodegen::operator()(const AST::Assignment &assignment) {
 
     LValueCodegen lc(translator, fname, expr_codegen);
 
-    auto addr = lc.visit(*assignment->lhs);
-    auto rhs  = expr_codegen.visit(*assignment->rhs);
+    auto addr = lc.visit(assignment.lhs());
+    auto rhs  = expr_codegen.visit(assignment.rhs());
 
-    translator.add_store(addr, rhs, assignment->pos);
+    translator.add_store(addr, rhs, assignment.pos());
 }
 
 void StatementCodegen::operator()(const AST::Return &ret) {
-    translator.return_(expr_codegen.visit(*ret.retval), ret.pos);
+    translator.return_(expr_codegen.visit(ret.retval()), ret.pos());
 }
 
 void StatementCodegen::operator()(const AST::VoidReturn &ret) {
-    translator.return_(ret.pos);
+    translator.return_(ret.pos());
 }
 
-void StatementCodegen::operator()(
-        const std::unique_ptr<AST::Declaration> &decl) {
-
+void StatementCodegen::operator()(const AST::Declaration &decl) {
     auto tg = TypeCodegen(translator, fname);
-    auto t = tg.visit(*decl->type);
-    translator.declare(decl->name.name(), t);
+    auto t = tg.visit(decl.type());
+    translator.declare(decl.name().name(), t);
 }
 
-void StatementCodegen::operator()(
-        const std::unique_ptr<AST::CompoundDeclaration> &cdecl) {
-    std::string name = cdecl->name.name();
+void StatementCodegen::operator()(const AST::CompoundDeclaration &cdecl) {
+    std::string name = cdecl.name().name();
     auto tg = TypeCodegen(translator, fname);
-    auto t = tg.visit(*cdecl->type);
+    auto t = tg.visit(cdecl.type());
     Variable result = translator.declare(name, t);
     translator.add_store(result.get_val(),
-                         expr_codegen.visit(*cdecl->rhs),
-                         cdecl->pos);
+                         expr_codegen.visit(cdecl.rhs()),
+                         cdecl.pos());
 }
 
-void StatementCodegen::operator()(
-        const std::unique_ptr<AST::IfStatement> &if_stmt) {
-
+void StatementCodegen::operator()(const AST::IfStatement &if_stmt) {
     /* Generate code for the condition. */
-    auto cond = expr_codegen.visit(*if_stmt->condition);
+    auto cond = expr_codegen.visit(if_stmt.condition());
 
-    auto structure = translator.create_ifthenelse(cond, if_stmt->pos);
+    auto structure = translator.create_ifthenelse(cond, if_stmt.pos());
 
-    for (const auto &arg: if_stmt->if_block) {
-        codegen(arg);
+    for (const auto &arg: if_stmt.if_block()) {
+        visit(*arg);
     }
 
     translator.point_to_else(structure);
 
     // Generate "else" code.
-    for (const auto &arg: if_stmt->else_block) {
-        codegen(arg);
+    for (const auto &arg: if_stmt.else_block()) {
+        visit(*arg);
     }
 
     translator.end_ifthenelse(std::move(structure));
@@ -369,9 +358,9 @@ void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
     TypeCodegen tg(translator, fname);
 
     for (const auto &decl: sd.members) {
-        auto t = std::make_shared<Type>(tg.visit(*decl->type));
+        auto t = std::make_shared<Type>(tg.visit(decl->type()));
         fields.push_back(std::pair<std::string, std::shared_ptr<Type> >
-                                  (decl->name.name(), t));
+                                  (decl->name().name(), t));
     }
 
     Struct<> t(fields, sd.name);
@@ -384,10 +373,10 @@ void ModuleCodegenImpl::operator()(const AST::TemplateStructDeclaration &s) {
     TemplateTypeCodegen tg(translator, fname, s.argnames);
 
     for (const auto &decl: s.decl.members) {
-        auto t = std::make_shared<TemplateType>(tg.visit(*decl->type));
+        auto t = std::make_shared<TemplateType>(tg.visit(decl->type()));
         fields.push_back(std::pair<std::string,
                                   std::shared_ptr<TemplateType> >
-                                  (decl->name.name(), t));
+                                  (decl->name().name(), t));
     }
 
     Struct<TemplateType> t(fields, s.decl.name);
@@ -403,7 +392,7 @@ Function<> ModuleCodegenImpl::type_of_ast_decl(
     TypeCodegen tg(translator, fname);
 
     for (const auto &decl: fd.args) {
-        arg_types.push_back(std::make_shared<Type>(tg.visit(*decl->type)));
+        arg_types.push_back(std::make_shared<Type>(tg.visit(decl->type())));
     }
 
     auto ret_type = std::make_shared<Type>(tg.visit(*fd.ret_type));
@@ -425,13 +414,13 @@ ModuleCodegenImpl::codegen_function_with_name(
     std::vector<std::string> arg_names;
 
     for (auto &decl: fd.signature.args) {
-        arg_names.push_back(decl->name.name());
+        arg_names.push_back(decl->name().name());
     }
 
     translator.create_and_start_function(ty, arg_names, name);
 
     for (const auto &arg: fd.block) {
-        stmt_cg.codegen(arg);
+        stmt_cg.visit(*arg);
     }
 
     return translator.end_function();
@@ -476,7 +465,7 @@ void ModuleCodegenImpl::operator()(const AST::TemplateFunctionDefinition &f) {
 
     for (const auto &decl: f.def->signature.args) {
         arg_types.push_back(std::make_shared<TemplateType>
-                                            (tg.visit(*decl->type)));
+                                            (tg.visit(decl->type())));
     }
 
     auto ret_type = std::make_shared<TemplateType>

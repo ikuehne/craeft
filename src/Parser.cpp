@@ -33,7 +33,7 @@ std::unique_ptr<AST::Expression> Parser::parse_expression(void) {
     return pimpl->parse_expression();
 }
 
-AST::Statement Parser::parse_statement(void) {
+std::unique_ptr<AST::Statement> Parser::parse_statement(void) {
     return pimpl->parse_statement();
 }
 
