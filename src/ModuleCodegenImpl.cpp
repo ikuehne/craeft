@@ -177,33 +177,6 @@ Value ExpressionCodegen::operator()(const AST::Variable &var) {
  */
 
 Value ExpressionCodegen::operator()(const AST::Binop &binop) {
-    // Special cases: for now, just struct field accesses.
-    if (binop.op() == ".") {
-        auto lhs = visit(binop.lhs());
-
-        auto v = llvm::dyn_cast<AST::Variable>(&binop.rhs());
-
-        if (!v) {
-            throw Error("parse error", "expected name in struct field access",
-                        fname, binop.pos());
-        }
-
-        return translator.field_access(lhs, v->name(), binop.pos());
-    } else if (binop.op() == "->") {
-        auto lhs = visit(binop.lhs());
-
-        auto v = llvm::dyn_cast<AST::Variable>(&binop.rhs());
-
-        if (!v) {
-            throw Error("parse error", "expected name in struct field access",
-                        fname, binop.pos());
-        }
-
-        auto derefed = translator.add_load(lhs, binop.pos());
-
-        return translator.field_access(derefed, v->name(), binop.pos());
-    }
-
     auto lhs = visit(binop.lhs());
     auto rhs = visit(binop.rhs());
 

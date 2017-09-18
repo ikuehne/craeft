@@ -410,6 +410,23 @@ std::unique_ptr<AST::Expression> ParserImpl::parse_binop(
             rhs = parse_binop(old_prec + 1, std::move(rhs));
         }
 
+        if (op.op == "." || op.op == "->") {
+            if (auto *var = llvm::dyn_cast<AST::Variable>(rhs.get())) {
+
+                if (op.op == "->") {
+                    auto pos = lhs->pos();
+                    lhs = std::make_unique<AST::Dereference>(
+                            std::move(lhs), pos);
+                }
+
+                lhs = std::make_unique<AST::FieldAccess>(
+                        std::move(lhs), var->name(), start);
+                continue;
+            }
+
+            _throw("expected field name in struct access");
+        }
+
         lhs = std::make_unique<AST::Binop>(
                 op.op, std::move(lhs), std::move(rhs), start);
     }
