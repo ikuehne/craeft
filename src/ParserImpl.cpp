@@ -235,7 +235,7 @@ std::unique_ptr<AST::Statement> ParserImpl::parse_statement(void) {
     }
 }
 
-AST::TopLevel ParserImpl::parse_toplevel(void) {
+std::unique_ptr<AST::Toplevel> ParserImpl::parse_toplevel(void) {
     if (llvm::isa<Tok::Fn>(lexer.get_tok())) {
         return parse_function();
     } else if (llvm::isa<Tok::Struct>(lexer.get_tok())) {
@@ -641,7 +641,8 @@ std::unique_ptr<AST::Statement> ParserImpl::parse_return(void) {
     return std::make_unique<AST::Return>(std::move(retval), start);
 }
 
-AST::TypeDeclaration ParserImpl::parse_type_declaration(void) {
+std::unique_ptr<AST::TypeDeclaration>
+        ParserImpl::parse_type_declaration(void) {
     auto start = lexer.get_pos();
     // Shift the `type`.
     lexer.shift();
@@ -658,7 +659,7 @@ AST::TypeDeclaration ParserImpl::parse_type_declaration(void) {
     // Shift the type name.
     lexer.shift();
 
-    return AST::TypeDeclaration(tname.name, start);
+    return std::make_unique<AST::TypeDeclaration>(tname.name, start);
 }
 
 std::vector<std::unique_ptr<AST::Declaration> >
@@ -689,7 +690,7 @@ std::vector<std::unique_ptr<AST::Declaration> >
     return result;
 }
 
-AST::TopLevel ParserImpl::parse_struct_declaration(void) {
+std::unique_ptr<AST::Toplevel> ParserImpl::parse_struct_declaration(void) {
     auto start = lexer.get_pos();
 
     // Shift the `struct`.
@@ -740,10 +741,8 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
 
         auto members = parse_declarations();
 
-        return AST::TemplateStructDeclaration(tname.name,
-                                              type_list,
-                                              std::move(members),
-                                              start);
+        return std::make_unique<AST::TemplateStructDeclaration>(
+                tname.name, type_list, std::move(members), start);
     }
 
     const auto &tok = lexer.get_tok();
@@ -760,10 +759,11 @@ AST::TopLevel ParserImpl::parse_struct_declaration(void) {
 
     auto members = parse_declarations();
 
-    return AST::StructDeclaration(tname.name, std::move(members), start);
+    return std::make_unique<AST::StructDeclaration>(
+            tname.name, std::move(members), start);
 }
 
-AST::TopLevel ParserImpl::parse_function(void) {
+std::unique_ptr<AST::Toplevel> ParserImpl::parse_function(void) {
     auto start = lexer.get_pos();
 
     bool templ = false;
@@ -828,8 +828,8 @@ AST::TopLevel ParserImpl::parse_function(void) {
         ret_type = parse_type();
     }
 
-    AST::FunctionDeclaration decl(fname, std::move(args),
-                                  std::move(ret_type), start);
+    auto decl = std::make_unique<AST::FunctionDeclaration>(
+            fname, std::move(args), std::move(ret_type), start);
 
     // If semicolon, this is just a forward declaration.
     if (llvm::isa<Tok::Semicolon>(lexer.get_tok())) {
@@ -841,8 +841,8 @@ AST::TopLevel ParserImpl::parse_function(void) {
     auto body = parse_block();
 
     if (templ) {
-        return AST::TemplateFunctionDefinition(std::move(decl), type_list,
-                                               std::move(body), start);
+        return std::make_unique<AST::TemplateFunctionDefinition>(
+                std::move(decl), type_list, std::move(body), start);
 
     }
 

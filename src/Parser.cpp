@@ -37,7 +37,7 @@ std::unique_ptr<AST::Statement> Parser::parse_statement(void) {
     return pimpl->parse_statement();
 }
 
-AST::TopLevel Parser::parse_toplevel(void) {
+std::unique_ptr<AST::Toplevel> Parser::parse_toplevel(void) {
     return pimpl->parse_toplevel();
 }
 

@@ -156,12 +156,10 @@ private:
  *
  * See ModuleCodegen.hh for documentation of public methods.
  */
-class ModuleCodegenImpl: public boost::static_visitor<void> {
+class ModuleCodegenImpl: public AST::ToplevelVisitor<void> {
 public:
     ModuleCodegenImpl(std::string name, std::string triple,
                       std::string fname);
-    void codegen(const AST::TopLevel &);
-
     void validate(std::ostream &);
     void optimize(int opt_level);
 
@@ -174,14 +172,15 @@ public:
             const AST::FunctionDefinition &, std::string);
 
     // Visitors for top-level AST nodes.
-    void operator()(const AST::TypeDeclaration &);
-    void operator()(const AST::StructDeclaration &);
-    void operator()(const AST::TemplateStructDeclaration &);
-    void operator()(const AST::FunctionDeclaration &);
-    void operator()(const std::unique_ptr<AST::FunctionDefinition> &);
-    void operator()(const AST::TemplateFunctionDefinition &);
 
 private:
+    void operator()(const AST::TypeDeclaration &) override;
+    void operator()(const AST::StructDeclaration &) override;
+    void operator()(const AST::TemplateStructDeclaration &) override;
+    void operator()(const AST::FunctionDeclaration &) override;
+    void operator()(const AST::FunctionDefinition &) override;
+    void operator()(const AST::TemplateFunctionDefinition &) override;
+
     Translator translator;
 
     /**

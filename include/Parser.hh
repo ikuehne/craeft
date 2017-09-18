@@ -58,7 +58,7 @@ public:
     /**
      * @brief Parse the next top-level AST node from the stream.
      */
-    AST::TopLevel parse_toplevel(void);
+    std::unique_ptr<AST::Toplevel> parse_toplevel(void);
 
     /**
      * @brief Return whether the parser has reached the end of the stream.

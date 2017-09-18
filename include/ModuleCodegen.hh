@@ -46,7 +46,7 @@ public:
     /**
      * @brief Generate code for the given top-level AST node.
      */
-    void codegen(const AST::TopLevel &);
+    void codegen(const AST::Toplevel &);
 
     /**
      * @brief Emit LLVM IR to the given output stream.

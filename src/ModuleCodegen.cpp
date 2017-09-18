@@ -33,7 +33,7 @@ ModuleCodegen::ModuleCodegen(std::string name, std::string filename,
 
 ModuleCodegen::~ModuleCodegen() {}
 
-void ModuleCodegen::codegen(const AST::TopLevel &t) { pimpl->codegen(t); }
+void ModuleCodegen::codegen(const AST::Toplevel &t) { pimpl->visit(t); }
 
 void ModuleCodegen::emit_ir(std::ostream &out) {
     pimpl->emit_ir(out);

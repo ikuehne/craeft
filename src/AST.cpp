@@ -278,19 +278,21 @@ private:
     std::ostream &out;
 };
 
-struct ToplevelPrintVisitor: boost::static_visitor<void> {
+class ToplevelPrintVisitor: public ToplevelVisitor<void> {
+public:
     ToplevelPrintVisitor(std::ostream &out): out(out) {}
 
-    void operator()(const TypeDeclaration &tdecl) {
-        out << "TypeDeclaration {" << tdecl.name << "}";
+private:
+    void operator()(const TypeDeclaration &tdecl) override {
+        out << "TypeDeclaration {" << tdecl.name() << "}";
     }
 
-    void operator()(const StructDeclaration &sdecl) {
-        out << "StructDeclaration {" << sdecl.name;
+    void operator()(const StructDeclaration &sdecl) override {
+        out << "StructDeclaration {" << sdecl.name();
 
         StatementPrintVisitor sv(out);
 
-        for (const auto &mem: sdecl.members) {
+        for (const auto &mem: sdecl.members()) {
             out << ", ";
             sv.visit(*mem);
         }
@@ -298,29 +300,29 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
         out << "}";
     }
 
-    void operator()(const FunctionDeclaration &fdecl) {
-        out << "FunctionDeclaration {" << fdecl.name << ", ";
+    void operator()(const FunctionDeclaration &fdecl) override {
+        out << "FunctionDeclaration {" << fdecl.name() << ", ";
 
         StatementPrintVisitor sv(out);
 
-        for (const auto &arg: fdecl.args) {
+        for (const auto &arg: fdecl.args()) {
             sv.visit(*arg);
             out << ", ";
         }
 
         TypePrintVisitor tv(out);
 
-        tv.visit(*fdecl.ret_type);
+        tv.visit(fdecl.ret_type());
 
         out << "}";
     }
 
-    void operator()(const std::unique_ptr<FunctionDefinition> &func) {
+    void operator()(const FunctionDefinition &func) override {
         out << "FunctionDefinition {";
-        (*this)(func->signature);
+        operator()(func.signature());
 
         StatementPrintVisitor sv(out);
-        for (const auto &arg: func->block) {
+        for (const auto &arg: func.block()) {
             out << ", ";
             sv.visit(*arg);
         }
@@ -328,37 +330,24 @@ struct ToplevelPrintVisitor: boost::static_visitor<void> {
         out << "}";
     }
 
-    void operator()(const std::shared_ptr<FunctionDefinition> &func) {
-        out << "FunctionDefinition {";
-        (*this)(func->signature);
-
-        StatementPrintVisitor sv(out);
-        for (const auto &arg: func->block) {
-            out << ", ";
-            sv.visit(*arg);
-        }
-
-        out << "}";
-    }
-
-    void operator()(const TemplateStructDeclaration &sd) {
+    void operator()(const TemplateStructDeclaration &sd) override {
         out << "TemplateStructDeclaration {";
 
-        (*this)(sd.decl);
+        operator()(sd.decl());
 
-        for (const auto &arg: sd.argnames) {
+        for (const auto &arg: sd.argnames()) {
             out << ", " << arg;
         }
 
         out << "}";
     }
 
-    void operator()(const TemplateFunctionDefinition &fd) {
+    void operator()(const TemplateFunctionDefinition &fd) override {
         out << "TemplateFunctionDefinition {";
 
-        (*this)(fd.def);
+        operator()(*fd.def());
 
-        for (const auto &arg: fd.argnames) {
+        for (const auto &arg: fd.argnames()) {
             out << ", " << arg;
         }
 
@@ -378,9 +367,9 @@ void print_statement(const Statement &stmt, std::ostream &out) {
     printer.visit(stmt);
 }
 
-void print_toplevel(const TopLevel &top, std::ostream &out) {
+void print_toplevel(const Toplevel &top, std::ostream &out) {
     ToplevelPrintVisitor printer(out);
-    boost::apply_visitor(printer, top);
+    printer.visit(top);
 }
 
 }

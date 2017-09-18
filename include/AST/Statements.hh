@@ -195,7 +195,7 @@ private:
 template<typename Result>
 class StatementVisitor {
 public:
-    virtual ~StatementVisitor() {};
+    virtual ~StatementVisitor() {}
 
     Result visit(const Statement &stmt) {
         switch (stmt.kind()) {

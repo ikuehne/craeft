@@ -51,7 +51,7 @@ public:
      * Note: starts at the token the lexer is *currently* on.
      */
     std::unique_ptr<AST::Statement> parse_statement(void);
-    AST::TopLevel parse_toplevel(void);
+    std::unique_ptr<AST::Toplevel> parse_toplevel(void);
     bool at_eof(void) const;
 
     /*************************************************************************
@@ -127,11 +127,11 @@ private:
      */
     std::unique_ptr<AST::Statement> parse_return(void);
     
-    AST::TypeDeclaration parse_type_declaration(void);
+    std::unique_ptr<AST::TypeDeclaration> parse_type_declaration(void);
 
-    AST::TopLevel parse_struct_declaration(void);
+    std::unique_ptr<AST::Toplevel> parse_struct_declaration(void);
 
-    AST::TopLevel parse_function(void);
+    std::unique_ptr<AST::Toplevel> parse_function(void);
 
     std::vector<std::unique_ptr<AST::Expression>> parse_expr_list(void);
 

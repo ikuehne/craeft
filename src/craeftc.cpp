@@ -23,7 +23,7 @@ static const int OBJFILE_MODE_BLAZEIT = 420;
 bool handle_input(Craeft::Parser &p, Craeft::ModuleCodegen &c) {
     try {
         auto e = p.parse_toplevel();
-        c.codegen(e);
+        c.codegen(*e);
         return true;
     } catch (Craeft::Error e) {
         e.emit(std::cerr);
