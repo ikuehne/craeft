@@ -221,6 +221,8 @@ private:
     virtual Result operator()(const IfStatement &) = 0;
 };
 
+void print_statement(const Statement &stmt, std::ostream &out);
+
 }
 
 }

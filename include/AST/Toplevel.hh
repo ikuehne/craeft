@@ -30,8 +30,7 @@
 
 #include "llvm/Support/Casting.h"
 
-#include "AST/Expressions.hh"
-#include "Error.hh"
+#include "AST/Statements.hh"
 
 namespace Craeft {
 
@@ -218,6 +217,8 @@ private:
     virtual Result operator()(const FunctionDefinition &) = 0;
     virtual Result operator()(const TemplateFunctionDefinition &) = 0;
 };
+
+void print_toplevel(const Toplevel &top, std::ostream &out);
 
 }
 

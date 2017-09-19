@@ -7,7 +7,6 @@
 #include <boost/program_options.hpp>
 #include <boost/variant.hpp>
 
-#include "AST.hh"
 #include "Parser.hh"
 #include "ModuleCodegen.hh"
 

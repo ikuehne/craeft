@@ -38,7 +38,7 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
 
-#include "AST.hh"
+#include "AST/Toplevel.hh"
 #include "Error.hh"
 #include "Type.hh"
 #include "Scope.hh"

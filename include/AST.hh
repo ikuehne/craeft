@@ -1,7 +1,7 @@
 /**
  * @file AST.hh
  *
- * @brief The classes comprising the abstract syntax tree.
+ * @brief Convenience header which pulls in all AST classes.
  */
 
 /* Craeft: a new systems programming language.
@@ -24,25 +24,7 @@
 
 #pragma once
 
-#include <ostream>
-#include <vector>
-
-#include <boost/variant.hpp>
-
 #include "AST/Expressions.hh"
 #include "AST/Types.hh"
 #include "AST/Statements.hh"
 #include "AST/Toplevel.hh"
-#include "Error.hh"
-
-namespace Craeft {
-
-/**
- * @brief Contains all classes and utilities relating to the abstract syntax
- * tree.
- */
-namespace AST {
-
-}
-
-}

@@ -31,12 +31,11 @@
 #include "llvm/Support/Casting.h"
 
 #include "Error.hh"
+#include "AST/Types.hh"
 
 namespace Craeft {
 
 namespace AST {
-
-class Type;
 
 class Expression {
 public:
@@ -411,6 +410,8 @@ private:
     virtual Result operator()(const Dereference &) = 0;
     virtual Result operator()(const FieldAccess &) = 0;
 };
+
+void print_expr(const Expression &expr, std::ostream &out);
 
 }
 

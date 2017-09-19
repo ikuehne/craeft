@@ -134,6 +134,8 @@ private:
     virtual Result operator()(const Pointer &) = 0;
 };
 
+void print_type(const Type &type, std::ostream &out);
+
 }
 
 }
