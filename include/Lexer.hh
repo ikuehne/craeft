@@ -1,10 +1,7 @@
 /**
- * @file Token.hh
+ * @file Lexer.hh
  *
- * @brief Tokens as output by the lexer.
- *
- * Consists of a series of small classes grouped in the namespace `Tok`, and a
- * variant type `Token` which can be any of those classes.
+ * @brief Lexes a character stream into a `Token` stream.
  */
 
 /* Craeft: a new systems programming language.
@@ -39,7 +36,6 @@ namespace Craeft {
 
 class Lexer {
 public:
-
     /**
      * @brief Create a new lexer, tokenizing the given input stream.
      *
