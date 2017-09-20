@@ -8,7 +8,7 @@
 #include <boost/variant.hpp>
 
 #include "Parser.hh"
-#include "ModuleCodegen.hh"
+#include "Codegen/Module.hh"
 
 namespace opt = boost::program_options;
 
@@ -19,7 +19,7 @@ static const int OBJFILE_MODE_BLAZEIT = 420;
  * @brief Pull a single AST out of the parser, and have the code generator
  *        visit it.
  */
-bool handle_input(Craeft::Parser &p, Craeft::ModuleCodegen &c) {
+bool handle_input(Craeft::Parser &p, Craeft::Codegen::ModuleGen &c) {
     try {
         auto e = p.parse_toplevel();
         c.codegen(*e);
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
       && opt_map.count("in")) {
         auto in_file = opt_map["in"].as<std::string>();
         /* Get a code generator. */
-        Craeft::ModuleCodegen codegen("Craeft module", in_file);
+        Craeft::Codegen::ModuleGen codegen("Craeft module", in_file);
         /* Construct a parser on that file. */
         Craeft::Parser parser(in_file);
         bool successful = true;

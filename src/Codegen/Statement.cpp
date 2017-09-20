@@ -1,5 +1,5 @@
 /**
- * @file ModuleCodegenImpl.cpp
+ * @file Codegen/Statement.cpp
  */
 
 /* Craeft: a new systems programming language.
@@ -20,52 +20,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "StatementCodegen.hh"
-#include "ValueCodegen.hh"
-#include "TypeCodegen.hh"
+#include "Codegen/Statement.hh"
+#include "Codegen/Value.hh"
+#include "Codegen/Type.hh"
 
 namespace Craeft {
 
-void StatementCodegen::operator()(const AST::ExpressionStatement &expr) {
-    ValueCodegen vg(_translator);
+namespace Codegen {
+
+void StatementGen::operator()(const AST::ExpressionStatement &expr) {
+    ValueGen vg(_translator);
     vg.visit(expr.expr());
 }
 
-void StatementCodegen::operator()(const AST::Assignment &assignment) {
-    LValueCodegen lc(_translator);
+void StatementGen::operator()(const AST::Assignment &assignment) {
+    LValueGen lc(_translator);
 
-    auto addr = LValueCodegen(_translator).visit(assignment.lhs());
-    auto rhs  = ValueCodegen(_translator).visit(assignment.rhs());
+    auto addr = LValueGen(_translator).visit(assignment.lhs());
+    auto rhs  = ValueGen(_translator).visit(assignment.rhs());
 
     _translator.add_store(addr, rhs, assignment.pos());
 }
 
-void StatementCodegen::operator()(const AST::Return &ret) {
-    ValueCodegen vg(_translator);
+void StatementGen::operator()(const AST::Return &ret) {
+    ValueGen vg(_translator);
     _translator.return_(vg.visit(ret.retval()), ret.pos());
 }
 
-void StatementCodegen::operator()(const AST::VoidReturn &ret) {
+void StatementGen::operator()(const AST::VoidReturn &ret) {
     _translator.return_(ret.pos());
 }
 
-void StatementCodegen::operator()(const AST::Declaration &decl) {
-    auto t = TypeCodegen(_translator).visit(decl.type());
+void StatementGen::operator()(const AST::Declaration &decl) {
+    auto t = TypeGen(_translator).visit(decl.type());
     _translator.declare(decl.name().name(), t);
 }
 
-void StatementCodegen::operator()(const AST::CompoundDeclaration &cdecl) {
+void StatementGen::operator()(const AST::CompoundDeclaration &cdecl) {
     std::string name = cdecl.name().name();
-    auto t = TypeCodegen(_translator).visit(cdecl.type());
+    auto t = TypeGen(_translator).visit(cdecl.type());
     Variable result = _translator.declare(name, t);
     _translator.add_store(result.get_val(),
-                          ValueCodegen(_translator).visit(cdecl.rhs()),
+                          ValueGen(_translator).visit(cdecl.rhs()),
                           cdecl.pos());
 }
 
-void StatementCodegen::operator()(const AST::IfStatement &if_stmt) {
+void StatementGen::operator()(const AST::IfStatement &if_stmt) {
     /* Generate code for the condition. */
-    auto cond = ValueCodegen(_translator).visit(if_stmt.condition());
+    auto cond = ValueGen(_translator).visit(if_stmt.condition());
 
     auto structure = _translator.create_ifthenelse(cond, if_stmt.pos());
 
@@ -83,4 +85,5 @@ void StatementCodegen::operator()(const AST::IfStatement &if_stmt) {
     _translator.end_ifthenelse(std::move(structure));
 }
 
+}
 }

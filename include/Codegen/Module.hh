@@ -1,7 +1,7 @@
 /**
- * @file ModuleCodegen.hh
+ * @file Codegen/Module.hh
  *
- * @brief Codegen for single modules.
+ * @brief Codegen for modules.
  */
 
 /* Craeft: a new systems programming language.
@@ -30,18 +30,20 @@
 
 namespace Craeft {
 
-class ModuleCodegenImpl;
+namespace Codegen {
+
+class ModuleGenImpl;
 
 /**
  * @brief Generating code for a module.
  */
-class ModuleCodegen {
+class ModuleGen {
 public:
-    ModuleCodegen(std::string name, std::string filename,
+    ModuleGen(std::string name, std::string filename,
                   std::string triple=llvm::sys::getDefaultTargetTriple());
 
     // You need explicitly declared destructors for PImpl classes...
-    ~ModuleCodegen();
+    ~ModuleGen();
 
     /**
      * @brief Generate code for the given top-level AST node.
@@ -85,8 +87,9 @@ public:
     void optimize(int level);
 
 private:
-    std::unique_ptr<ModuleCodegenImpl> pimpl;
+    std::unique_ptr<ModuleGenImpl> pimpl;
 
 };
 
+}
 }

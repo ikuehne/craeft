@@ -1,5 +1,5 @@
 /**
- * @file ModuleCodegenImpl.hh
+ * @file Codegen/ModuleImpl.hh
  *
  * @brief Interface to the actual implementation of module codegen.
  */
@@ -35,22 +35,22 @@
 #include "llvm/IR/Value.h"
 #include "llvm/Target/TargetMachine.h"
 
-#include "AST.hh"
+#include "AST/Toplevel.hh"
 #include "Environment.hh"
 #include "Translator.hh"
-#include "ValueCodegen.hh"
 
 namespace Craeft {
 
+namespace Codegen {
+
 /**
- * @brief Class containing actual implementation of ModuleCodegen methods.
+ * @brief Class containing actual implementation of ModuleGen methods.
  *
- * See ModuleCodegen.hh for documentation of public methods.
+ * See Codegen/Module.hh for documentation of public methods.
  */
-class ModuleCodegenImpl: public AST::ToplevelVisitor<void> {
+class ModuleGenImpl: public AST::ToplevelVisitor<void> {
 public:
-    ModuleCodegenImpl(std::string name, std::string triple,
-                      std::string fname);
+    ModuleGenImpl(std::string name, std::string triple, std::string fname);
     void validate(std::ostream &);
     void optimize(int opt_level);
 
@@ -72,17 +72,12 @@ private:
     void operator()(const AST::FunctionDefinition &) override;
     void operator()(const AST::TemplateFunctionDefinition &) override;
 
-    Translator translator;
-
-    /**
-     * @brief The name of the file this is generating code for.
-     *
-     * For error messages.
-     */
-    std::string fname;
+    Translator _translator;
 
     /* Utilities. */
     Function<> type_of_ast_decl(const AST::FunctionDeclaration &fd);
 };
+
+}
 
 }

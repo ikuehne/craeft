@@ -1,7 +1,7 @@
 /**
- * @file StatementCodegen.hh
+ * @file Codegen/Statement.hh
  *
- * @brief Generating Values from AST statements.
+ * @brief Codegen for AST statements.
  */
 
 /* Craeft: a new systems programming language.
@@ -29,12 +29,14 @@
 
 namespace Craeft {
 
+namespace Codegen {
+
 /**
  * Codegen for statements: pass them on to the Translator.
  */
-class StatementCodegen: public AST::StatementVisitor<void> {
+class StatementGen: public AST::StatementVisitor<void> {
 public:
-    StatementCodegen(Translator &translator): _translator(translator) {}
+    StatementGen(Translator &translator): _translator(translator) {}
 
 private:
     // Visitors of different AST statement types.
@@ -49,4 +51,5 @@ private:
     Translator &_translator;
 };
 
+}
 }

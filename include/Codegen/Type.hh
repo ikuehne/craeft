@@ -1,5 +1,5 @@
 /**
- * @file TypeCodegen.hh
+ * @file Codegen/Type.hh
  *
  * @brief Generating Types from AST expressions.
  */
@@ -29,14 +29,16 @@
 
 namespace Craeft {
 
+namespace Codegen {
+
 /**
  * @brief Codegen for types: convert AST types to Craeft Types.
  */
-class TypeCodegen: public AST::TypeVisitor<Type> {
+class TypeGen: public AST::TypeVisitor<Type> {
 public:
-    TypeCodegen(Translator &translator): translator(translator) {}
+    TypeGen(Translator &translator): translator(translator) {}
 
-    ~TypeCodegen(void) override {}
+    ~TypeGen(void) override {}
 
 private:
     Type operator()(const AST::NamedType &) override;
@@ -50,12 +52,12 @@ private:
 /**
  * @brief Codegen for template types: convert AST templates to TemplateTypes.
  */
-class TemplateTypeCodegen: public AST::TypeVisitor<TemplateType> {
+class TemplateTypeGen: public AST::TypeVisitor<TemplateType> {
 public:
-    TemplateTypeCodegen(Translator &translator, std::vector<std::string> args)
+    TemplateTypeGen(Translator &translator, std::vector<std::string> args)
         : translator(translator), args(args) {}
 
-    ~TemplateTypeCodegen(void) override {}
+    ~TemplateTypeGen(void) override {}
 
 private:
     TemplateType operator()(const AST::NamedType &) override;
@@ -67,4 +69,5 @@ private:
     std::vector<std::string> args;
 };
 
+}
 }

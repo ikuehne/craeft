@@ -1,5 +1,5 @@
 /**
- * @file ValueCodegen.cpp
+ * @file Codegen/Value.cpp
  */
 
 /* Craeft: a new systems programming language.
@@ -20,21 +20,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ValueCodegen.hh"
-#include "TypeCodegen.hh"
+#include "Codegen/Type.hh"
+#include "Codegen/Value.hh"
 
 namespace Craeft {
 
-Value LValueCodegen::operator()(const AST::Variable &var) {
+namespace Codegen {
+
+Value LValueGen::operator()(const AST::Variable &var) {
     return _translator.get_identifier_addr(var.name(), var.pos());
 }
 
-Value LValueCodegen::operator()(const AST::Dereference &deref) {
+Value LValueGen::operator()(const AST::Dereference &deref) {
     /* If the dereference is an l-value, return just the referand. */
-    return ValueCodegen(_translator).visit(deref.referand());
+    return ValueGen(_translator).visit(deref.referand());
 }
 
-Value LValueCodegen::operator()(const AST::FieldAccess &fa) {
+Value LValueGen::operator()(const AST::FieldAccess &fa) {
     if (auto *structure = llvm::dyn_cast<AST::LValue>(&fa.structure())) {
         return _translator.field_address(
                 visit(*structure), fa.field(), fa.pos());
@@ -45,51 +47,51 @@ Value LValueCodegen::operator()(const AST::FieldAccess &fa) {
                 fa.pos());
 }
 
-Value ValueCodegen::operator()(const AST::IntLiteral &lit) {
+Value ValueGen::operator()(const AST::IntLiteral &lit) {
     SignedInt type(64);
     auto *llvm_type = type.to_llvm(_ctx);
     auto *llvm_int = llvm::ConstantInt::get(llvm_type, lit.value(), true);
     return Value(llvm_int, type);
 }
 
-Value ValueCodegen::operator()(const AST::UIntLiteral &lit) {
+Value ValueGen::operator()(const AST::UIntLiteral &lit) {
     UnsignedInt type(64);
     auto *llvm_type = type.to_llvm(_ctx);
     auto *llvm_int = llvm::ConstantInt::get(llvm_type, lit.value(), true) ;
     return Value(llvm_int, type);
 }
 
-Value ValueCodegen::operator()(const AST::FloatLiteral &lit) {
+Value ValueGen::operator()(const AST::FloatLiteral &lit) {
     Float type(DoublePrecision);
     llvm::APFloat constant(lit.value());
     return Value(llvm::ConstantFP::get(_ctx, constant), type);
 }
 
-Value ValueCodegen::operator()(const AST::StringLiteral &lit) {
+Value ValueGen::operator()(const AST::StringLiteral &lit) {
     return _translator.string_literal(lit.value());
 }
 
-Value ValueCodegen::operator()(const AST::Dereference &deref) {
+Value ValueGen::operator()(const AST::Dereference &deref) {
     return _translator.add_load(visit(deref.referand()), deref.pos());
 }
 
-Value ValueCodegen::operator()(const AST::FieldAccess &access) {
+Value ValueGen::operator()(const AST::FieldAccess &access) {
     auto lhs = visit(access.structure());
 
     return _translator.field_access(lhs, access.field(), access.pos());
 }
 
-Value ValueCodegen::operator()(const AST::Reference &ref) {
+Value ValueGen::operator()(const AST::Reference &ref) {
     /* LValue codegenerators return addresses to the l-value, so just use one
      * of those to codegen the referand. */
-    return LValueCodegen(_translator).visit(ref.referand());
+    return LValueGen(_translator).visit(ref.referand());
 }
 
-Value ValueCodegen::operator()(const AST::Variable &var) {
+Value ValueGen::operator()(const AST::Variable &var) {
     return _translator.get_identifier_value(var.name(), var.pos());
 }
 
-Value ValueCodegen::operator()(const AST::Binop &binop) {
+Value ValueGen::operator()(const AST::Binop &binop) {
     auto lhs = visit(binop.lhs());
     auto rhs = visit(binop.rhs());
 
@@ -136,7 +138,7 @@ Value ValueCodegen::operator()(const AST::Binop &binop) {
     }
 }
 
-Value ValueCodegen::operator()(const AST::FunctionCall &call) {
+Value ValueGen::operator()(const AST::FunctionCall &call) {
     std::vector<Value> args;
 
     for (const auto &arg: call.args()) {
@@ -146,8 +148,8 @@ Value ValueCodegen::operator()(const AST::FunctionCall &call) {
     return _translator.call(call.fname(), args, call.pos());
 }
 
-Value ValueCodegen::operator()(const AST::TemplateFunctionCall &call) {
-    TypeCodegen tg(_translator);
+Value ValueGen::operator()(const AST::TemplateFunctionCall &call) {
+    TypeGen tg(_translator);
 
     std::vector<Type> tmpl_args;
 
@@ -164,12 +166,13 @@ Value ValueCodegen::operator()(const AST::TemplateFunctionCall &call) {
     return _translator.call(call.fname(), tmpl_args, args, call.pos());
 }
 
-Value ValueCodegen::operator()(const AST::Cast &cast) {
-    auto dest_ty = TypeCodegen(_translator).visit(cast.type());
+Value ValueGen::operator()(const AST::Cast &cast) {
+    auto dest_ty = TypeGen(_translator).visit(cast.type());
 
     auto cast_val = visit(cast.arg());
 
     return _translator.cast(cast_val, dest_ty, cast.pos());
 }
 
+}
 }

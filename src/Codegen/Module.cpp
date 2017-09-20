@@ -1,7 +1,5 @@
 /**
- * @file ModuleCodegen.cpp
- *
- * @brief Codegen for single modules.
+ * @file Codegen/Module.cpp
  */
 
 /* Craeft: a new systems programming language.
@@ -22,37 +20,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ModuleCodegen.hh"
-#include "ModuleCodegenImpl.hh"
+#include "Codegen/Module.hh"
+#include "Codegen/ModuleImpl.hh"
 
 namespace Craeft {
 
-ModuleCodegen::ModuleCodegen(std::string name, std::string filename,
+namespace Codegen {
+
+ModuleGen::ModuleGen(std::string name, std::string filename,
                              std::string triple)
-    : pimpl(new ModuleCodegenImpl(name, triple, filename)) {}
+    : pimpl(new ModuleGenImpl(name, triple, filename)) {}
 
-ModuleCodegen::~ModuleCodegen() {}
+ModuleGen::~ModuleGen() {}
 
-void ModuleCodegen::codegen(const AST::Toplevel &t) { pimpl->visit(t); }
+void ModuleGen::codegen(const AST::Toplevel &t) { pimpl->visit(t); }
 
-void ModuleCodegen::emit_ir(std::ostream &out) {
+void ModuleGen::emit_ir(std::ostream &out) {
     pimpl->emit_ir(out);
 }
 
-void ModuleCodegen::emit_obj(int fd) {
+void ModuleGen::emit_obj(int fd) {
     pimpl->emit_obj(fd);
 }
 
-void ModuleCodegen::emit_asm(int fd) {
+void ModuleGen::emit_asm(int fd) {
     pimpl->emit_asm(fd);
 }
 
-void ModuleCodegen::validate(std::ostream &out) {
+void ModuleGen::validate(std::ostream &out) {
     pimpl->validate(out);
 }
 
-void ModuleCodegen::optimize(int level) {
+void ModuleGen::optimize(int level) {
     pimpl->optimize(level);
 }
 
+}
 }

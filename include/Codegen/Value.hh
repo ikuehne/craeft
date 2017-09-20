@@ -1,5 +1,5 @@
 /**
- * @file ValueCodegen.hh
+ * @file Codegen/Value.hh
  *
  * @brief Generating Values from AST expressions.
  */
@@ -30,7 +30,7 @@
 
 namespace Craeft {
 
-class ValueCodegen;
+namespace Codegen {
 
 /**
  * @brief Codegen for l-values: return the address of the given AST l-value.
@@ -39,9 +39,9 @@ class ValueCodegen;
  * occupies; for a dereference, just return the address being dereferenced;
  * and for a FieldAccess, return the address of that field.
  */
-class LValueCodegen: public AST::LValueVisitor<Value> {
+class LValueGen: public AST::LValueVisitor<Value> {
 public:
-    LValueCodegen(Translator &translator): _translator(translator) {}
+    LValueGen(Translator &translator): _translator(translator) {}
 
 private:
     Value operator()(const AST::Variable &) override;
@@ -54,9 +54,9 @@ private:
 /**
  * @brief Codegen for r-values: return the value of the given AST r-value.
  */
-class ValueCodegen: public AST::ExpressionVisitor<Value> {
+class ValueGen: public AST::ExpressionVisitor<Value> {
 public:
-    ValueCodegen(Translator &translator)
+    ValueGen(Translator &translator)
         : _translator(translator), _ctx(_translator.get_ctx()) {}
 
 private:
@@ -77,4 +77,5 @@ private:
     llvm::LLVMContext &_ctx;
 };
 
+}
 }

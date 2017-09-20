@@ -359,8 +359,6 @@ public:
      *
      * Finish the translation and output some sort of code.
      *
-     * See the documentation of ModuleCodegen.
-     *
      * @{
      */
 

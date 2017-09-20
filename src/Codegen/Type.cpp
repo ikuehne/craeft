@@ -1,5 +1,5 @@
 /**
- * @file TypeCodegen.cpp
+ * @file Codegen/Type.cpp
  */
 
 /* Craeft: a new systems programming language.
@@ -20,24 +20,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "TypeCodegen.hh"
+#include "Codegen/Type.hh"
 
 namespace Craeft {
 
-Type TypeCodegen::operator()(const AST::NamedType &it) {
+namespace Codegen {
+
+Type TypeGen::operator()(const AST::NamedType &it) {
     // TODO: Annotate type names with source positions.
     return translator.lookup_type(it.name(), it.pos());
 }
 
-Type TypeCodegen::operator()(const AST::Void &_) {
+Type TypeGen::operator()(const AST::Void &_) {
     return Void();
 }
 
-Type TypeCodegen::operator()(const AST::Pointer &ut) {
+Type TypeGen::operator()(const AST::Pointer &ut) {
     return Pointer<>(visit(ut.pointed()));
 }
 
-Type TypeCodegen::operator()(const AST::TemplatedType &t) {
+Type TypeGen::operator()(const AST::TemplatedType &t) {
     std::vector<Type> args;
 
     for (const auto &arg: t.args()) {
@@ -51,7 +53,7 @@ Type TypeCodegen::operator()(const AST::TemplatedType &t) {
  * Code generation for template types.
  */
 
-TemplateType TemplateTypeCodegen::operator()(const AST::NamedType &it) {
+TemplateType TemplateTypeGen::operator()(const AST::NamedType &it) {
     for (int i = 0; i < (int)args.size(); ++i) {
         if (it.name() == args[i]) {
             return i;
@@ -61,15 +63,15 @@ TemplateType TemplateTypeCodegen::operator()(const AST::NamedType &it) {
     return to_template(translator.lookup_type(it.name(), it.pos()));
 }
 
-TemplateType TemplateTypeCodegen::operator()(const AST::Void &_) {
+TemplateType TemplateTypeGen::operator()(const AST::Void &_) {
     return Void();
 }
 
-TemplateType TemplateTypeCodegen::operator()(const AST::Pointer &ut) {
+TemplateType TemplateTypeGen::operator()(const AST::Pointer &ut) {
     return Pointer<TemplateType>(visit(ut.pointed()));
 }
 
-TemplateType TemplateTypeCodegen::operator()(const AST::TemplatedType &t) {
+TemplateType TemplateTypeGen::operator()(const AST::TemplatedType &t) {
     std::vector<TemplateType> args;
 
     for (const auto &arg: t.args()) {
@@ -79,4 +81,5 @@ TemplateType TemplateTypeCodegen::operator()(const AST::TemplatedType &t) {
     return translator.respecialize_template(t.name(), args, t.pos());
 }
 
+}
 }
