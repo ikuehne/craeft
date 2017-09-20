@@ -62,9 +62,6 @@ bool is_arrow(const Tok::Token &tok) {
  * must be verified after the fact.
  */
 class ExpressionVerifier: public AST::ExpressionVisitor<void> {
-public:
-    ExpressionVerifier(const std::string &fname): fname(fname) {}
-
 private:
     /* By default, do nothing. */
     void operator()(const AST::IntLiteral &) override {}
@@ -83,7 +80,7 @@ private:
         if (op.op() == "=") {
             throw Error("parse error",
                         "\"=\" may not appear in an expression",
-                        fname, op.pos());
+                        op.pos());
         }
 
         visit(op.lhs());
@@ -105,14 +102,11 @@ private:
     void operator()(const AST::Cast &cast) override {
         visit(cast.arg());
     }
-
-private:
-    const std::string &fname;
 };
 
 inline void ParserImpl::verify_expression(const AST::Expression &expr) const {
     /* Just a thin wrapper over the ExpressionVerifier visitor. */
-    ExpressionVerifier(fname).visit(expr);
+    ExpressionVerifier().visit(expr);
 }
 
 inline std::unique_ptr<AST::LValue> ParserImpl::to_lvalue(
@@ -133,7 +127,7 @@ inline std::unique_ptr<AST::LValue> ParserImpl::to_lvalue(
              } else { 
                  throw Error("parser error",
                              "expected field name in field access",
-                             fname, pos);
+                             pos);
              }
          } else if (binop->op() == "->") {
              if (auto *name = llvm::dyn_cast<AST::Variable>(&binop->rhs())) {
@@ -146,12 +140,12 @@ inline std::unique_ptr<AST::LValue> ParserImpl::to_lvalue(
              } else { 
                  throw Error("parser error",
                              "expected field name in field access",
-                             fname, pos);
+                             pos);
              }
          } 
     }
 
-    throw Error("parser error", "expected l-value", fname, pos);
+    throw Error("parser error", "expected l-value", pos);
 }
 
 class AssignmentFactorizer
@@ -211,7 +205,7 @@ inline std::unique_ptr<AST::Statement> ParserImpl::extract_assignments(
  * ParserImpl public methods.
  */
 
-ParserImpl::ParserImpl(std::string fname): lexer(fname), fname(fname) {}
+ParserImpl::ParserImpl(const std::string &fname): lexer(fname) {}
 
 std::unique_ptr<AST::Expression> ParserImpl::parse_expression(void) {
     return parse_binop(0, parse_unary());
@@ -371,7 +365,7 @@ std::unique_ptr<AST::Expression> ParserImpl::parse_unary(void) {
     }
 
     throw Error("parser error", "unrecognized operator \"" + op.op
-                              + "\"", fname, start);
+                              + "\"", start);
 }
 
 std::unique_ptr<AST::Expression> ParserImpl::parse_binop(
@@ -513,7 +507,7 @@ std::unique_ptr<AST::Type> ParserImpl::parse_type(void) {
     lexer.shift();
 
     std::unique_ptr<AST::Type> result
-        = std::make_unique<AST::NamedType>(tname);
+        = std::make_unique<AST::NamedType>(tname, lexer.get_pos());
 
     if (at_open_generic()) {
         lexer.shift();
@@ -525,14 +519,16 @@ std::unique_ptr<AST::Type> ParserImpl::parse_type(void) {
 
         find_and_shift(Tok::Operator(":>"), "after template type");
 
-        result = std::make_unique<AST::TemplatedType>(tname, std::move(args));
+        result = std::make_unique<AST::TemplatedType>(
+                tname, std::move(args), lexer.get_pos());
     }
 
     while (llvm::isa<Tok::Operator>(lexer.get_tok())) {
         auto op = llvm::cast<Tok::Operator>(lexer.get_tok());
         if (op.op != "*") break;
 
-        result = std::make_unique<AST::Pointer>(std::move(result));
+        result = std::make_unique<AST::Pointer>(std::move(result),
+                                                lexer.get_pos());
         lexer.shift();
     }
 
@@ -820,7 +816,8 @@ std::unique_ptr<AST::Toplevel> ParserImpl::parse_function(void) {
     auto args = parse_arg_list();
 
     // Default to void type;
-    std::unique_ptr<AST::Type> ret_type = std::make_unique<AST::Void>();
+    std::unique_ptr<AST::Type> ret_type =
+        std::make_unique<AST::Void>(lexer.get_pos());
 
     // parse another return type if present.
     if (is_arrow(lexer.get_tok())) {
@@ -926,7 +923,7 @@ inline bool ParserImpl::at_close_generic(void) {
 }
 
 [[noreturn]] inline void ParserImpl::_throw(std::string message) {
-    throw Error("parser error", message, fname, lexer.get_pos());
+    throw Error("parser error", message, lexer.get_pos());
 }
 
 }

@@ -76,7 +76,6 @@ private:
     bool eof;
     std::unique_ptr<Tok::Token> tok;
     SourcePos pos;
-    std::string fname;
     std::ifstream stream;
 };
 

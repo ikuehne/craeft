@@ -40,7 +40,7 @@ public:
      *
      * @param fname The filename to open and parse from.
      */
-    Parser(std::string fname);
+    Parser(const std::string &fname);
 
     /* Explicitly declared because PImpl. */
     ~Parser();

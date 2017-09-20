@@ -44,9 +44,8 @@ namespace Craeft {
 
 class TypeCodegen: public AST::TypeVisitor<Type> {
 public:
-    TypeCodegen(Translator &translator,
-                std::string &fname)
-        : translator(translator), fname(fname) {}
+    TypeCodegen(Translator &translator)
+        : translator(translator) {}
 
     ~TypeCodegen(void) override {}
 
@@ -57,13 +56,11 @@ private:
     Type operator()(const AST::TemplatedType &) override;
 
     Translator &translator;
-    std::string &fname;
 };
 
 class TemplateTypeCodegen: public AST::TypeVisitor<TemplateType> {
 public:
     TemplateTypeCodegen(Translator &translator,
-                        std::string &fname,
                         std::vector<std::string> args)
         : translator(translator), args(args) {}
 
@@ -81,11 +78,9 @@ private:
 
 class StatementCodegen: public AST::StatementVisitor<void> {
 public:
-    StatementCodegen(Translator &translator,
-                     const std::string &fname)
+    StatementCodegen(Translator &translator)
         : translator(translator),
-          fname(fname),
-          _value_codegen(translator, fname) {}
+          _value_codegen(translator) {}
 private:
     // Visitors of different AST statement types.
     void operator()(const AST::ExpressionStatement &);
@@ -97,8 +92,6 @@ private:
     void operator()(const AST::IfStatement &);
 
     Translator &translator;
-
-    std::string fname;
 
     /**
      * @brief The code generator for expressions.

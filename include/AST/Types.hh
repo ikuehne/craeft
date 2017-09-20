@@ -30,6 +30,8 @@
 
 #include "llvm/Support/Casting.h"
 
+#include "Error.hh"
+
 namespace Craeft {
 
 namespace AST {
@@ -47,12 +49,15 @@ public:
         return _kind;
     }
 
+    SourcePos pos(void) const { return _pos; }
+
     virtual ~Type() {}
 
-    Type(TypeKind kind): _kind(kind) {}
+    Type(TypeKind kind, SourcePos pos): _kind(kind), _pos(pos) {}
 
 private:
     TypeKind _kind;
+    SourcePos _pos;
 };
 
 #define TYPE_CLASS(X)\
@@ -64,8 +69,8 @@ private:
 class NamedType: public Type {
 public:
     const std::string& name(void) const { return _name; }
-    NamedType(const std::string &name)
-        : Type(TypeKind::NamedType), _name(name) {}
+    NamedType(const std::string &name, SourcePos pos)
+        : Type(TypeKind::NamedType, pos), _name(name) {}
 
     TYPE_CLASS(NamedType);
 
@@ -75,7 +80,7 @@ private:
 
 class Void: public Type {
 public:
-    Void(void): Type(TypeKind::Void) {}
+    Void(SourcePos pos): Type(TypeKind::Void, pos) {}
     TYPE_CLASS(Void);
 };
 
@@ -86,8 +91,9 @@ public:
         return _args;
     }
     TemplatedType(const std::string &name,
-                  std::vector<std::unique_ptr<Type>> &&args)
-        : Type(TypeKind::TemplatedType),
+                  std::vector<std::unique_ptr<Type>> &&args,
+                  SourcePos pos)
+        : Type(TypeKind::TemplatedType, pos),
           _name(name),
           _args(std::move(args)) {}
     TYPE_CLASS(TemplatedType);
@@ -100,8 +106,8 @@ class Pointer: public Type {
 public:
     const Type &pointed(void) const { return *_pointed; }
 
-    Pointer(std::unique_ptr<Type> pointed)
-        : Type(TypeKind::Pointer), _pointed(std::move(pointed)) {}
+    Pointer(std::unique_ptr<Type> pointed, SourcePos pos)
+        : Type(TypeKind::Pointer, pos), _pointed(std::move(pointed)) {}
 
     TYPE_CLASS(Pointer);
 private:

@@ -48,8 +48,7 @@ Lexer::Lexer(const std::string &fname)
     : c(' '),
       eof(false),
       tok(std::make_unique<Tok::OpenParen>()),
-      pos(0, 0),
-      fname(fname),
+      pos(0, 0, std::make_shared<std::string>(fname)),
       stream(fname) {
     shift();
 }
@@ -139,7 +138,7 @@ std::string Lexer::lex_string(void) {
         get();
 
         if (eof) {
-            throw Error("lexer error", "unterminated string", fname, pos);
+            throw Error("lexer error", "unterminated string", pos);
         }
 
         if (c == '\\') {
@@ -279,7 +278,7 @@ void Lexer::shift(void) {
         get();
     } else throw Error("lexer error",
                        std::string("character \"") + c + "\" not recognized",
-                       fname, pos);
+                       pos);
 }
 
 const Tok::Token &Lexer::get_tok(void) const {

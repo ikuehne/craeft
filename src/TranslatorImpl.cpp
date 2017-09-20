@@ -229,7 +229,7 @@ Value TranslatorImpl::cast(Value val, const Type &dest_ty, SourcePos pos) {
         break;
     case Illegal:
         // TODO: Add representations of types to make this more helpful.
-        throw Error("type error", "cannot cast types", fname, pos);
+        throw Error("type error", "cannot cast types", pos);
     }
 
     return Value(inst, dest_ty);
@@ -241,7 +241,7 @@ Value TranslatorImpl::add_load(Value pointer, SourcePos pos) {
     // Make sure value is actually a pointer.
     if (!pointer_ty) {
         throw Error("type error", "cannot dereference non-pointer value",
-                    fname, pos);
+                    pos);
     }
 
     auto *pointed = pointer_ty->get_pointed();
@@ -254,7 +254,7 @@ void TranslatorImpl::add_store(Value pointer, Value new_val, SourcePos pos) {
     // Make sure value is actually a pointer.
     if (!is_type<Pointer<> >(pointer.get_type())) {
         throw Error("type error", "cannot dereference non-pointer value",
-                    fname, pos);
+                    pos);
     }
 
     builder.CreateStore(new_val.to_llvm(), pointer.to_llvm());
@@ -263,12 +263,12 @@ void TranslatorImpl::add_store(Value pointer, Value new_val, SourcePos pos) {
 Value TranslatorImpl::left_shift(Value val, Value nbits, SourcePos pos) {
     if (!nbits.is_integral()) {
         throw Error("type error", "cannot shift by non-integer value",
-                    fname, pos);
+                    pos);
     }
 
     if (!val.is_integral()) {
         throw Error("type error", "cannot shift non-integer value",
-                    fname, pos);
+                    pos);
     }
 
     auto *inst = builder.CreateShl(val.to_llvm(), nbits.to_llvm());
@@ -278,7 +278,7 @@ Value TranslatorImpl::left_shift(Value val, Value nbits, SourcePos pos) {
 Value TranslatorImpl::right_shift(Value val, Value nbits, SourcePos pos) {
     if (!nbits.is_integral()) {
         throw Error("type error", "cannot shift by non-integer value",
-                    fname, pos);
+                    pos);
     }
 
     llvm::Value *inst;
@@ -289,7 +289,7 @@ Value TranslatorImpl::right_shift(Value val, Value nbits, SourcePos pos) {
         inst = builder.CreateLShr(val.to_llvm(), nbits.to_llvm());
     } else {
         throw Error("type error", "cannot shift non-integer value",
-                    fname, pos);
+                    pos);
     }
 
     return Value(inst, val.get_type());
@@ -298,10 +298,9 @@ Value TranslatorImpl::right_shift(Value val, Value nbits, SourcePos pos) {
 class Operator: public boost::static_visitor<Value> {
 public:
     Operator(const Value &lhs, const Value &rhs,
-             const SourcePos pos, const std::string &fname,
-             llvm::Module &module,
+             const SourcePos pos, llvm::Module &module,
              llvm::IRBuilder<> &builder)
-        : module(module), lhs(lhs), rhs(rhs), pos(pos), fname(fname),
+        : module(module), lhs(lhs), rhs(rhs), pos(pos),
           builder(builder) {
         unsigned_int_extender = [&](llvm::Value *v, llvm::Type *t) {
             return get_builder().CreateSExtOrTrunc(v, t);
@@ -394,8 +393,6 @@ protected:
 
     const SourcePos get_pos(void) const { return pos; }
 
-    const std::string &get_fname(void) const { return fname; }
-
     using Extender=std::function<llvm::Value *(llvm::Value *, llvm::Type*)>;
 
     using Performer=std::function<llvm::Value *(llvm::Value *, llvm::Value*)>;
@@ -408,13 +405,12 @@ protected:
 
 private:
     [[noreturn]] void type_error(std::string msg) const {
-        throw Error("type error", msg, fname, pos);
+        throw Error("type error", msg, pos);
     }
 
     const Value &lhs;
     const Value &rhs;
     const SourcePos pos;
-    const std::string &fname;
     llvm::IRBuilder<> &builder;
 };
 
@@ -458,7 +454,7 @@ public:
                     const SourcePos pos, const std::string &fname,
                     llvm::Module &module,
                     llvm::IRBuilder<> &builder)
-        : Operator(lhs, rhs, pos, fname, module, builder) {}
+        : Operator(lhs, rhs, pos, module, builder) {}
 
     virtual ~BitwiseOperator() override {};
 
@@ -528,7 +524,7 @@ Value TranslatorImpl::bit_xor(Value lhs, Value rhs, SourcePos pos) {
 Value TranslatorImpl::bit_not(Value val, SourcePos pos) {
     if (!val.is_integral()) {
         throw Error("type error", "cannot perform bitwise operations on "
-                                  "non-integral types", fname, pos);
+                                  "non-integral types", pos);
     }
 
     auto *inst = builder.CreateNot(val.to_llvm());
@@ -626,10 +622,9 @@ const Float &get_wider_float(const Type &l, const Type &r) {
 class ArithmeticOperator: public Operator {
 public:
     ArithmeticOperator(const Value &lhs, const Value &rhs,
-                const SourcePos pos, const std::string &fname,
-                llvm::Module &module,
+                const SourcePos pos, llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-          : Operator(lhs, rhs, pos, fname, module, builder) {
+          : Operator(lhs, rhs, pos, module, builder) {
         sint_performer = [&](llvm::Value *l, llvm::Value *r) {
             return sint_perform(l, r);
         };
@@ -708,10 +703,9 @@ private:
 class AddOperator: public ArithmeticOperator {
 public:
     AddOperator(const Value &lhs, const Value &rhs,
-                const SourcePos pos, const std::string &fname,
-                llvm::Module &module,
+                const SourcePos pos, llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-          : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
+          : ArithmeticOperator(lhs, rhs, pos, module, builder) {}
 
     ~AddOperator() override {}
 
@@ -747,16 +741,15 @@ protected:
 };
 
 Value TranslatorImpl::add(Value lhs, Value rhs, SourcePos pos) {
-    return AddOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return AddOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class SubOperator: public ArithmeticOperator {
 public:
     SubOperator(const Value &lhs, const Value &rhs,
-                const SourcePos pos, const std::string &fname,
-                llvm::Module &module,
+                const SourcePos pos, llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ArithmeticOperator(lhs, rhs, pos, module, builder) {}
 
     ~SubOperator() override {}
 
@@ -776,7 +769,7 @@ public:
     Value ptr_ptr_op(const Value &l, const Value &r) override {
         if (!(l.get_type() == r.get_type())) {
             throw Error("type error", "cannot subtract pointers of different "
-                                      "types", get_fname(), get_pos());
+                                      "types", get_pos());
         }
         auto *result = get_builder().CreatePtrDiff(l.to_llvm(), r.to_llvm());
         return Value(result, l.get_type());
@@ -804,16 +797,15 @@ protected:
 };
 
 Value TranslatorImpl::sub(Value lhs, Value rhs, SourcePos pos) {
-    return SubOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return SubOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class MulOperator: public ArithmeticOperator {
 public:
     MulOperator(const Value &lhs, const Value &rhs,
-                const SourcePos pos, const std::string &fname,
-                llvm::Module &module,
+                const SourcePos pos, llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ArithmeticOperator(lhs, rhs, pos, module, builder) {}
 
     ~MulOperator() {}
 
@@ -839,16 +831,15 @@ protected:
 };
 
 Value TranslatorImpl::mul(Value lhs, Value rhs, SourcePos pos) {
-    return MulOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return MulOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class DivOperator: public ArithmeticOperator {
 public:
     DivOperator(const Value &lhs, const Value &rhs,
-                const SourcePos pos, const std::string &fname,
-                llvm::Module &module,
+                const SourcePos pos, llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ArithmeticOperator(lhs, rhs, pos, module, builder) {}
 
     ~DivOperator() override {}
 
@@ -874,21 +865,21 @@ protected:
 };
 
 Value TranslatorImpl::div(Value lhs, Value rhs, SourcePos pos) {
-    return DivOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return DivOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class ComparisonOperator: public ArithmeticOperator {
 public:
     ComparisonOperator(const Value &lhs, const Value &rhs,
-                const SourcePos pos, const std::string &fname,
+                const SourcePos pos,
                 llvm::Module &module,
                 llvm::IRBuilder<> &builder)
-        : ArithmeticOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ArithmeticOperator(lhs, rhs, pos, module, builder) {}
 
     virtual Value ptr_ptr_op(const Value &l, const Value &r) override {
         if (!(l.get_type() == r.get_type())) {
             throw Error("type error", "cannot compare pointers to different "
-                                      "types", get_fname(), get_pos());
+                                      "types", get_pos());
         }
 
         auto result = get_builder().CreateICmp(unsigned_int_predicate(),
@@ -920,10 +911,9 @@ protected:
 class EqualOperator: public ComparisonOperator {
 public:
     EqualOperator(const Value &lhs, const Value &rhs,
-                  const SourcePos pos, const std::string &fname,
-                  llvm::Module &module,
+                  const SourcePos pos, llvm::Module &module,
                   llvm::IRBuilder<> &builder)
-        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ComparisonOperator(lhs, rhs, pos, module, builder) {}
 
     ~EqualOperator() override {}
 
@@ -946,16 +936,15 @@ protected:
 };
 
 Value TranslatorImpl::equal(Value lhs, Value rhs, SourcePos pos) {
-    return EqualOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return EqualOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class LessOperator: public ComparisonOperator {
 public:
     LessOperator(const Value &lhs, const Value &rhs,
-                  const SourcePos pos, const std::string &fname,
-                  llvm::Module &module,
+                  const SourcePos pos, llvm::Module &module,
                   llvm::IRBuilder<> &builder)
-        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ComparisonOperator(lhs, rhs, pos, module, builder) {}
 
     ~LessOperator() override {}
 
@@ -978,16 +967,15 @@ protected:
 };
 
 Value TranslatorImpl::less(Value lhs, Value rhs, SourcePos pos) {
-    return LessOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return LessOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class LessEqOperator: public ComparisonOperator {
 public:
     LessEqOperator(const Value &lhs, const Value &rhs,
-                  const SourcePos pos, const std::string &fname,
-                  llvm::Module &module,
+                  const SourcePos pos, llvm::Module &module,
                   llvm::IRBuilder<> &builder)
-        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ComparisonOperator(lhs, rhs, pos, module, builder) {}
 
     ~LessEqOperator() override {}
 
@@ -1010,16 +998,15 @@ protected:
 };
 
 Value TranslatorImpl::lesseq(Value lhs, Value rhs, SourcePos pos) {
-    return LessEqOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return LessEqOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class NequalOperator: public ComparisonOperator {
 public:
     NequalOperator(const Value &lhs, const Value &rhs,
-                  const SourcePos pos, const std::string &fname,
-                  llvm::Module &module,
+                  const SourcePos pos, llvm::Module &module,
                   llvm::IRBuilder<> &builder)
-        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ComparisonOperator(lhs, rhs, pos, module, builder) {}
 
     ~NequalOperator() override {}
 
@@ -1042,16 +1029,15 @@ protected:
 };
 
 Value TranslatorImpl::nequal(Value lhs, Value rhs, SourcePos pos) {
-    return NequalOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return NequalOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class GreaterOperator: public ComparisonOperator {
 public:
     GreaterOperator(const Value &lhs, const Value &rhs,
-                  const SourcePos pos, const std::string &fname,
-                  llvm::Module &module,
+                  const SourcePos pos, llvm::Module &module,
                   llvm::IRBuilder<> &builder)
-        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ComparisonOperator(lhs, rhs, pos, module, builder) {}
 
     ~GreaterOperator() override {}
 
@@ -1074,16 +1060,15 @@ protected:
 };
 
 Value TranslatorImpl::greater(Value lhs, Value rhs, SourcePos pos) {
-    return GreaterOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return GreaterOperator(lhs, rhs, pos, *module, builder).apply();
 }
 
 class GreaterEqOperator: public ComparisonOperator {
 public:
     GreaterEqOperator(const Value &lhs, const Value &rhs,
-                  const SourcePos pos, const std::string &fname,
-                  llvm::Module &module,
+                  const SourcePos pos, llvm::Module &module,
                   llvm::IRBuilder<> &builder)
-        : ComparisonOperator(lhs, rhs, pos, fname, module, builder) {}
+        : ComparisonOperator(lhs, rhs, pos, module, builder) {}
 
     ~GreaterEqOperator() override {}
 
@@ -1106,7 +1091,7 @@ protected:
 };
 
 Value TranslatorImpl::greatereq(Value lhs, Value rhs, SourcePos pos) {
-    return GreaterEqOperator(lhs, rhs, pos, fname, *module, builder).apply();
+    return GreaterEqOperator(lhs, rhs, pos, *module, builder).apply();
 }
 static inline bool is_u1(Value v) {
     auto ty = v.get_type();
@@ -1123,7 +1108,7 @@ static inline bool is_u1(Value v) {
 Value TranslatorImpl::bool_and(Value lhs, Value rhs, SourcePos pos) {
     if (!(is_u1(lhs) && is_u1(rhs))) {
         throw Error("type error", "logical operations only allowed between "
-                                  "U1s", fname, pos);
+                                  "U1s", pos);
     }
 
     auto *inst = builder.CreateAnd(lhs.to_llvm(), rhs.to_llvm());
@@ -1133,7 +1118,7 @@ Value TranslatorImpl::bool_and(Value lhs, Value rhs, SourcePos pos) {
 Value TranslatorImpl::bool_or(Value lhs, Value rhs, SourcePos pos) {
     if (!(is_u1(lhs) && is_u1(rhs))) {
         throw Error("type error", "logical operations only allowed between "
-                                  "U1s", fname, pos);
+                                  "U1s", pos);
     }
 
     auto *inst = builder.CreateOr(lhs.to_llvm(), rhs.to_llvm());
@@ -1142,8 +1127,7 @@ Value TranslatorImpl::bool_or(Value lhs, Value rhs, SourcePos pos) {
 
 Value TranslatorImpl::bool_not(Value val, SourcePos pos) {
     if (!is_u1(val)) {
-        throw Error("type error", "logical not only allowed on U1s",
-                    fname, pos);
+        throw Error("type error", "logical not only allowed on U1s", pos);
     }
 
     auto *inst = builder.CreateNot(val.to_llvm());
@@ -1157,7 +1141,7 @@ TranslatorImpl::get_field_idx(Type _t, std::string field, SourcePos pos) {
 
     if (!t) {
         throw Error("type error", "cannot access field of non-struct value",
-                    fname, pos);
+                    pos);
     }
 
     auto field_entry = (*t)[field];
@@ -1166,7 +1150,7 @@ TranslatorImpl::get_field_idx(Type _t, std::string field, SourcePos pos) {
 
     if (!result_t) {
         throw Error("error", "no field \"" + field
-                           + "\" found for struct type", fname, pos);
+                           + "\" found for struct type", pos);
     }
 
     assert(field_entry.first >= 0);
@@ -1196,7 +1180,7 @@ Value TranslatorImpl::field_address(Value ptr, std::string field,
     if (!ptr_t) {
         throw Error("type error",
                     "cannot compute field address from non-pointer type",
-                    fname, pos);
+                    pos);
     }
 
     auto pair = get_field_idx(*ptr_t->get_pointed(), field, pos);
@@ -1220,17 +1204,15 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
     }
 
     if (!env.bound(func)) {
-        throw Error("error", "function \"" + func + "\" not defined",
-                    fname, pos);
+        throw Error("error", "function \"" + func + "\" not defined", pos);
     }
 
-    auto fbinding = env.lookup_identifier(func, pos, fname);
+    auto fbinding = env.lookup_identifier(func, pos);
     auto ty = fbinding.get_type();
     auto *ftype = boost::get<Function<> >(&ty);
 
     if (!ftype) {
-        throw Error("type error", "cannot call non-function value",
-                    fname, pos);
+        throw Error("type error", "cannot call non-function value", pos);
     }
 
     for (unsigned i = 0; i < args.size(); ++i) {
@@ -1238,7 +1220,7 @@ Value TranslatorImpl::call(std::string func, std::vector<Value> &args,
         auto rhs_ty = *ftype->get_args()[i];
         if (!(lhs_ty == rhs_ty)) {
             throw Error("type error", "argument does not match function type",
-                        fname, pos);
+                        pos);
         }
     }
 
@@ -1252,7 +1234,7 @@ Value TranslatorImpl::call(std::string func, std::vector<Type> &templ_args,
     // Use the mangled name to find the function if it has been implemented.
     auto name = mangle_name(func, templ_args);
 
-    auto tv = env.lookup_template_func(func, pos, fname);
+    auto tv = env.lookup_template_func(func, pos);
 
 
     auto specialized_type = tv.ty.specialize(templ_args);
@@ -1300,12 +1282,12 @@ Variable TranslatorImpl::declare(const std::string &varname, const Type &t) {
 
 void TranslatorImpl::assign(const std::string &varname, Value val,
                             SourcePos pos) {
-    auto var = env.lookup_identifier(varname, pos, fname);
+    auto var = env.lookup_identifier(varname, pos);
 
     if (!(val.get_type() == var.get_type())) {
         throw Error("type error",
                     "cannot assign to variable of different type",
-                    fname, pos);
+                    pos);
     }
 
     // Get the address of the variable on the stack.
@@ -1359,8 +1341,10 @@ void TranslatorImpl::create_and_start_function(Function<> f,
     }
 
     if (rettype) {
+        // TODO: Fix this code.
+        SourcePos pos(0, 0, std::make_shared<std::string>(fname));
         throw Error("internal error", "cannot start function while inside "
-                                      "function", fname, SourcePos(0, 0));
+                                      "function", pos);
     }
 
     rettype = f.get_rettype();
@@ -1376,7 +1360,7 @@ TranslatorImpl::end_function(void) {
 
     // Add implicit void returns.
     if (is_type<Void>(*rettype) && !current->is_terminated()) {
-        return_(SourcePos(0, 0));
+        return_(SourcePos(0, 0, std::make_shared<std::string>(fname)));
     }
 
     rettype = NULL;
@@ -1398,7 +1382,7 @@ void TranslatorImpl::return_(SourcePos pos) {
 }
 
 Value TranslatorImpl::get_identifier_addr(std::string ident, SourcePos pos) {
-    return env.lookup_identifier(ident, pos, fname).get_val();
+    return env.lookup_identifier(ident, pos).get_val();
 }
 
 Value TranslatorImpl::get_identifier_value(std::string ident, SourcePos pos) {
@@ -1410,7 +1394,7 @@ Value TranslatorImpl::get_identifier_value(std::string ident, SourcePos pos) {
 }
 
 Type TranslatorImpl::lookup_type(std::string tname, SourcePos pos) {
-    return env.lookup_type(tname, pos, fname);
+    return env.lookup_type(tname, pos);
 }
 
 void TranslatorImpl::push_scope(void) { env.push(); }
@@ -1422,7 +1406,7 @@ void TranslatorImpl::bind_type(std::string name, Type t) {
 Type TranslatorImpl::specialize_template(std::string template_name,
                                          const std::vector<Type> &args,
                                          SourcePos pos) {
-    return env.lookup_template(template_name, pos, fname)
+    return env.lookup_template(template_name, pos)
               .specialize(args);
 }
 
@@ -1430,7 +1414,7 @@ Struct<TemplateType> TranslatorImpl::respecialize_template(
         std::string template_name,
         const std::vector<TemplateType> &args,
         SourcePos pos) {
-    return env.lookup_template(template_name, pos, fname)
+    return env.lookup_template(template_name, pos)
               .respecialize(args);
 }
 

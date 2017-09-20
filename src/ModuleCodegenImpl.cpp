@@ -42,7 +42,7 @@ namespace Craeft {
 
 Type TypeCodegen::operator()(const AST::NamedType &it) {
     // TODO: Annotate type names with source positions.
-    return translator.lookup_type(it.name(), SourcePos(0, 0));
+    return translator.lookup_type(it.name(), it.pos());
 }
 
 Type TypeCodegen::operator()(const AST::Void &_) {
@@ -60,7 +60,7 @@ Type TypeCodegen::operator()(const AST::TemplatedType &t) {
         args.push_back(visit(*arg));
     }
 
-    return translator.specialize_template(t.name(), args, SourcePos(0, 0));
+    return translator.specialize_template(t.name(), args, t.pos());
 }
 
 /*****************************************************************************
@@ -74,7 +74,7 @@ TemplateType TemplateTypeCodegen::operator()(const AST::NamedType &it) {
         }
     }
     
-    return to_template(translator.lookup_type(it.name(), SourcePos(0, 0)));
+    return to_template(translator.lookup_type(it.name(), it.pos()));
 }
 
 TemplateType TemplateTypeCodegen::operator()(const AST::Void &_) {
@@ -92,7 +92,7 @@ TemplateType TemplateTypeCodegen::operator()(const AST::TemplatedType &t) {
         args.push_back(visit(*arg));
     }
 
-    return translator.respecialize_template(t.name(), args, SourcePos(0, 0));
+    return translator.respecialize_template(t.name(), args, t.pos());
 }
 
 /*****************************************************************************
@@ -105,7 +105,7 @@ void StatementCodegen::operator()(const AST::ExpressionStatement &expr) {
 
 void StatementCodegen::operator()(const AST::Assignment &assignment) {
 
-    LValueCodegen lc(translator, fname, _value_codegen);
+    LValueCodegen lc(translator, _value_codegen);
 
     auto addr = lc.visit(assignment.lhs());
     auto rhs  = _value_codegen.visit(assignment.rhs());
@@ -122,14 +122,14 @@ void StatementCodegen::operator()(const AST::VoidReturn &ret) {
 }
 
 void StatementCodegen::operator()(const AST::Declaration &decl) {
-    auto tg = TypeCodegen(translator, fname);
+    auto tg = TypeCodegen(translator);
     auto t = tg.visit(decl.type());
     translator.declare(decl.name().name(), t);
 }
 
 void StatementCodegen::operator()(const AST::CompoundDeclaration &cdecl) {
     std::string name = cdecl.name().name();
-    auto tg = TypeCodegen(translator, fname);
+    auto tg = TypeCodegen(translator);
     auto t = tg.visit(cdecl.type());
     Variable result = translator.declare(name, t);
     translator.add_store(result.get_val(),
@@ -163,8 +163,7 @@ void StatementCodegen::operator()(const AST::IfStatement &if_stmt) {
 
 ModuleCodegenImpl::ModuleCodegenImpl(std::string name, std::string triple,
                                      std::string fname)
-    : translator(name, fname, triple), fname(fname),
-      stmt_cg(translator, fname) {
+    : translator(name, fname, triple), stmt_cg(translator) {
 }
 
 void ModuleCodegenImpl::emit_ir(std::ostream &out) {
@@ -180,13 +179,12 @@ void ModuleCodegenImpl::emit_obj(int fd) {
 }
 
 void ModuleCodegenImpl::operator()(const AST::TypeDeclaration &td) {
-    throw Error("error", "type declarations not implemented",
-                fname, td.pos());
+    throw Error("error", "type declarations not implemented", td.pos());
 }
 
 void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
     std::vector<std::pair<std::string, std::shared_ptr<Type> > >fields;
-    TypeCodegen tg(translator, fname);
+    TypeCodegen tg(translator);
 
     for (const auto &decl: sd.members()) {
         auto t = std::make_shared<Type>(tg.visit(decl->type()));
@@ -201,7 +199,7 @@ void ModuleCodegenImpl::operator()(const AST::StructDeclaration &sd) {
 
 void ModuleCodegenImpl::operator()(const AST::TemplateStructDeclaration &s) {
     std::vector<std::pair<std::string, std::shared_ptr<TemplateType> > >fields;
-    TemplateTypeCodegen tg(translator, fname, s.argnames());
+    TemplateTypeCodegen tg(translator, s.argnames());
 
     for (const auto &decl: s.decl().members()) {
         auto t = std::make_shared<TemplateType>(tg.visit(decl->type()));
@@ -220,7 +218,7 @@ void ModuleCodegenImpl::operator()(const AST::TemplateStructDeclaration &s) {
 Function<> ModuleCodegenImpl::type_of_ast_decl(
         const AST::FunctionDeclaration &fd) {
     std::vector<std::shared_ptr<Type> > arg_types;
-    TypeCodegen tg(translator, fname);
+    TypeCodegen tg(translator);
 
     for (const auto &decl: fd.args()) {
         arg_types.push_back(std::make_shared<Type>(tg.visit(decl->type())));
@@ -291,7 +289,7 @@ void ModuleCodegenImpl::operator()(const AST::TemplateFunctionDefinition &f) {
     auto name = f.def()->signature().name();
 
     std::vector<std::shared_ptr<TemplateType> >arg_types;
-    TemplateTypeCodegen tg(translator, fname, f.argnames());
+    TemplateTypeCodegen tg(translator, f.argnames());
 
     for (const auto &decl: f.def()->signature().args()) {
         arg_types.push_back(std::make_shared<TemplateType>

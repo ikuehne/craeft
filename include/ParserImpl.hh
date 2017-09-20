@@ -38,7 +38,7 @@ namespace Craeft {
  */
 class ParserImpl {
 public:
-    ParserImpl(std::string fname);
+    ParserImpl(const std::string &fname);
 
     /**
      * @brief Parse the next expression from the lexer.
@@ -195,11 +195,6 @@ private:
         {".", 1400},
         {"->", 1400},
     };
-
-    /**
-     * @brief The name of the file being parsed.
-     */
-    std::string fname;
 };
 
 }

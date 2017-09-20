@@ -43,7 +43,6 @@ Value LValueCodegen::operator()(const AST::FieldAccess &fa) {
 
     throw Error("parser error",
                 "expected lvalue structure in lvalue access",
-                _fname,
                 fa.pos());
 }
 
@@ -83,7 +82,7 @@ Value ValueCodegen::operator()(const AST::FieldAccess &access) {
 
 Value ValueCodegen::operator()(const AST::Reference &ref) {
     /* LValue codegenerators return addresses to the l-value. */
-    LValueCodegen lc(_translator, _fname, *this);
+    LValueCodegen lc(_translator, *this);
     /* So just use one of those to codegen the referand. */
     return lc.visit(ref.referand());
 }
@@ -134,8 +133,7 @@ Value ValueCodegen::operator()(const AST::Binop &binop) {
         return _translator.bool_or(lhs, rhs, pos);
     } else {
         throw Error("internal error", "unrecognized operator \"" + binop.op()
-                                                                 + "\"",
-                    _fname, pos);
+                                                                 + "\"", pos);
                     
     }
 }
@@ -151,7 +149,7 @@ Value ValueCodegen::operator()(const AST::FunctionCall &call) {
 }
 
 Value ValueCodegen::operator()(const AST::TemplateFunctionCall &call) {
-    TypeCodegen tg(_translator, _fname);
+    TypeCodegen tg(_translator);
 
     std::vector<Type> tmpl_args;
 
@@ -169,7 +167,7 @@ Value ValueCodegen::operator()(const AST::TemplateFunctionCall &call) {
 }
 
 Value ValueCodegen::operator()(const AST::Cast &cast) {
-    auto dest_ty = TypeCodegen(_translator, _fname).visit(cast.type());
+    auto dest_ty = TypeCodegen(_translator).visit(cast.type());
 
     auto cast_val = visit(cast.arg());
 

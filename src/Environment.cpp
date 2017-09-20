@@ -73,15 +73,13 @@ bool Environment::bound(const std::string &name) const {
 }
 
 Variable Environment::lookup_identifier(const std::string &name,
-                                        SourcePos pos, std::string &fname)
-        const {
+                                        SourcePos pos) const {
     assert(!isupper(name[0]));
 
     try {
         return ident_map[name];
     } catch (KeyNotPresentException) {
-        throw Error("name error", "variable \"" + name + "\" not found",
-                    fname, pos);
+        throw Error("name error", "variable \"" + name + "\" not found", pos);
     }
 }
 
@@ -93,48 +91,41 @@ Variable Environment::add_identifier(std::string name, Value val) {
 
 void Environment::add_type(std::string name, Type t) {
     type_map.bind(name, t);
-
-    std::string fname("hello, there!");
-    lookup_type(name, SourcePos(0, 0), fname);
 }
 
 const Type &Environment::lookup_type(const std::string &tname,
-                                     SourcePos pos,
-                                     std::string &fname) const {
+                                     SourcePos pos) const {
     assert(isupper(tname[0]));
 
     try {
         return type_map[tname];
     } catch (KeyNotPresentException) {
-        throw Error("name error", "type \"" + tname + "\" not found",
-                    fname, pos);
+        throw Error("name error", "type \"" + tname + "\" not found", pos);
     }
 }
 
 const TemplateStruct &Environment::lookup_template(
-        const std::string &tname, SourcePos pos, std::string &fname) const {
+        const std::string &tname, SourcePos pos) const {
     assert(isupper(tname[0]));
 
     try {
         return template_map[tname];
     } catch (KeyNotPresentException) {
-        throw Error("name error", "template type \"" + tname + "\" not "
-                    "found",
-                    fname, pos);
+        throw Error("name error", "template type \"" + tname + "\" not found",
+                    pos);
     }
 }
 
 const TemplateValue &Environment::lookup_template_func(
         const std::string &func_name,
-        SourcePos pos,
-        std::string &fname) const {
+        SourcePos pos) const {
     assert(islower(func_name[0]));
 
     try {
         return templatefunc_map[func_name];
     } catch (KeyNotPresentException) {
         throw Error("name error", "template function \"" + func_name
-                                + "\" not found", fname, pos);
+                                + "\" not found", pos);
     }
 }
 }

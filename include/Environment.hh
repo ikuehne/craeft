@@ -130,8 +130,7 @@ public:
      *
      * @param name Must be a valid identifier.
      */
-    Variable lookup_identifier(const std::string &name,
-                               SourcePos pos, std::string &fname) const;
+    Variable lookup_identifier(const std::string &name, SourcePos pos) const;
 
     Variable add_identifier(std::string name, Value val);
 
@@ -150,17 +149,13 @@ public:
      *
      * @param tname Must be a valid type name.
      */
-    const Type &lookup_type(const std::string &tname,
-                            SourcePos pos,
-                            std::string &fname) const;
+    const Type &lookup_type(const std::string &tname, SourcePos pos) const;
 
     const TemplateStruct &lookup_template(const std::string &tname,
-                                          SourcePos pos,
-                                          std::string &fname) const;
+                                          SourcePos pos) const;
 
     const TemplateValue &lookup_template_func(const std::string &func_name,
-                                              SourcePos pos,
-                                              std::string &fname) const;
+                                              SourcePos pos) const;
 
 private:
     Scope<Variable> ident_map;

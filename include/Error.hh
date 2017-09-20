@@ -39,9 +39,12 @@ namespace Craeft {
 struct SourcePos {
     uint16_t charno;
     uint16_t lineno;
+    std::shared_ptr<std::string> fname;
 
-    SourcePos(uint16_t charno, uint16_t lineno): charno(charno),
-                                                 lineno(lineno) {}
+    SourcePos(uint16_t charno,
+              uint16_t lineno,
+              std::shared_ptr<std::string> fname):
+        charno(charno), lineno(lineno), fname(fname) {}
 };
 
 /**
@@ -59,7 +62,7 @@ public:
      * @param filename The file in which the error occured.
      * @param pos The position in the source where the error occured.
      */
-    Error(std::string header, std::string message, std::string filename, SourcePos pos);
+    Error(std::string header, std::string message, SourcePos pos);
 
     /**
      * @brief Print the error to the given stream.
@@ -68,7 +71,6 @@ public:
 private:
     std::string header;
     std::string msg;
-    std::string fname;
     SourcePos pos;
 };
 

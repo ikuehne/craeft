@@ -25,7 +25,7 @@
 
 namespace Craeft {
 
-Parser::Parser(std::string fname): pimpl(new ParserImpl(fname)) {}
+Parser::Parser(const std::string &fname): pimpl(new ParserImpl(fname)) {}
 
 Parser::~Parser() {}
 

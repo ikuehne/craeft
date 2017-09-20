@@ -44,16 +44,14 @@ class ValueCodegen;
 class LValueCodegen: public AST::LValueVisitor<Value> {
 public:
     LValueCodegen(Translator &translator,
-                  const std::string &fname,
                   ValueCodegen &eg)
-        : _fname(fname), _translator(translator), _eg(eg) {}
+        : _translator(translator), _eg(eg) {}
 
 private:
     Value operator()(const AST::Variable &) override;
     Value operator()(const AST::Dereference &) override;
     Value operator()(const AST::FieldAccess &) override;
 
-    std::string _fname;
     Translator &_translator;
     ValueCodegen &_eg;
 };
@@ -63,10 +61,9 @@ private:
  */
 class ValueCodegen: public AST::ExpressionVisitor<Value> {
 public:
-    ValueCodegen(Translator &translator, const std::string &fname)
+    ValueCodegen(Translator &translator)
         : _translator(translator),
-          _ctx(_translator.get_ctx()),
-          _fname(fname) {}
+          _ctx(_translator.get_ctx()) {}
 
 private:
     Value operator()(const AST::IntLiteral &) override;
@@ -84,7 +81,6 @@ private:
 
     Translator &_translator;
     llvm::LLVMContext &_ctx;
-    std::string _fname;
 };
 
 }

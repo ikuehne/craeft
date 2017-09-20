@@ -77,15 +77,14 @@ static std::vector<std::string> &get_lines(std::string f) {
     }
 }
 
-Error::Error(std::string header, std::string msg,
-             std::string fname, SourcePos pos)
-    : header(header), msg(msg), fname(fname), pos(pos) {}
+Error::Error(std::string header, std::string msg, SourcePos pos)
+    : header(header), msg(msg), pos(pos) {}
 
 void Error::emit(std::ostream &out) {
-    const std::vector<std::string> &lines = get_lines(fname);
+    const std::vector<std::string> &lines = get_lines(*pos.fname);
     if (pos.charno > 0) pos.charno--;
 
-    out << fname
+    out << *pos.fname
         << ":" << pos.lineno << ":" << pos.charno + 1
         << ": " << TERM_ERR << header << ": " << TERM_RESET
         << msg << "\n\t"
