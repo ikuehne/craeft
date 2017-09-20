@@ -21,7 +21,7 @@
  */
 
 #include "ValueCodegen.hh"
-#include "ModuleCodegenImpl.hh"
+#include "TypeCodegen.hh"
 
 namespace Craeft {
 
@@ -29,10 +29,9 @@ Value LValueCodegen::operator()(const AST::Variable &var) {
     return _translator.get_identifier_addr(var.name(), var.pos());
 }
 
-Value LValueCodegen::operator()(
-        const AST::Dereference &deref) {
+Value LValueCodegen::operator()(const AST::Dereference &deref) {
     /* If the dereference is an l-value, return just the referand. */
-    return _eg.visit(deref.referand());
+    return ValueCodegen(_translator).visit(deref.referand());
 }
 
 Value LValueCodegen::operator()(const AST::FieldAccess &fa) {
@@ -81,10 +80,9 @@ Value ValueCodegen::operator()(const AST::FieldAccess &access) {
 }
 
 Value ValueCodegen::operator()(const AST::Reference &ref) {
-    /* LValue codegenerators return addresses to the l-value. */
-    LValueCodegen lc(_translator, *this);
-    /* So just use one of those to codegen the referand. */
-    return lc.visit(ref.referand());
+    /* LValue codegenerators return addresses to the l-value, so just use one
+     * of those to codegen the referand. */
+    return LValueCodegen(_translator).visit(ref.referand());
 }
 
 Value ValueCodegen::operator()(const AST::Variable &var) {

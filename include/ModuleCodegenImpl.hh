@@ -42,63 +42,6 @@
 
 namespace Craeft {
 
-class TypeCodegen: public AST::TypeVisitor<Type> {
-public:
-    TypeCodegen(Translator &translator)
-        : translator(translator) {}
-
-    ~TypeCodegen(void) override {}
-
-private:
-    Type operator()(const AST::NamedType &) override;
-    Type operator()(const AST::Void &) override;
-    Type operator()(const AST::Pointer &) override;
-    Type operator()(const AST::TemplatedType &) override;
-
-    Translator &translator;
-};
-
-class TemplateTypeCodegen: public AST::TypeVisitor<TemplateType> {
-public:
-    TemplateTypeCodegen(Translator &translator,
-                        std::vector<std::string> args)
-        : translator(translator), args(args) {}
-
-    ~TemplateTypeCodegen(void) override {}
-
-private:
-    TemplateType operator()(const AST::NamedType &) override;
-    TemplateType operator()(const AST::Void &) override;
-    TemplateType operator()(const AST::Pointer &) override;
-    TemplateType operator()(const AST::TemplatedType &) override;
-
-    Translator &translator;
-    std::vector<std::string> args;
-};
-
-class StatementCodegen: public AST::StatementVisitor<void> {
-public:
-    StatementCodegen(Translator &translator)
-        : translator(translator),
-          _value_codegen(translator) {}
-private:
-    // Visitors of different AST statement types.
-    void operator()(const AST::ExpressionStatement &);
-    void operator()(const AST::VoidReturn &);
-    void operator()(const AST::Return &);
-    void operator()(const AST::Assignment &assignment);
-    void operator()(const AST::Declaration &);
-    void operator()(const AST::CompoundDeclaration &);
-    void operator()(const AST::IfStatement &);
-
-    Translator &translator;
-
-    /**
-     * @brief The code generator for expressions.
-     */
-    ValueCodegen _value_codegen;
-};
-
 /**
  * @brief Class containing actual implementation of ModuleCodegen methods.
  *
@@ -137,11 +80,6 @@ private:
      * For error messages.
      */
     std::string fname;
-
-    /**
-     * @brief The code generator for statements.
-     */
-    StatementCodegen stmt_cg;
 
     /* Utilities. */
     Function<> type_of_ast_decl(const AST::FunctionDeclaration &fd);

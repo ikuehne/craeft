@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include "llvm/Support/Host.h"
-
 #include "AST/Expressions.hh"
 #include "Translator.hh"
 #include "Value.hh"
@@ -43,9 +41,7 @@ class ValueCodegen;
  */
 class LValueCodegen: public AST::LValueVisitor<Value> {
 public:
-    LValueCodegen(Translator &translator,
-                  ValueCodegen &eg)
-        : _translator(translator), _eg(eg) {}
+    LValueCodegen(Translator &translator): _translator(translator) {}
 
 private:
     Value operator()(const AST::Variable &) override;
@@ -53,7 +49,6 @@ private:
     Value operator()(const AST::FieldAccess &) override;
 
     Translator &_translator;
-    ValueCodegen &_eg;
 };
 
 /**
@@ -62,8 +57,7 @@ private:
 class ValueCodegen: public AST::ExpressionVisitor<Value> {
 public:
     ValueCodegen(Translator &translator)
-        : _translator(translator),
-          _ctx(_translator.get_ctx()) {}
+        : _translator(translator), _ctx(_translator.get_ctx()) {}
 
 private:
     Value operator()(const AST::IntLiteral &) override;
