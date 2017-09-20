@@ -95,191 +95,26 @@ TemplateType TemplateTypeCodegen::operator()(const AST::TemplatedType &t) {
     return translator.respecialize_template(t.name(), args, SourcePos(0, 0));
 }
 
-
-/*****************************************************************************
- * Code generation for L-Values.
- */
-
-Value LValueCodegen::operator()(const AST::Variable &var) {
-    return translator.get_identifier_addr(var.name(), var.pos());
-}
-
-Value LValueCodegen::operator()(
-        const AST::Dereference &deref) {
-    /* If the dereference is an l-value, return just the referand. */
-    return eg.visit(deref.referand());
-}
-
-Value LValueCodegen::operator()(const AST::FieldAccess &fa) {
-    if (auto *structure = llvm::dyn_cast<AST::LValue>(&fa.structure())) {
-        return translator.field_address(
-                visit(*structure), fa.field(), fa.pos());
-    }
-
-    throw Error("parser error",
-                "expected lvalue structure in lvalue access",
-                fname,
-                fa.pos());
-}
-
-/*****************************************************************************
- * Code generation for expressions.
- */
-
-Value ExpressionCodegen::operator()(const AST::IntLiteral &lit) {
-    SignedInt type(64);
-    auto &ctx = translator.get_ctx();
-    return Value(llvm::ConstantInt::get(type.to_llvm(ctx), lit.value(), true),
-                 type);
-}
-
-Value ExpressionCodegen::operator()(const AST::UIntLiteral &lit) {
-    UnsignedInt type(64);
-    auto &ctx = translator.get_ctx();
-    return Value(llvm::ConstantInt::get(type.to_llvm(ctx), lit.value(), true),
-                 type);
-}
-
-Value ExpressionCodegen::operator()(const AST::FloatLiteral &lit) {
-    Float type(DoublePrecision);
-    auto &ctx = translator.get_ctx();
-    return Value(llvm::ConstantFP::get(ctx, llvm::APFloat(lit.value())),
-                 type);
-}
-
-Value ExpressionCodegen::operator()(const AST::StringLiteral &lit) {
-    return translator.string_literal(lit.value());
-}
-
-Value ExpressionCodegen::operator()(const AST::Dereference &deref) {
-    return translator.add_load(visit(deref.referand()), deref.pos());
-}
-
-Value ExpressionCodegen::operator()(const AST::FieldAccess &access) {
-    auto lhs = visit(access.structure());
-
-    return translator.field_access(lhs, access.field(), access.pos());
-}
-
-Value ExpressionCodegen::operator()(const AST::Reference &ref) {
-    /* LValue codegenerators return addresses to the l-value. */
-    LValueCodegen lc(translator, fname, *this);
-    /* So just use one of those to codegen the referand. */
-    return lc.visit(ref.referand());
-}
-
-Value ExpressionCodegen::operator()(const AST::Variable &var) {
-    return translator.get_identifier_value(var.name(), var.pos());
-}
-
-/*****************************************************************************
- * Arithmetic expressions.
- */
-
-Value ExpressionCodegen::operator()(const AST::Binop &binop) {
-    auto lhs = visit(binop.lhs());
-    auto rhs = visit(binop.rhs());
-
-    auto pos = binop.pos();
-
-    if (binop.op() == "<<") {
-        return translator.left_shift(lhs, rhs, pos);
-    } else if (binop.op() == ">>") {
-        return translator.right_shift(lhs, rhs, pos);
-    } else if (binop.op() == "&") {
-        return translator.bit_and(lhs, rhs, pos);
-    } else if (binop.op() == "|") {
-        return translator.bit_or(lhs, rhs, pos);
-    } else if (binop.op() == "^") {
-        return translator.bit_xor(lhs, rhs, pos);
-    } else if (binop.op() == "+") {
-        return translator.add(lhs, rhs, pos);
-    } else if (binop.op() == "-") {
-        return translator.sub(lhs, rhs, pos);
-    } else if (binop.op() == "*") {
-        return translator.mul(lhs, rhs, pos);
-    } else if (binop.op() == "/") {
-        return translator.div(lhs, rhs, pos);
-    } else if (binop.op() == "==") {
-        return translator.equal(lhs, rhs, pos);
-    } else if (binop.op() == "!=") {
-        return translator.nequal(lhs, rhs, pos);
-    } else if (binop.op() == "<") {
-        return translator.less(lhs, rhs, pos);
-    } else if (binop.op() == "<=") {
-        return translator.lesseq(lhs, rhs, pos);
-    } else if (binop.op() == ">") {
-        return translator.greater(lhs, rhs, pos);
-    } else if (binop.op() == ">=") {
-        return translator.greatereq(lhs, rhs, pos);
-    } else if (binop.op() == "&&") {
-        return translator.bool_and(lhs, rhs, pos);
-    } else if (binop.op() == "||") {
-        return translator.bool_or(lhs, rhs, pos);
-    } else {
-        throw Error("internal error", "unrecognized operator \"" + binop.op()
-                                                                 + "\"",
-                    fname, pos);
-                    
-    }
-}
-
-Value ExpressionCodegen::operator()(const AST::FunctionCall &call) {
-    std::vector<Value> args;
-
-    for (const auto &arg: call.args()) {
-        args.push_back(visit(*arg));
-    }
-
-    return translator.call(call.fname(), args, call.pos());
-}
-
-Value ExpressionCodegen::operator()(const AST::TemplateFunctionCall &call) {
-    TypeCodegen tg(translator, fname);
-
-    std::vector<Type> tmpl_args;
-
-    for (const auto &arg: call.type_args()) {
-        tmpl_args.push_back(tg.visit(*arg));
-    }
-
-    std::vector<Value> args;
-
-    for (const auto &arg: call.value_args()) {
-        args.push_back(visit(*arg));
-    }
-
-    return translator.call(call.fname(), tmpl_args, args, call.pos());
-}
-
-Value ExpressionCodegen::operator()(const AST::Cast &cast) {
-    auto dest_ty = TypeCodegen(translator, fname).visit(cast.type());
-
-    auto cast_val = visit(cast.arg());
-
-    return translator.cast(cast_val, dest_ty, cast.pos());
-}
-
 /*****************************************************************************
  * Statement codegen.
  */
 
 void StatementCodegen::operator()(const AST::ExpressionStatement &expr) {
-    expr_codegen.visit(expr.expr());
+    _value_codegen.visit(expr.expr());
 }
 
 void StatementCodegen::operator()(const AST::Assignment &assignment) {
 
-    LValueCodegen lc(translator, fname, expr_codegen);
+    LValueCodegen lc(translator, fname, _value_codegen);
 
     auto addr = lc.visit(assignment.lhs());
-    auto rhs  = expr_codegen.visit(assignment.rhs());
+    auto rhs  = _value_codegen.visit(assignment.rhs());
 
     translator.add_store(addr, rhs, assignment.pos());
 }
 
 void StatementCodegen::operator()(const AST::Return &ret) {
-    translator.return_(expr_codegen.visit(ret.retval()), ret.pos());
+    translator.return_(_value_codegen.visit(ret.retval()), ret.pos());
 }
 
 void StatementCodegen::operator()(const AST::VoidReturn &ret) {
@@ -298,13 +133,13 @@ void StatementCodegen::operator()(const AST::CompoundDeclaration &cdecl) {
     auto t = tg.visit(cdecl.type());
     Variable result = translator.declare(name, t);
     translator.add_store(result.get_val(),
-                         expr_codegen.visit(cdecl.rhs()),
+                         _value_codegen.visit(cdecl.rhs()),
                          cdecl.pos());
 }
 
 void StatementCodegen::operator()(const AST::IfStatement &if_stmt) {
     /* Generate code for the condition. */
-    auto cond = expr_codegen.visit(if_stmt.condition());
+    auto cond = _value_codegen.visit(if_stmt.condition());
 
     auto structure = translator.create_ifthenelse(cond, if_stmt.pos());
 

@@ -38,6 +38,7 @@
 #include "AST.hh"
 #include "Environment.hh"
 #include "Translator.hh"
+#include "ValueCodegen.hh"
 
 namespace Craeft {
 
@@ -78,59 +79,13 @@ private:
     std::vector<std::string> args;
 };
 
-class ExpressionCodegen;
-
-class LValueCodegen: public AST::LValueVisitor<Value> {
-public:
-    LValueCodegen(Translator &translator,
-                  const std::string &fname,
-                  ExpressionCodegen &eg)
-        : fname(fname), translator(translator), eg(eg) {}
-
-
-private:
-    Value operator()(const AST::Variable &) override;
-    Value operator()(const AST::Dereference &) override;
-    Value operator()(const AST::FieldAccess &) override;
-
-    std::string fname;
-    Translator &translator;
-    ExpressionCodegen &eg;
-};
-
-class ExpressionCodegen: public AST::ExpressionVisitor<Value> {
-public:
-    ExpressionCodegen(Translator &translator,
-                      const std::string &fname)
-        : translator(translator), fname(fname) {}
-
-
-private:
-    // Visitors of different AST statement types.
-    Value operator()(const AST::IntLiteral &) override;
-    Value operator()(const AST::UIntLiteral &) override;
-    Value operator()(const AST::FloatLiteral &) override;
-    Value operator()(const AST::StringLiteral &) override;
-    Value operator()(const AST::Variable &) override;
-    Value operator()(const AST::Reference &) override;
-    Value operator()(const AST::Dereference &) override;
-    Value operator()(const AST::FieldAccess &) override;
-    Value operator()(const AST::Binop &) override;
-    Value operator()(const AST::FunctionCall &) override;
-    Value operator()(const AST::TemplateFunctionCall &) override;
-    Value operator()(const AST::Cast &) override;
-
-    Translator &translator;
-    std::string fname;
-};
-
 class StatementCodegen: public AST::StatementVisitor<void> {
 public:
     StatementCodegen(Translator &translator,
                      const std::string &fname)
         : translator(translator),
           fname(fname),
-          expr_codegen(translator, fname) {}
+          _value_codegen(translator, fname) {}
 private:
     // Visitors of different AST statement types.
     void operator()(const AST::ExpressionStatement &);
@@ -148,7 +103,7 @@ private:
     /**
      * @brief The code generator for expressions.
      */
-    ExpressionCodegen expr_codegen;
+    ValueCodegen _value_codegen;
 };
 
 /**
