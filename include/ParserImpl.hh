@@ -26,7 +26,7 @@
 
 #include <map>
 
-#include "AST.hh"
+#include "AST/Toplevel.hh"
 #include "Lexer.hh"
 
 namespace Craeft {

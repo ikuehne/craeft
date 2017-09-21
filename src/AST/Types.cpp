@@ -1,5 +1,5 @@
 /**
- * @file AST/Type.cpp
+ * @file AST/Types.cpp
  */
 
 /* Craeft: a new systems programming language.

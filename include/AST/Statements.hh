@@ -1,5 +1,5 @@
 /**
- * @file Statements.hh
+ * @file AST/Statements.hh
  *
  * @brief The AST nodes that represent statements.
  */
@@ -42,7 +42,7 @@ namespace AST {
  *
  * Uses LLVM RTTI.
  */
-class Statement {
+class Statement: public ASTNode {
 public:
     enum StatementKind {
         ExpressionStatement,
@@ -54,20 +54,13 @@ public:
         IfStatement
     };
 
-    StatementKind kind(void) const {
-        return _kind;
-    }
+    StatementKind kind(void) const { return _kind; }
 
     virtual ~Statement() {}
-    SourcePos pos(void) const { return _pos; }
 
-    void set_pos(SourcePos pos) { _pos = pos; }
-
-    Statement(StatementKind kind, SourcePos pos): _kind(kind), _pos(pos) {}
-
+    Statement(StatementKind kind, SourcePos pos): ASTNode(pos), _kind(kind) {}
 private:
     StatementKind _kind;
-    SourcePos _pos;
 };
 
 #define STATEMENT_CLASS(X)\

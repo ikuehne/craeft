@@ -1,5 +1,5 @@
 /**
- * @file Types.hh
+ * @file AST/Types.hh
  *
  * @brief The AST nodes that represent types.
  */
@@ -30,7 +30,7 @@
 
 #include "llvm/Support/Casting.h"
 
-#include "Error.hh"
+#include "AST/AST.hh"
 
 namespace Craeft {
 
@@ -41,7 +41,7 @@ namespace AST {
  *
  * Uses LLVM RTTI.
  */
-class Type {
+class Type: public ASTNode {
 public:
     enum TypeKind {
         NamedType,
@@ -50,19 +50,14 @@ public:
         Pointer
     };
 
-    TypeKind kind(void) const {
-        return _kind;
-    }
-
-    SourcePos pos(void) const { return _pos; }
+    TypeKind kind(void) const { return _kind; }
 
     virtual ~Type() {}
 
-    Type(TypeKind kind, SourcePos pos): _kind(kind), _pos(pos) {}
+    Type(TypeKind kind, SourcePos pos): ASTNode(pos), _kind(kind) {}
 
 private:
     TypeKind _kind;
-    SourcePos _pos;
 };
 
 #define TYPE_CLASS(X)\

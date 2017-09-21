@@ -1,7 +1,5 @@
 /**
- * @file AST.hh
- *
- * @brief Convenience header which pulls in all AST classes.
+ * @file AST/AST.hh
  */
 
 /* Craeft: a new systems programming language.
@@ -24,7 +22,29 @@
 
 #pragma once
 
-#include "AST/Expressions.hh"
-#include "AST/Types.hh"
-#include "AST/Statements.hh"
-#include "AST/Toplevel.hh"
+#include "Error.hh"
+
+namespace Craeft {
+
+namespace AST {
+
+/**
+ * @brief Nodes in the abstract syntax tree.
+ */
+class ASTNode {
+public:
+    explicit ASTNode(SourcePos pos): _pos(pos) {}
+    virtual ~ASTNode() {}
+
+    /**
+     * The only thing all AST nodes have in common is a location in the
+     * source.
+     */
+    SourcePos pos(void) const { return _pos; }
+    void set_pos(SourcePos pos) { _pos = pos; }
+private:
+    SourcePos _pos;
+};
+
+}
+}

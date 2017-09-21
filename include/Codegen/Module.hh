@@ -26,7 +26,7 @@
 
 #include "llvm/Support/Host.h"
 
-#include "AST.hh"
+#include "AST/Toplevel.hh"
 
 namespace Craeft {
 

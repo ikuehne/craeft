@@ -1,5 +1,5 @@
 /**
- * @file Toplevel.hh
+ * @file AST/Toplevel.hh
  *
  * @brief The AST nodes that represent top-level forms.
  */
@@ -41,7 +41,7 @@ namespace AST {
  *
  * Uses LLVM RTTI.
  */
-class Toplevel {
+class Toplevel: public ASTNode {
 public:
     enum ToplevelKind {
         TypeDeclaration,
@@ -52,20 +52,13 @@ public:
         TemplateFunctionDefinition
     };
 
-    ToplevelKind kind(void) const {
-        return _kind;
-    }
+    ToplevelKind kind(void) const { return _kind; }
 
     virtual ~Toplevel() {}
-    SourcePos pos(void) const { return _pos; }
 
-    void set_pos(SourcePos pos) { _pos = pos; }
-
-    Toplevel(ToplevelKind kind, SourcePos pos): _kind(kind), _pos(pos) {}
-
+    Toplevel(ToplevelKind kind, SourcePos pos): ASTNode(pos), _kind(kind) {}
 private:
     ToplevelKind _kind;
-    SourcePos _pos;
 };
 
 #define TOPLEVEL_CLASS(X)\

@@ -27,7 +27,7 @@
 #include <memory>
 #include <string>
 
-#include "AST.hh"
+#include "AST/Toplevel.hh"
 
 namespace Craeft {
 

@@ -1,5 +1,5 @@
 /**
- * @file Expressions.hh
+ * @file AST/Expressions.hh
  *
  * @brief The AST nodes that represent expressions.
  */
@@ -30,7 +30,7 @@
 
 #include "llvm/Support/Casting.h"
 
-#include "Error.hh"
+#include "AST/AST.hh"
 #include "AST/Types.hh"
 
 namespace Craeft {
@@ -42,7 +42,7 @@ namespace AST {
  *
  * Uses LLVM RTTI.
  */
-class Expression {
+class Expression: public ASTNode {
 public:
     enum ExpressionKind {
         IntLiteral,
@@ -59,20 +59,14 @@ public:
         Cast
     };
 
-    ExpressionKind kind(void) const {
-        return _kind;
-    }
+    ExpressionKind kind(void) const { return _kind; }
 
     virtual ~Expression() {}
-    SourcePos pos(void) const { return _pos; }
 
-    void set_pos(SourcePos pos) { _pos = pos; }
-
-    Expression(ExpressionKind kind, SourcePos pos): _kind(kind), _pos(pos) {}
-
+    Expression(ExpressionKind kind, SourcePos pos)
+        : ASTNode(pos), _kind(kind) {}
 private:
     ExpressionKind _kind;
-    SourcePos _pos;
 };
 
 /**
