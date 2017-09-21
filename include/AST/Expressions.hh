@@ -37,6 +37,11 @@ namespace Craeft {
 
 namespace AST {
 
+/**
+ * @brief Expressions: anything that evaluates to a value.
+ *
+ * Uses LLVM RTTI.
+ */
 class Expression {
 public:
     enum ExpressionKind {
@@ -70,6 +75,9 @@ private:
     SourcePos _pos;
 };
 
+/**
+ * @brief LValues: anything that can be assigned to.
+ */
 class LValue: public Expression {
 public:
     static bool classof(const Expression *e) {
@@ -80,6 +88,11 @@ public:
 
     LValue(ExpressionKind kind, SourcePos pos): Expression(kind, pos) {}
 };
+
+/*
+ * These expand to some boilerplate code necessary to inherit from
+ * *Expression* and *LValue*.  They are `undef`ed later to limit the damage.
+ */
 
 #define EXPRESSION_CLASS(X)\
     static bool classof(const Expression *e) {\
@@ -93,6 +106,12 @@ public:
     }\
     EXPRESSION_CLASS(X)
 
+
+/**
+ * @defgroup Literals
+ */
+
+/** @{ */
 
 class IntLiteral: public Expression {
 public:
@@ -142,6 +161,8 @@ private:
     std::string _value;
 };
 
+/** @} */
+
 class Variable: public LValue {
 public:
     Variable(const std::string &name, SourcePos pos)
@@ -155,6 +176,9 @@ private:
     std::string _name;
 };
 
+/**
+ * @brief A use of the address-of operator.
+ */
 class Reference: public Expression {
 public:
     Reference(std::unique_ptr<LValue> referand, SourcePos pos)
@@ -164,11 +188,16 @@ public:
     const LValue &referand(void) const { return *_referand; }
 
     EXPRESSION_CLASS(Reference);
-
 private:
+    /*
+     * Only l-values can have their address taken.
+     */
     std::unique_ptr<LValue> _referand;
 };
 
+/**
+ * @brief An application of the dereference operator.
+ */
 class Dereference: public LValue {
 public:
     Dereference(std::unique_ptr<Expression> referand, SourcePos pos)
@@ -182,6 +211,9 @@ private:
     std::unique_ptr<Expression> _referand;
 };
 
+/**
+ * @brief Binary operator applications (+, >, -, etc.).
+ */
 class Binop: public Expression {
 public:
     Binop(const std::string &op,
@@ -198,16 +230,18 @@ public:
     const Expression &lhs(void) const { return *_lhs; }
     const Expression &rhs(void) const { return *_rhs; }
 
+    /**
+     * @brief Release ownership of the left hand side to the caller.
+     *
+     * Invalidates the Binop.  Client code should probably be refactored to
+     * render this unnecessary.
+     */
     std::unique_ptr<Expression> release_lhs(void) {
-        std::unique_ptr<Expression> result;
-        std::swap(_lhs, result);
-        return result;
+        return std::move(_lhs);
     }
 
     std::unique_ptr<Expression> release_rhs(void) {
-        std::unique_ptr<Expression> result;
-        std::swap(_rhs, result);
-        return result;
+        return std::move(_rhs);
     }
 
     EXPRESSION_CLASS(Binop);
@@ -265,6 +299,9 @@ private:
     std::vector<std::unique_ptr<Expression>> _value_args;
 };
 
+/**
+ * @brief Type casts.
+ */
 class Cast: public Expression {
 public:
     Cast(std::unique_ptr<Type> type,
@@ -283,6 +320,9 @@ private:
     std::unique_ptr<Expression> _arg;
 };
 
+/**
+ * @brief Accesses to struct fields.
+ */
 class FieldAccess: public LValue {
 public:
     FieldAccess(std::unique_ptr<Expression> structure,
@@ -296,7 +336,6 @@ public:
     const std::string &field(void) const { return _field; }
 
     LVALUE_CLASS(FieldAccess);
-
 private:
     std::unique_ptr<Expression> _structure;
     std::string _field;
@@ -305,6 +344,12 @@ private:
 #undef EXPRESSION_CLASS
 #undef LVALUE_CLASS
 
+/**
+ * @brief Visitor for Expression ASTs.
+ *
+ * Parameterized over the return type.  Derived classes should implement
+ * operator().
+ */
 template<typename Result>
 class ExpressionVisitor {
 public:
@@ -344,6 +389,12 @@ private:
     virtual Result operator()(const Cast &) = 0;
 };
 
+/**
+ * @brief "Consuming" visitor for an Expression AST.
+ *
+ * Takes ownership of the host AST.  Used to implement some transformations
+ * without copying the entire tree.
+ */
 template<typename Result>
 class ConsumingExpressionVisitor {
 public:
@@ -387,6 +438,9 @@ private:
     virtual Result operator()(std::unique_ptr<Cast>) = 0;
 };
 
+/**
+ * @brief Visitor for L-Value ASTs.
+ */
 template<typename Result>
 class LValueVisitor {
 public:
@@ -411,9 +465,10 @@ private:
     virtual Result operator()(const FieldAccess &) = 0;
 };
 
+/**
+ * @brief Pretty-print the given expression to the given stream.
+ */
 void print_expr(const Expression &expr, std::ostream &out);
 
 }
-
 }
-

@@ -76,10 +76,6 @@ TranslatorImpl::TranslatorImpl(std::string module_name, std::string filename,
     auto llvm_target =
         llvm::TargetRegistry::lookupTarget("", target_triple, error);
 
-    // Print an error and exit if we couldn't find the requested target.
-    // This generally occurs if we've forgotten to initialise the
-    // TargetRegistry or we have a bogus target triple.
-
     /* TODO: fix this to properly handle the error. */
     if (!llvm_target) {
         llvm::errs() << error;

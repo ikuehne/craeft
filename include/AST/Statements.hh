@@ -37,6 +37,11 @@ namespace Craeft {
 
 namespace AST {
 
+/**
+ * @brief ASTs for statements.
+ *
+ * Uses LLVM RTTI.
+ */
 class Statement {
 public:
     enum StatementKind {
@@ -71,6 +76,9 @@ private:
     }\
     ~X(void) override {}
 
+/**
+ * @brief A statement consisting of an expression (e.g. `1 + 1;`).
+ */
 class ExpressionStatement: public Statement {
 public:
     explicit ExpressionStatement(std::unique_ptr<Expression> expr)
@@ -84,6 +92,9 @@ private:
     std::unique_ptr<Expression> _expr;
 };
 
+/**
+ * @brief Return statement with a value (as opposed to a void return).
+ */
 class Return: public Statement {
 public:
     Return(std::unique_ptr<Expression> retval, SourcePos pos)
@@ -96,12 +107,18 @@ private:
     std::unique_ptr<Expression> _retval;
 };
 
+/**
+ * @brief Void return statement (`return;`).
+ */
 class VoidReturn: public Statement {
 public:
     VoidReturn(SourcePos pos): Statement(StatementKind::VoidReturn, pos) {}
     STATEMENT_CLASS(VoidReturn);
 };
 
+/**
+ * @brief Variable declaration.
+ */
 class Declaration: public Statement {
 public:
     Declaration(std::unique_ptr<Type> type,
@@ -121,6 +138,9 @@ private:
     Variable _name;
 };
 
+/**
+ * @brief Assignments (with `=`).
+ */
 class Assignment: public Statement {
 public:
     Assignment(std::unique_ptr<LValue> lhs,
@@ -139,6 +159,9 @@ private:
     std::unique_ptr<Expression> _rhs;
 };
 
+/**
+ * @brief A declaration combined with an assignment (`I32 x = 5;`).
+ */
 class CompoundDeclaration: public Statement {
 public:
     CompoundDeclaration(std::unique_ptr<Type> type,
@@ -161,6 +184,9 @@ private:
     std::unique_ptr<Expression> _rhs;
 };
 
+/**
+ * @brief An `if/else` block.
+ */
 class IfStatement: public Statement {
 public:
     IfStatement(std::unique_ptr<Expression> condition,
@@ -192,6 +218,11 @@ private:
 
 #undef STATEMENT_CLASS
 
+/**
+ * @brief Visitor for AST statements, parameterized over the return type.
+ *
+ * Derived classes should override `operator()`.
+ */
 template<typename Result>
 class StatementVisitor {
 public:
@@ -221,9 +252,10 @@ private:
     virtual Result operator()(const IfStatement &) = 0;
 };
 
+/**
+ * @brief Pretty-print the given statement to the given stream.
+ */
 void print_statement(const Statement &stmt, std::ostream &out);
 
 }
-
 }
-

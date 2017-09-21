@@ -42,16 +42,11 @@ namespace Craeft {
 namespace Tok {
 
 /**
- * @defgroup Tokens Classes for possible types of tokens.
+ * @brief Craeft lexemes.
  *
- * Each of these classes contains public data members for the contents of the
- * token and a simple inline constructor which takes one argument per member.
- * For performance, these constructors will `move` potentially
- * expensive-to-copy data like strings.
- *
- * @{
+ * Uses LLVM RTTI, which is rather heavy-duty for a token stream; should
+ * perhaps refactor.
  */
-
 class Token {
 public:
     enum TokenKind {
@@ -98,6 +93,9 @@ private:
     TokenKind _kind;
 };
 
+/**
+ * Just expands to some boilerplate for LLVM RTTI.
+ */
 #define TOK_CLASS(X)\
     static bool classof(const Token *t) {\
         return t->kind() == TokenKind::X;\

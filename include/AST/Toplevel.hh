@@ -36,6 +36,11 @@ namespace Craeft {
 
 namespace AST {
 
+/**
+ * @brief Top-level forms such as function declarations.
+ *
+ * Uses LLVM RTTI.
+ */
 class Toplevel {
 public:
     enum ToplevelKind {
@@ -69,6 +74,9 @@ private:
     }\
     ~X(void) override {}
 
+/**
+ * @brief Forward declaration of a type.
+ */
 class TypeDeclaration: public Toplevel {
 public:
     TypeDeclaration(const std::string &name, SourcePos pos)
@@ -81,6 +89,9 @@ private:
     std::string _name;
 };
 
+/**
+ * @brief Definition of a struct.
+ */
 class StructDeclaration: public Toplevel {
 public:
     StructDeclaration(const std::string &name,
@@ -101,6 +112,9 @@ private:
     std::vector<std::unique_ptr<Declaration>> _members;
 };
 
+/**
+ * @brief Declaration of a struct template.
+ */
 class TemplateStructDeclaration: public Toplevel {
 public:
     TemplateStructDeclaration(
@@ -121,6 +135,9 @@ private:
     class StructDeclaration _decl;
 };
 
+/**
+ * @brief Forward declaration of a function.
+ */
 class FunctionDeclaration: public Toplevel {
 public:
     FunctionDeclaration(const std::string &name,
@@ -167,6 +184,9 @@ private:
     std::vector<std::unique_ptr<Statement>> _block;
 };
 
+/**
+ * @brief Definition of a template function.
+ */
 class TemplateFunctionDefinition: public Toplevel {
 public:
     TemplateFunctionDefinition(
@@ -190,6 +210,11 @@ private:
 
 #undef TOPLEVEL_CLASS
 
+/**
+ * @brief Visitor for top-level AST forms, parameterized over the return type.
+ *
+ * Derived classes should override `operator()`.
+ */
 template<typename Result>
 class ToplevelVisitor {
 public:
@@ -218,9 +243,10 @@ private:
     virtual Result operator()(const TemplateFunctionDefinition &) = 0;
 };
 
+/**
+ * @brief Pretty-print the given top-level AST to the given stream.
+ */
 void print_toplevel(const Toplevel &top, std::ostream &out);
 
 }
-
 }
-

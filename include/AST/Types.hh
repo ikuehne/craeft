@@ -36,6 +36,11 @@ namespace Craeft {
 
 namespace AST {
 
+/**
+ * @brief Syntactic representation of types.
+ *
+ * Uses LLVM RTTI.
+ */
 class Type {
 public:
     enum TypeKind {
@@ -66,6 +71,9 @@ private:
     }\
     ~X(void) override {}
 
+/**
+ * @brief A concrete type referenced by a name.
+ */
 class NamedType: public Type {
 public:
     const std::string& name(void) const { return _name; }
@@ -78,12 +86,18 @@ private:
     std::string _name;
 };
 
+/**
+ * @brief Void type (often not named, as in void-valued functions).
+ */
 class Void: public Type {
 public:
     Void(SourcePos pos): Type(TypeKind::Void, pos) {}
     TYPE_CLASS(Void);
 };
 
+/**
+ * @brief A type template referenced by a name.
+ */
 class TemplatedType: public Type {
 public:
     const std::string &name(void) const { return _name; }
@@ -102,6 +116,9 @@ private:
     std::vector<std::unique_ptr<Type>> _args;
 };
 
+/**
+ * @brief A pointer type.
+ */
 class Pointer: public Type {
 public:
     const Type &pointed(void) const { return *_pointed; }
@@ -116,6 +133,11 @@ private:
 
 #undef TYPE_CLASS
 
+/**
+ * @brief Visitor for type ASTs, parameterized on the return type.
+ *
+ * Derived classes should override `operator()`.
+ */
 template<typename Result>
 class TypeVisitor {
 public:
@@ -140,8 +162,10 @@ private:
     virtual Result operator()(const Pointer &) = 0;
 };
 
+/**
+ * @brief Pretty-print the given AST type to the given stream.
+ */
 void print_type(const Type &type, std::ostream &out);
 
 }
-
 }
