@@ -1,9 +1,5 @@
 var searchData=
 [
-  ['identifier',['Identifier',['../struct_craeft_1_1_tok_1_1_identifier.html',1,'Craeft::Tok']]],
-  ['if',['If',['../struct_craeft_1_1_tok_1_1_if.html',1,'Craeft::Tok']]],
-  ['ifstatement',['IfStatement',['../struct_craeft_1_1_a_s_t_1_1_if_statement.html',1,'Craeft::AST']]],
-  ['intliteral',['IntLiteral',['../struct_craeft_1_1_a_s_t_1_1_int_literal.html',1,'Craeft::AST']]],
-  ['intliteral',['IntLiteral',['../struct_craeft_1_1_tok_1_1_int_literal.html',1,'Craeft::Tok']]],
-  ['inttype',['IntType',['../struct_craeft_1_1_a_s_t_1_1_int_type.html',1,'Craeft::AST']]]
+  ['greatereqoperator',['GreaterEqOperator',['../class_craeft_1_1_greater_eq_operator.html',1,'Craeft']]],
+  ['greateroperator',['GreaterOperator',['../class_craeft_1_1_greater_operator.html',1,'Craeft']]]
 ];

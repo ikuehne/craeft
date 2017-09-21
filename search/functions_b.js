@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['operator_3d_3d',['operator==',['../class_craeft_1_1_void.html#a13d88fc9442ded4e078c226370b75eca',1,'Craeft::Void']]],
-  ['optimize',['optimize',['../class_craeft_1_1_module_codegen.html#a6f299a8e6633180ef0e64dfd6f8add76',1,'Craeft::ModuleCodegen']]]
+  ['mangle_5fname',['mangle_name',['../namespace_craeft.html#a9cd80163aa357a7c40f2f1a2e9bc38f0',1,'Craeft']]],
+  ['mul',['mul',['../group___craeft.html#ga31ec88cbb2318ff02d60d1772c77201e',1,'Craeft::Translator']]]
 ];

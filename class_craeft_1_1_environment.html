@@ -73,10 +73,10 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a53cf770769355964903c8835fd5855a0"><td class="memItemLeft" align="right" valign="top"><a id="a53cf770769355964903c8835fd5855a0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#a53cf770769355964903c8835fd5855a0">Environment</a> (void)</td></tr>
-<tr class="memdesc:a53cf770769355964903c8835fd5855a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new, empty environment. <br /></td></tr>
-<tr class="separator:a53cf770769355964903c8835fd5855a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac858dde0d27b3d102d253e0f4b5c5184"><td class="memItemLeft" align="right" valign="top"><a id="ac858dde0d27b3d102d253e0f4b5c5184"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#ac858dde0d27b3d102d253e0f4b5c5184">Environment</a> (llvm::LLVMContext &amp;ctx)</td></tr>
+<tr class="memdesc:ac858dde0d27b3d102d253e0f4b5c5184"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new, empty environment. <br /></td></tr>
+<tr class="separator:ac858dde0d27b3d102d253e0f4b5c5184"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6953c4a9b7c0bcf90998d9f09ae6559"><td class="memItemLeft" align="right" valign="top"><a id="aa6953c4a9b7c0bcf90998d9f09ae6559"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#aa6953c4a9b7c0bcf90998d9f09ae6559">pop</a> (void)</td></tr>
 <tr class="memdesc:aa6953c4a9b7c0bcf90998d9f09ae6559"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pop the most recently entered (deepest) scope. <br /></td></tr>
@@ -85,35 +85,47 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#a6a508e1bf98871f3c0447382348e8fcc">push</a> (void)</td></tr>
 <tr class="memdesc:a6a508e1bf98871f3c0447382348e8fcc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Push a new, empty scope. <br /></td></tr>
 <tr class="separator:a6a508e1bf98871f3c0447382348e8fcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade7a1bd7f902e5d1687d621e90c95829"><td class="memItemLeft" align="right" valign="top"><a id="ade7a1bd7f902e5d1687d621e90c95829"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#ade7a1bd7f902e5d1687d621e90c95829">bound</a> (const std::string &amp;name)</td></tr>
-<tr class="memdesc:ade7a1bd7f902e5d1687d621e90c95829"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get whether the given name is bound in any scope. <br /></td></tr>
-<tr class="separator:ade7a1bd7f902e5d1687d621e90c95829"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa42c505464d900690a86c70994c3b5bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_craeft_1_1_variable.html">Variable</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#aa42c505464d900690a86c70994c3b5bc">lookup_identifier</a> (const std::string &amp;name, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos, std::string &amp;fname)</td></tr>
-<tr class="memdesc:aa42c505464d900690a86c70994c3b5bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the given name in the map.  <a href="#aa42c505464d900690a86c70994c3b5bc">More...</a><br /></td></tr>
-<tr class="separator:aa42c505464d900690a86c70994c3b5bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79002baaf275c9cbbf1f87aaaff1822f"><td class="memItemLeft" align="right" valign="top"><a id="a79002baaf275c9cbbf1f87aaaff1822f"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#a79002baaf275c9cbbf1f87aaaff1822f">bound</a> (const std::string &amp;name) const</td></tr>
+<tr class="memdesc:a79002baaf275c9cbbf1f87aaaff1822f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get whether the given name is bound in any scope. <br /></td></tr>
+<tr class="separator:a79002baaf275c9cbbf1f87aaaff1822f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7db3b3a59ea9a5fed65cb3dd8d99435"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_craeft_1_1_variable.html">Variable</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#ae7db3b3a59ea9a5fed65cb3dd8d99435">lookup_identifier</a> (const std::string &amp;name, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos) const</td></tr>
+<tr class="memdesc:ae7db3b3a59ea9a5fed65cb3dd8d99435"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the given name in the map.  <a href="#ae7db3b3a59ea9a5fed65cb3dd8d99435">More...</a><br /></td></tr>
+<tr class="separator:ae7db3b3a59ea9a5fed65cb3dd8d99435"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a235be2ef277d4ba9ee10c8f7fe8cbe5d"><td class="memItemLeft" align="right" valign="top"><a id="a235be2ef277d4ba9ee10c8f7fe8cbe5d"></a>
-<a class="el" href="struct_craeft_1_1_variable.html">Variable</a>&#160;</td><td class="memItemRight" valign="bottom"><b>add_identifier</b> (std::string name, <a class="el" href="class_craeft_1_1_value.html">Value</a> val)</td></tr>
+<a class="el" href="class_craeft_1_1_variable.html">Variable</a>&#160;</td><td class="memItemRight" valign="bottom"><b>add_identifier</b> (std::string name, <a class="el" href="class_craeft_1_1_value.html">Value</a> val)</td></tr>
 <tr class="separator:a235be2ef277d4ba9ee10c8f7fe8cbe5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac87d338a3873c13e0fd5f219ef40dad8"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="struct_craeft_1_1_type.html">Type</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#ac87d338a3873c13e0fd5f219ef40dad8">lookup_type</a> (const std::string &amp;tname, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos, std::string &amp;fname)</td></tr>
-<tr class="memdesc:ac87d338a3873c13e0fd5f219ef40dad8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the given type name in the map.  <a href="#ac87d338a3873c13e0fd5f219ef40dad8">More...</a><br /></td></tr>
-<tr class="separator:ac87d338a3873c13e0fd5f219ef40dad8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ceca2c88929121586219e3e004c5f9a"><td class="memItemLeft" align="right" valign="top"><a id="a1ceca2c88929121586219e3e004c5f9a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>add_type</b> (std::string name, <a class="el" href="struct_craeft_1_1_type.html">Type</a> t)</td></tr>
+<tr class="separator:a1ceca2c88929121586219e3e004c5f9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d46e2a0fc9cbbf50c8e2f87f6978803"><td class="memItemLeft" align="right" valign="top"><a id="a4d46e2a0fc9cbbf50c8e2f87f6978803"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>add_template_type</b> (std::string name, <a class="el" href="struct_craeft_1_1_template_struct.html">TemplateStruct</a> t)</td></tr>
+<tr class="separator:a4d46e2a0fc9cbbf50c8e2f87f6978803"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9889a395b434cf582ece30fc8b5dc7a0"><td class="memItemLeft" align="right" valign="top"><a id="a9889a395b434cf582ece30fc8b5dc7a0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>add_template_func</b> (std::string name, <a class="el" href="struct_craeft_1_1_template_value.html">TemplateValue</a> v)</td></tr>
+<tr class="separator:a9889a395b434cf582ece30fc8b5dc7a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ee2f4f9f6dd6fb67447bfeb1c266323"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="struct_craeft_1_1_type.html">Type</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_environment.html#a0ee2f4f9f6dd6fb67447bfeb1c266323">lookup_type</a> (const std::string &amp;tname, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos) const</td></tr>
+<tr class="memdesc:a0ee2f4f9f6dd6fb67447bfeb1c266323"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the given type name in the map.  <a href="#a0ee2f4f9f6dd6fb67447bfeb1c266323">More...</a><br /></td></tr>
+<tr class="separator:a0ee2f4f9f6dd6fb67447bfeb1c266323"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af08de388d4f8685e8b05b2012b73cab1"><td class="memItemLeft" align="right" valign="top"><a id="af08de388d4f8685e8b05b2012b73cab1"></a>
+const <a class="el" href="struct_craeft_1_1_template_struct.html">TemplateStruct</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>lookup_template</b> (const std::string &amp;tname, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos) const</td></tr>
+<tr class="separator:af08de388d4f8685e8b05b2012b73cab1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afad9bf9595b264517860cd160f3bf00b"><td class="memItemLeft" align="right" valign="top"><a id="afad9bf9595b264517860cd160f3bf00b"></a>
+const <a class="el" href="struct_craeft_1_1_template_value.html">TemplateValue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>lookup_template_func</b> (const std::string &amp;func_name, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos) const</td></tr>
+<tr class="separator:afad9bf9595b264517860cd160f3bf00b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="_environment_8hh_source.html#l00096">96</a> of file <a class="el" href="_environment_8hh_source.html">Environment.hh</a>.</p>
+<p>Definition at line <a class="el" href="_environment_8hh_source.html#l00104">104</a> of file <a class="el" href="_environment_8hh_source.html">Environment.hh</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="aa42c505464d900690a86c70994c3b5bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa42c505464d900690a86c70994c3b5bc">&sect;&nbsp;</a></span>lookup_identifier()</h2>
+<a id="ae7db3b3a59ea9a5fed65cb3dd8d99435"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7db3b3a59ea9a5fed65cb3dd8d99435">&sect;&nbsp;</a></span>lookup_identifier()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="struct_craeft_1_1_variable.html">Variable</a> Craeft::Environment::lookup_identifier </td>
+          <td class="memname"><a class="el" href="class_craeft_1_1_variable.html">Variable</a> Craeft::Environment::lookup_identifier </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>name</em>, </td>
@@ -122,25 +134,14 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a>&#160;</td>
-          <td class="paramname"><em>pos</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::string &amp;&#160;</td>
-          <td class="paramname"><em>fname</em>&#160;</td>
+          <td class="paramname"><em>pos</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td>
+          <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Find the given name in the map. </p>
@@ -152,21 +153,18 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_environment_8hh_source.html#l00157">157</a> of file <a class="el" href="_environment_8hh_source.html">Environment.hh</a>.</p>
+<p>Definition at line <a class="el" href="_environment_8cpp_source.html#l00075">75</a> of file <a class="el" href="_environment_8cpp_source.html">Environment.cpp</a>.</p>
 
 </div>
 </div>
-<a id="ac87d338a3873c13e0fd5f219ef40dad8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac87d338a3873c13e0fd5f219ef40dad8">&sect;&nbsp;</a></span>lookup_type()</h2>
+<a id="a0ee2f4f9f6dd6fb67447bfeb1c266323"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ee2f4f9f6dd6fb67447bfeb1c266323">&sect;&nbsp;</a></span>lookup_type()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="struct_craeft_1_1_type.html">Type</a>&amp; Craeft::Environment::lookup_type </td>
+          <td class="memname">const <a class="el" href="struct_craeft_1_1_type.html">Type</a> &amp; Craeft::Environment::lookup_type </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>tname</em>, </td>
@@ -175,25 +173,14 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a>&#160;</td>
-          <td class="paramname"><em>pos</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::string &amp;&#160;</td>
-          <td class="paramname"><em>fname</em>&#160;</td>
+          <td class="paramname"><em>pos</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td>
+          <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Find the given type name in the map. </p>
@@ -204,12 +191,13 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_environment_8hh_source.html#l00187">187</a> of file <a class="el" href="_environment_8hh_source.html">Environment.hh</a>.</p>
+<p>Definition at line <a class="el" href="_environment_8cpp_source.html#l00096">96</a> of file <a class="el" href="_environment_8cpp_source.html">Environment.cpp</a>.</p>
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/<a class="el" href="_environment_8hh_source.html">Environment.hh</a></li>
+<li>src/<a class="el" href="_environment_8cpp_source.html">Environment.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

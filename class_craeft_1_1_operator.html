@@ -65,7 +65,9 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pro-types">Protected Types</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="class_craeft_1_1_operator-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Craeft::Operator Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
@@ -77,19 +79,27 @@ Inheritance diagram for Craeft::Operator:</div>
  <div class="center">
   <img src="class_craeft_1_1_operator.png" usemap="#Craeft::Operator_map" alt=""/>
   <map id="Craeft::Operator_map" name="Craeft::Operator_map">
-<area href="class_craeft_1_1_add_operator.html" alt="Craeft::AddOperator" shape="rect" coords="0,112,175,136"/>
-<area href="class_craeft_1_1_bitwise_operator.html" alt="Craeft::BitwiseOperator" shape="rect" coords="185,112,360,136"/>
-<area href="class_craeft_1_1_div_operator.html" alt="Craeft::DivOperator" shape="rect" coords="370,112,545,136"/>
-<area href="class_craeft_1_1_mul_operator.html" alt="Craeft::MulOperator" shape="rect" coords="555,112,730,136"/>
-<area href="class_craeft_1_1_sub_operator.html" alt="Craeft::SubOperator" shape="rect" coords="740,112,915,136"/>
+<area href="class_craeft_1_1_arithmetic_operator.html" alt="Craeft::ArithmeticOperator" shape="rect" coords="647,112,822,136"/>
+<area href="class_craeft_1_1_bitwise_operator.html" alt="Craeft::BitwiseOperator" shape="rect" coords="832,112,1007,136"/>
+<area href="class_craeft_1_1_add_operator.html" alt="Craeft::AddOperator" shape="rect" coords="0,168,175,192"/>
+<area href="class_craeft_1_1_comparison_operator.html" alt="Craeft::ComparisonOperator" shape="rect" coords="462,168,637,192"/>
+<area href="class_craeft_1_1_div_operator.html" alt="Craeft::DivOperator" shape="rect" coords="647,168,822,192"/>
+<area href="class_craeft_1_1_mul_operator.html" alt="Craeft::MulOperator" shape="rect" coords="832,168,1007,192"/>
+<area href="class_craeft_1_1_sub_operator.html" alt="Craeft::SubOperator" shape="rect" coords="1017,168,1192,192"/>
+<area href="class_craeft_1_1_equal_operator.html" alt="Craeft::EqualOperator" shape="rect" coords="0,224,175,248"/>
+<area href="class_craeft_1_1_greater_eq_operator.html" alt="Craeft::GreaterEqOperator" shape="rect" coords="185,224,360,248"/>
+<area href="class_craeft_1_1_greater_operator.html" alt="Craeft::GreaterOperator" shape="rect" coords="370,224,545,248"/>
+<area href="class_craeft_1_1_less_eq_operator.html" alt="Craeft::LessEqOperator" shape="rect" coords="555,224,730,248"/>
+<area href="class_craeft_1_1_less_operator.html" alt="Craeft::LessOperator" shape="rect" coords="740,224,915,248"/>
+<area href="class_craeft_1_1_nequal_operator.html" alt="Craeft::NequalOperator" shape="rect" coords="925,224,1100,248"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a133d027a4220cb98f2385bf1f7360651"><td class="memItemLeft" align="right" valign="top"><a id="a133d027a4220cb98f2385bf1f7360651"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Operator</b> (const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;lhs, const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;rhs, const <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos, const std::string &amp;fname, llvm::IRBuilder&lt;&gt; &amp;builder)</td></tr>
-<tr class="separator:a133d027a4220cb98f2385bf1f7360651"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61b48f64e9ca15788af916e8142236cd"><td class="memItemLeft" align="right" valign="top"><a id="a61b48f64e9ca15788af916e8142236cd"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Operator</b> (const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;lhs, const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;rhs, const <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos, llvm::Module &amp;module, llvm::IRBuilder&lt;&gt; &amp;builder)</td></tr>
+<tr class="separator:a61b48f64e9ca15788af916e8142236cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1438074e790cb5eca310c67aaaac3a9"><td class="memItemLeft" align="right" valign="top"><a id="ad1438074e790cb5eca310c67aaaac3a9"></a>
 virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><b>get_op</b> (void) const =0</td></tr>
 <tr class="separator:ad1438074e790cb5eca310c67aaaac3a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -114,24 +124,27 @@ virtual <a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td
 <tr class="memitem:a0b96eb7fce26dcea6323507423182f15"><td class="memItemLeft" align="right" valign="top"><a id="a0b96eb7fce26dcea6323507423182f15"></a>
 virtual <a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>int_ptr_op</b> (const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;, const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;)</td></tr>
 <tr class="separator:a0b96eb7fce26dcea6323507423182f15"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afddb19344fd2e05652d6c0c34ef35662"><td class="memItemLeft" align="right" valign="top"><a id="afddb19344fd2e05652d6c0c34ef35662"></a>
-<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_unsigned_int.html">UnsignedInt</a> &amp;, const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a> &amp;)</td></tr>
-<tr class="separator:afddb19344fd2e05652d6c0c34ef35662"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab886ad76cb0535d8274a80e1bfdd771c"><td class="memItemLeft" align="right" valign="top"><a id="ab886ad76cb0535d8274a80e1bfdd771c"></a>
-<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_signed_int.html">SignedInt</a> &amp;, const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a> &amp;)</td></tr>
-<tr class="separator:ab886ad76cb0535d8274a80e1bfdd771c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff0c5f40298d56f19152b978982551ae"><td class="memItemLeft" align="right" valign="top"><a id="aff0c5f40298d56f19152b978982551ae"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_unsigned_int.html">UnsignedInt</a> &amp;, const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a>&lt;&gt; &amp;)</td></tr>
+<tr class="separator:aff0c5f40298d56f19152b978982551ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8ae2cbb95d3a3cc0ba4e9b5cf171a40"><td class="memItemLeft" align="right" valign="top"><a id="ac8ae2cbb95d3a3cc0ba4e9b5cf171a40"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_signed_int.html">SignedInt</a> &amp;, const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a>&lt;&gt; &amp;)</td></tr>
+<tr class="separator:ac8ae2cbb95d3a3cc0ba4e9b5cf171a40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b3456371034a60f17a2618f17ab428b"><td class="memItemLeft" align="right" valign="top"><a id="a7b3456371034a60f17a2618f17ab428b"></a>
 virtual <a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ptr_int_op</b> (const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;, const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;)</td></tr>
 <tr class="separator:a7b3456371034a60f17a2618f17ab428b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a042be0ab9b37db7ef7a3cfe892ecd0fa"><td class="memItemLeft" align="right" valign="top"><a id="a042be0ab9b37db7ef7a3cfe892ecd0fa"></a>
-<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a> &amp;, const <a class="el" href="class_craeft_1_1_unsigned_int.html">UnsignedInt</a> &amp;)</td></tr>
-<tr class="separator:a042be0ab9b37db7ef7a3cfe892ecd0fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54d844599c3f7afa1280c1642275d36d"><td class="memItemLeft" align="right" valign="top"><a id="a54d844599c3f7afa1280c1642275d36d"></a>
-<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a> &amp;, const <a class="el" href="class_craeft_1_1_signed_int.html">SignedInt</a> &amp;)</td></tr>
-<tr class="separator:a54d844599c3f7afa1280c1642275d36d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ec828da4e6284b61e49a26c6583eaef"><td class="memItemLeft" align="right" valign="top"><a id="a9ec828da4e6284b61e49a26c6583eaef"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a>&lt;&gt; &amp;, const <a class="el" href="class_craeft_1_1_unsigned_int.html">UnsignedInt</a> &amp;)</td></tr>
+<tr class="separator:a9ec828da4e6284b61e49a26c6583eaef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bd0691f16e65d328abde41bced8c5e1"><td class="memItemLeft" align="right" valign="top"><a id="a3bd0691f16e65d328abde41bced8c5e1"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a>&lt;&gt; &amp;, const <a class="el" href="class_craeft_1_1_signed_int.html">SignedInt</a> &amp;)</td></tr>
+<tr class="separator:a3bd0691f16e65d328abde41bced8c5e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad78ec4132a3455d23c3caf31e46e1399"><td class="memItemLeft" align="right" valign="top"><a id="ad78ec4132a3455d23c3caf31e46e1399"></a>
 virtual <a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ptr_ptr_op</b> (const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;, const <a class="el" href="class_craeft_1_1_value.html">Value</a> &amp;)</td></tr>
 <tr class="separator:ad78ec4132a3455d23c3caf31e46e1399"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6f5148dd8760e0ff197fcdeb036d29c"><td class="memItemLeft" align="right" valign="top"><a id="af6f5148dd8760e0ff197fcdeb036d29c"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a>&lt;&gt; &amp;, const <a class="el" href="class_craeft_1_1_pointer.html">Pointer</a>&lt;&gt; &amp;)</td></tr>
+<tr class="separator:af6f5148dd8760e0ff197fcdeb036d29c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8a15836ef6ec651973324940fc8a39a"><td class="memTemplParams" colspan="2"><a id="af8a15836ef6ec651973324940fc8a39a"></a>
 template&lt;typename L , typename R &gt; </td></tr>
 <tr class="memitem:af8a15836ef6ec651973324940fc8a39a"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator()</b> (const L &amp;, const R &amp;)</td></tr>
@@ -139,6 +152,15 @@ template&lt;typename L , typename R &gt; </td></tr>
 <tr class="memitem:ac0477d0956149a55d6a157317120afaf"><td class="memItemLeft" align="right" valign="top"><a id="ac0477d0956149a55d6a157317120afaf"></a>
 <a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>apply</b> (void)</td></tr>
 <tr class="separator:ac0477d0956149a55d6a157317120afaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-types"></a>
+Protected Types</h2></td></tr>
+<tr class="memitem:a8a76c5d28aec8c6653d970b0ba5e3abd"><td class="memItemLeft" align="right" valign="top"><a id="a8a76c5d28aec8c6653d970b0ba5e3abd"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Extender</b> = std::function&lt; llvm::Value *(llvm::Value *, llvm::Type *)&gt;</td></tr>
+<tr class="separator:a8a76c5d28aec8c6653d970b0ba5e3abd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af526b37bedd99e5c36e8afb059e7116d"><td class="memItemLeft" align="right" valign="top"><a id="af526b37bedd99e5c36e8afb059e7116d"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Performer</b> = std::function&lt; llvm::Value *(llvm::Value *, llvm::Value *)&gt;</td></tr>
+<tr class="separator:af526b37bedd99e5c36e8afb059e7116d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -148,13 +170,25 @@ llvm::IRBuilder &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_
 <tr class="memitem:a46e04a4cd868ca0f13a83cd507e8562e"><td class="memItemLeft" align="right" valign="top"><a id="a46e04a4cd868ca0f13a83cd507e8562e"></a>
 const <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get_pos</b> (void) const</td></tr>
 <tr class="separator:a46e04a4cd868ca0f13a83cd507e8562e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af439873674d4f16732249dc27af89ec8"><td class="memItemLeft" align="right" valign="top"><a id="af439873674d4f16732249dc27af89ec8"></a>
-const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_fname</b> (void) const</td></tr>
-<tr class="separator:af439873674d4f16732249dc27af89ec8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:ae11c9f00e831159c5b85f213482cf765"><td class="memItemLeft" align="right" valign="top"><a id="ae11c9f00e831159c5b85f213482cf765"></a>
+Extender&#160;</td><td class="memItemRight" valign="bottom"><b>unsigned_int_extender</b></td></tr>
+<tr class="separator:ae11c9f00e831159c5b85f213482cf765"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af86f1dd7e1a5357a28ad1765f61155cb"><td class="memItemLeft" align="right" valign="top"><a id="af86f1dd7e1a5357a28ad1765f61155cb"></a>
+Extender&#160;</td><td class="memItemRight" valign="bottom"><b>signed_int_extender</b></td></tr>
+<tr class="separator:af86f1dd7e1a5357a28ad1765f61155cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a431d441a5c2675549647a4ca84477edc"><td class="memItemLeft" align="right" valign="top"><a id="a431d441a5c2675549647a4ca84477edc"></a>
+Extender&#160;</td><td class="memItemRight" valign="bottom"><b>float_extender</b></td></tr>
+<tr class="separator:a431d441a5c2675549647a4ca84477edc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a466fe01145f8af195fe8575b0aff1026"><td class="memItemLeft" align="right" valign="top"><a id="a466fe01145f8af195fe8575b0aff1026"></a>
+llvm::Module &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>module</b></td></tr>
+<tr class="separator:a466fe01145f8af195fe8575b0aff1026"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="_translator_impl_8cpp_source.html#l00273">273</a> of file <a class="el" href="_translator_impl_8cpp_source.html">TranslatorImpl.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_translator_impl_8cpp_source.html#l00294">294</a> of file <a class="el" href="_translator_impl_8cpp_source.html">TranslatorImpl.cpp</a>.</p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="_translator_impl_8cpp_source.html">TranslatorImpl.cpp</a></li>
 </ul>

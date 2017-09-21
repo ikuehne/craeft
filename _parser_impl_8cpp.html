@@ -65,7 +65,9 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a>  </div>
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">ParserImpl.cpp File Reference</div>  </div>
 </div><!--header-->
@@ -90,7 +92,39 @@ Namespaces</h2></td></tr>
 <tr class="memitem:namespace_craeft"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_craeft.html">Craeft</a></td></tr>
 <tr class="memdesc:namespace_craeft"><td class="mdescLeft">&#160;</td><td class="mdescRight">Contains all interfaces internal to the compiler. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a0987bfcdbc042b5322f998ca63ab31d3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>IGNORE</b>(X)</td></tr>
+<tr class="separator:a0987bfcdbc042b5322f998ca63ab31d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a77cee5adeec2101a42df82bfcd891713"><td class="memItemLeft" align="right" valign="top"><a id="a77cee5adeec2101a42df82bfcd891713"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::is_arrow</b> (const Tok::Token &amp;tok)</td></tr>
+<tr class="separator:a77cee5adeec2101a42df82bfcd891713"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a0987bfcdbc042b5322f998ca63ab31d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0987bfcdbc042b5322f998ca63ab31d3">&sect;&nbsp;</a></span>IGNORE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IGNORE</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">X</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">std::unique_ptr&lt;AST::Statement&gt; operator()(\</div><div class="line">            std::unique_ptr&lt;AST::X&gt; _IGNORE_ARG_)<span class="keyword"> override </span>{\</div><div class="line">        return std::make_unique&lt;AST::ExpressionStatement&gt;(\</div><div class="line">                std::move(_IGNORE_ARG_));\</div><div class="line">    }</div></div><!-- fragment -->
+<p>Definition at line <a class="el" href="_parser_impl_8cpp_source.html#l00158">158</a> of file <a class="el" href="_parser_impl_8cpp_source.html">ParserImpl.cpp</a>.</p>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

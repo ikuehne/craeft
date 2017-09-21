@@ -73,21 +73,21 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a584edbe348c503996ad4f0583b843520"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#a584edbe348c503996ad4f0583b843520">Parser</a> (std::string fname)</td></tr>
-<tr class="memdesc:a584edbe348c503996ad4f0583b843520"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <a class="el" href="class_craeft_1_1_parser.html">Parser</a>, parsing from the given file.  <a href="#a584edbe348c503996ad4f0583b843520">More...</a><br /></td></tr>
-<tr class="separator:a584edbe348c503996ad4f0583b843520"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae991d774fc82c09ec4a4223b883580a9"><td class="memItemLeft" align="right" valign="top"><a id="ae991d774fc82c09ec4a4223b883580a9"></a>
-<a class="el" href="group___expressions.html#gad5bdc5a209a97b167dc068ecab4d8a30">AST::Expression</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#ae991d774fc82c09ec4a4223b883580a9">parse_expression</a> (void)</td></tr>
-<tr class="memdesc:ae991d774fc82c09ec4a4223b883580a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the next expression from the stream. <br /></td></tr>
-<tr class="separator:ae991d774fc82c09ec4a4223b883580a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada65d5842cfddc04fb2b207045564b8e"><td class="memItemLeft" align="right" valign="top"><a id="ada65d5842cfddc04fb2b207045564b8e"></a>
-AST::Statement&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#ada65d5842cfddc04fb2b207045564b8e">parse_statement</a> (void)</td></tr>
-<tr class="memdesc:ada65d5842cfddc04fb2b207045564b8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the next statement from the stream. <br /></td></tr>
-<tr class="separator:ada65d5842cfddc04fb2b207045564b8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a8efb3ece667434042fe228ad93f041"><td class="memItemLeft" align="right" valign="top"><a id="a3a8efb3ece667434042fe228ad93f041"></a>
-AST::TopLevel&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#a3a8efb3ece667434042fe228ad93f041">parse_toplevel</a> (void)</td></tr>
-<tr class="memdesc:a3a8efb3ece667434042fe228ad93f041"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the next top-level <a class="el" href="namespace_craeft_1_1_a_s_t.html" title="Contains all classes and utilities relating to the abstract syntax tree. ">AST</a> node from the stream. <br /></td></tr>
-<tr class="separator:a3a8efb3ece667434042fe228ad93f041"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd3ce20cd05be1f62565c04385370b6d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#abd3ce20cd05be1f62565c04385370b6d">Parser</a> (const std::string &amp;fname)</td></tr>
+<tr class="memdesc:abd3ce20cd05be1f62565c04385370b6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <a class="el" href="class_craeft_1_1_parser.html">Parser</a>, parsing from the given file.  <a href="#abd3ce20cd05be1f62565c04385370b6d">More...</a><br /></td></tr>
+<tr class="separator:abd3ce20cd05be1f62565c04385370b6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25bf1f8b98e2c9012d3fab38b65759af"><td class="memItemLeft" align="right" valign="top"><a id="a25bf1f8b98e2c9012d3fab38b65759af"></a>
+std::unique_ptr&lt; <a class="el" href="class_craeft_1_1_a_s_t_1_1_expression.html">AST::Expression</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#a25bf1f8b98e2c9012d3fab38b65759af">parse_expression</a> (void)</td></tr>
+<tr class="memdesc:a25bf1f8b98e2c9012d3fab38b65759af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the next expression from the stream. <br /></td></tr>
+<tr class="separator:a25bf1f8b98e2c9012d3fab38b65759af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2e3ba79aaae0a7ad50d1564e4edbfea"><td class="memItemLeft" align="right" valign="top"><a id="ac2e3ba79aaae0a7ad50d1564e4edbfea"></a>
+std::unique_ptr&lt; <a class="el" href="class_craeft_1_1_a_s_t_1_1_statement.html">AST::Statement</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#ac2e3ba79aaae0a7ad50d1564e4edbfea">parse_statement</a> (void)</td></tr>
+<tr class="memdesc:ac2e3ba79aaae0a7ad50d1564e4edbfea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the next statement from the stream. <br /></td></tr>
+<tr class="separator:ac2e3ba79aaae0a7ad50d1564e4edbfea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fb3a233e3f0da44f625ecab1188a244"><td class="memItemLeft" align="right" valign="top"><a id="a8fb3a233e3f0da44f625ecab1188a244"></a>
+std::unique_ptr&lt; <a class="el" href="class_craeft_1_1_a_s_t_1_1_toplevel.html">AST::Toplevel</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#a8fb3a233e3f0da44f625ecab1188a244">parse_toplevel</a> (void)</td></tr>
+<tr class="memdesc:a8fb3a233e3f0da44f625ecab1188a244"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the next top-level AST node from the stream. <br /></td></tr>
+<tr class="separator:a8fb3a233e3f0da44f625ecab1188a244"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73fef9644fd31ff66316837813ac301a"><td class="memItemLeft" align="right" valign="top"><a id="a73fef9644fd31ff66316837813ac301a"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_parser.html#a73fef9644fd31ff66316837813ac301a">at_eof</a> (void)</td></tr>
 <tr class="memdesc:a73fef9644fd31ff66316837813ac301a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return whether the parser has reached the end of the stream. <br /></td></tr>
@@ -97,8 +97,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <div class="textblock">
 <p>Definition at line <a class="el" href="_parser_8hh_source.html#l00036">36</a> of file <a class="el" href="_parser_8hh_source.html">Parser.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a584edbe348c503996ad4f0583b843520"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a584edbe348c503996ad4f0583b843520">&sect;&nbsp;</a></span>Parser()</h2>
+<a id="abd3ce20cd05be1f62565c04385370b6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd3ce20cd05be1f62565c04385370b6d">&sect;&nbsp;</a></span>Parser()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -106,7 +106,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
         <tr>
           <td class="memname">Craeft::Parser::Parser </td>
           <td>(</td>
-          <td class="paramtype">std::string&#160;</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>fname</em></td><td>)</td>
           <td></td>
         </tr>

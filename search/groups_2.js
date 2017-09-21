@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['instructions_2e',['instructions.',['../group___craeft.html',1,'']]]
+  ['structures_2e',['structures.',['../group___control.html',1,'']]]
 ];

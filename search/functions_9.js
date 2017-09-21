@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['mul',['mul',['../group___craeft.html#ga31ec88cbb2318ff02d60d1772c77201e',1,'Craeft::Translator']]]
+  ['jump_5fto',['jump_to',['../class_craeft_1_1_block.html#ad6ada2cd5898e3b276b5aa93f9b8acb0',1,'Craeft::Block']]]
 ];

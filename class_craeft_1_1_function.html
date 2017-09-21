@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.12"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>craeft: Craeft::Function Class Reference</title>
+<title>craeft: Craeft::Function&lt; TypeType &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -67,34 +67,33 @@ $(function() {
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="class_craeft_1_1_function-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Craeft::Function Class Reference</div>  </div>
+<div class="title">Craeft::Function&lt; TypeType &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6844d075b0a84b2627fa9cc63bee7d7b"><td class="memItemLeft" align="right" valign="top"><a id="a6844d075b0a84b2627fa9cc63bee7d7b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Function</b> (std::shared_ptr&lt; <a class="el" href="struct_craeft_1_1_type.html">Type</a> &gt; rettype, std::vector&lt; std::shared_ptr&lt; <a class="el" href="struct_craeft_1_1_type.html">Type</a> &gt; &gt;args)</td></tr>
-<tr class="separator:a6844d075b0a84b2627fa9cc63bee7d7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa76e03c38b3fa1dcaa88301339692276"><td class="memItemLeft" align="right" valign="top"><a id="aa76e03c38b3fa1dcaa88301339692276"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="class_craeft_1_1_function.html">Function</a> &amp;other) const</td></tr>
-<tr class="separator:aa76e03c38b3fa1dcaa88301339692276"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a781635ffe54670decf905bff82927a97"><td class="memItemLeft" align="right" valign="top"><a id="a781635ffe54670decf905bff82927a97"></a>
-<a class="el" href="struct_craeft_1_1_type.html">Type</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>get_rettype</b> (void) const</td></tr>
-<tr class="separator:a781635ffe54670decf905bff82927a97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2df0149b2eb73f6c7e5f52bff436a3f"><td class="memItemLeft" align="right" valign="top"><a id="ad2df0149b2eb73f6c7e5f52bff436a3f"></a>
-const std::vector&lt; std::shared_ptr&lt; <a class="el" href="struct_craeft_1_1_type.html">Type</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_args</b> (void) const</td></tr>
-<tr class="separator:ad2df0149b2eb73f6c7e5f52bff436a3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab9a4d03a3a1cde06f0d08a6def42d1e7"><td class="memItemLeft" align="right" valign="top"><a id="ab9a4d03a3a1cde06f0d08a6def42d1e7"></a>
-llvm::FunctionType *&#160;</td><td class="memItemRight" valign="bottom"><b>to_llvm</b> (void) const</td></tr>
-<tr class="separator:ab9a4d03a3a1cde06f0d08a6def42d1e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c1378fa8678354203dffd277fdf667e"><td class="memItemLeft" align="right" valign="top"><a id="a8c1378fa8678354203dffd277fdf667e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Function</b> (std::shared_ptr&lt; TypeType &gt; rettype, std::vector&lt; std::shared_ptr&lt; TypeType &gt; &gt;args)</td></tr>
+<tr class="separator:a8c1378fa8678354203dffd277fdf667e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fab510b21b0ee1e91b8a7176e9e6477"><td class="memItemLeft" align="right" valign="top"><a id="a2fab510b21b0ee1e91b8a7176e9e6477"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="class_craeft_1_1_function.html">Function</a>&lt; TypeType &gt; &amp;other) const</td></tr>
+<tr class="separator:a2fab510b21b0ee1e91b8a7176e9e6477"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2db3709a108234b288c90fe65d0caea8"><td class="memItemLeft" align="right" valign="top"><a id="a2db3709a108234b288c90fe65d0caea8"></a>
+TypeType *&#160;</td><td class="memItemRight" valign="bottom"><b>get_rettype</b> (void) const</td></tr>
+<tr class="separator:a2db3709a108234b288c90fe65d0caea8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b45e03077237fb17b4ff8be1f8057a0"><td class="memItemLeft" align="right" valign="top"><a id="a2b45e03077237fb17b4ff8be1f8057a0"></a>
+const std::vector&lt; std::shared_ptr&lt; TypeType &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_args</b> (void) const</td></tr>
+<tr class="separator:a2b45e03077237fb17b4ff8be1f8057a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p>Definition at line <a class="el" href="_type_8hh_source.html#l00180">180</a> of file <a class="el" href="_type_8hh_source.html">Type.hh</a>.</p>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+<div class="textblock"><h3>template&lt;typename TypeType = Type&gt;<br />
+class Craeft::Function&lt; TypeType &gt;</h3>
+
+
+<p>Definition at line <a class="el" href="_type_8hh_source.html#l00177">177</a> of file <a class="el" href="_type_8hh_source.html">Type.hh</a>.</p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/<a class="el" href="_type_8hh_source.html">Type.hh</a></li>
-<li>src/<a class="el" href="_type_8cpp_source.html">Type.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

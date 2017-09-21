@@ -1,4 +1,29 @@
 var searchData=
 [
-  ['while',['While',['../struct_craeft_1_1_tok_1_1_while.html',1,'Craeft::Tok']]]
+  ['templatedtype',['TemplatedType',['../class_craeft_1_1_a_s_t_1_1_templated_type.html',1,'Craeft::AST']]],
+  ['templatefunction',['TemplateFunction',['../struct_craeft_1_1_template_function.html',1,'Craeft']]],
+  ['templatefunctioncall',['TemplateFunctionCall',['../class_craeft_1_1_a_s_t_1_1_template_function_call.html',1,'Craeft::AST']]],
+  ['templatefunctiondefinition',['TemplateFunctionDefinition',['../class_craeft_1_1_a_s_t_1_1_template_function_definition.html',1,'Craeft::AST']]],
+  ['templatestruct',['TemplateStruct',['../struct_craeft_1_1_template_struct.html',1,'Craeft']]],
+  ['templatestructdeclaration',['TemplateStructDeclaration',['../class_craeft_1_1_a_s_t_1_1_template_struct_declaration.html',1,'Craeft::AST']]],
+  ['templatetype',['TemplateType',['../struct_craeft_1_1_template_type.html',1,'Craeft']]],
+  ['templatetypegen',['TemplateTypeGen',['../class_craeft_1_1_codegen_1_1_template_type_gen.html',1,'Craeft::Codegen']]],
+  ['templatevalue',['TemplateValue',['../struct_craeft_1_1_template_value.html',1,'Craeft']]],
+  ['templatizervisitor',['TemplatizerVisitor',['../class_craeft_1_1_templatizer_visitor.html',1,'Craeft']]],
+  ['token',['Token',['../class_craeft_1_1_tok_1_1_token.html',1,'Craeft::Tok']]],
+  ['tollvmvisitor',['ToLlvmVisitor',['../struct_craeft_1_1_to_llvm_visitor.html',1,'Craeft']]],
+  ['toplevel',['Toplevel',['../class_craeft_1_1_a_s_t_1_1_toplevel.html',1,'Craeft::AST']]],
+  ['toplevelvisitor',['ToplevelVisitor',['../class_craeft_1_1_a_s_t_1_1_toplevel_visitor.html',1,'Craeft::AST']]],
+  ['toplevelvisitor_3c_20void_20_3e',['ToplevelVisitor&lt; void &gt;',['../class_craeft_1_1_a_s_t_1_1_toplevel_visitor.html',1,'Craeft::AST']]],
+  ['translator',['Translator',['../class_craeft_1_1_translator.html',1,'Craeft']]],
+  ['translatorimpl',['TranslatorImpl',['../class_craeft_1_1_translator_impl.html',1,'Craeft']]],
+  ['type',['Type',['../class_craeft_1_1_a_s_t_1_1_type.html',1,'Craeft::AST']]],
+  ['type',['Type',['../struct_craeft_1_1_tok_1_1_type.html',1,'Craeft::Tok']]],
+  ['type',['Type',['../struct_craeft_1_1_type.html',1,'Craeft']]],
+  ['typedeclaration',['TypeDeclaration',['../class_craeft_1_1_a_s_t_1_1_type_declaration.html',1,'Craeft::AST']]],
+  ['typegen',['TypeGen',['../class_craeft_1_1_codegen_1_1_type_gen.html',1,'Craeft::Codegen']]],
+  ['typename',['TypeName',['../struct_craeft_1_1_tok_1_1_type_name.html',1,'Craeft::Tok']]],
+  ['typevisitor',['TypeVisitor',['../class_craeft_1_1_a_s_t_1_1_type_visitor.html',1,'Craeft::AST']]],
+  ['typevisitor_3c_20templatetype_20_3e',['TypeVisitor&lt; TemplateType &gt;',['../class_craeft_1_1_a_s_t_1_1_type_visitor.html',1,'Craeft::AST']]],
+  ['typevisitor_3c_20type_20_3e',['TypeVisitor&lt; Type &gt;',['../class_craeft_1_1_a_s_t_1_1_type_visitor.html',1,'Craeft::AST']]]
 ];

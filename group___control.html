@@ -68,18 +68,97 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:gafdc924492a047d4e850a1ef61d6399ef"><td class="memItemLeft" align="right" valign="top"><a id="gafdc924492a047d4e850a1ef61d6399ef"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::Translator::create_function_prototype</b> (<a class="el" href="class_craeft_1_1_function.html">Function</a> f, std::string name)</td></tr>
-<tr class="separator:gafdc924492a047d4e850a1ef61d6399ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga0260515e7b903237ee2dd2113b43f98a"><td class="memItemLeft" align="right" valign="top"><a id="ga0260515e7b903237ee2dd2113b43f98a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::Translator::create_and_start_function</b> (<a class="el" href="class_craeft_1_1_function.html">Function</a> f, std::vector&lt; std::string &gt; args, std::string name)</td></tr>
-<tr class="separator:ga0260515e7b903237ee2dd2113b43f98a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad913be576fdc4d2050e2c1169cd8c458"><td class="memItemLeft" align="right" valign="top"><a id="gad913be576fdc4d2050e2c1169cd8c458"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::Translator::end_function</b> (void)</td></tr>
-<tr class="separator:gad913be576fdc4d2050e2c1169cd8c458"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga685e24f0445acc1a2b42286d7c66da1b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_craeft_1_1_if_then_else.html">IfThenElse</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___control.html#ga685e24f0445acc1a2b42286d7c66da1b">Craeft::Translator::create_ifthenelse</a> (<a class="el" href="class_craeft_1_1_value.html">Value</a> cond, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="memdesc:ga685e24f0445acc1a2b42286d7c66da1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create and return an <a class="el" href="class_craeft_1_1_if_then_else.html" title="Abstract representation of a Craeft if/then/else structure. ">IfThenElse</a> structure.  <a href="#ga685e24f0445acc1a2b42286d7c66da1b">More...</a><br /></td></tr>
+<tr class="separator:ga685e24f0445acc1a2b42286d7c66da1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8f5d8e4de364640df9f743788606e480"><td class="memItemLeft" align="right" valign="top"><a id="ga8f5d8e4de364640df9f743788606e480"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___control.html#ga8f5d8e4de364640df9f743788606e480">Craeft::Translator::point_to_else</a> (<a class="el" href="class_craeft_1_1_if_then_else.html">IfThenElse</a> &amp;structure)</td></tr>
+<tr class="memdesc:ga8f5d8e4de364640df9f743788606e480"><td class="mdescLeft">&#160;</td><td class="mdescRight">Terminates the "then" and starts emitting instructions at the "else". <br /></td></tr>
+<tr class="separator:ga8f5d8e4de364640df9f743788606e480"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6b606a55cb7a55e9b343626366ff6978"><td class="memItemLeft" align="right" valign="top"><a id="ga6b606a55cb7a55e9b343626366ff6978"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___control.html#ga6b606a55cb7a55e9b343626366ff6978">Craeft::Translator::end_ifthenelse</a> (<a class="el" href="class_craeft_1_1_if_then_else.html">IfThenElse</a> structure)</td></tr>
+<tr class="memdesc:ga6b606a55cb7a55e9b343626366ff6978"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exit the if/then/else and start emitting instructions outside the structure. <br /></td></tr>
+<tr class="separator:ga6b606a55cb7a55e9b343626366ff6978"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafded15ecda6562240980e2959a59aa65"><td class="memItemLeft" align="right" valign="top"><a id="gafded15ecda6562240980e2959a59aa65"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::Translator::create_function_prototype</b> (<a class="el" href="class_craeft_1_1_function.html">Function</a>&lt;&gt; f, std::string name)</td></tr>
+<tr class="separator:gafded15ecda6562240980e2959a59aa65"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga848bee05465cab75fbfa161924583165"><td class="memItemLeft" align="right" valign="top"><a id="ga848bee05465cab75fbfa161924583165"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::Translator::create_and_start_function</b> (<a class="el" href="class_craeft_1_1_function.html">Function</a>&lt;&gt; f, std::vector&lt; std::string &gt; args, std::string name)</td></tr>
+<tr class="separator:ga848bee05465cab75fbfa161924583165"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafe137181bd7fd1d78727e3a8457b4265"><td class="memItemLeft" align="right" valign="top"><a id="gafe137181bd7fd1d78727e3a8457b4265"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::Translator::create_struct</b> (<a class="el" href="class_craeft_1_1_struct.html">Struct</a>&lt;&gt; t)</td></tr>
+<tr class="separator:gafe137181bd7fd1d78727e3a8457b4265"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga772298c33d13d288e57154f83f660a9c"><td class="memItemLeft" align="right" valign="top"><a id="ga772298c33d13d288e57154f83f660a9c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Craeft::Translator::create_struct</b> (<a class="el" href="struct_craeft_1_1_template_struct.html">TemplateStruct</a> t)</td></tr>
+<tr class="separator:ga772298c33d13d288e57154f83f660a9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf2f5fdd88e5d702b178ce0d30d234578"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::pair&lt; std::vector&lt; <a class="el" href="struct_craeft_1_1_type.html">Type</a> &gt;, <a class="el" href="struct_craeft_1_1_template_value.html">TemplateValue</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___control.html#gaf2f5fdd88e5d702b178ce0d30d234578">Craeft::Translator::end_function</a> (void)</td></tr>
+<tr class="memdesc:gaf2f5fdd88e5d702b178ce0d30d234578"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="struct_point.html">Point</a> away from the current function.  <a href="#gaf2f5fdd88e5d702b178ce0d30d234578">More...</a><br /></td></tr>
+<tr class="separator:gaf2f5fdd88e5d702b178ce0d30d234578"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>Again, fairly thin abstractions over LLVM's primitives. </p>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ga685e24f0445acc1a2b42286d7c66da1b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga685e24f0445acc1a2b42286d7c66da1b">&sect;&nbsp;</a></span>create_ifthenelse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_craeft_1_1_if_then_else.html">IfThenElse</a> Craeft::Translator::create_ifthenelse </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td>
+          <td class="paramname"><em>cond</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a>&#160;</td>
+          <td class="paramname"><em>pos</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create and return an <a class="el" href="class_craeft_1_1_if_then_else.html" title="Abstract representation of a Craeft if/then/else structure. ">IfThenElse</a> structure. </p>
+<p>Opens a new namespace; new instructions are added in the "then" block.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cond</td><td>The condition of the "if". </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="_translator_8cpp_source.html#l00179">179</a> of file <a class="el" href="_translator_8cpp_source.html">Translator.cpp</a>.</p>
+
+</div>
+</div>
+<a id="gaf2f5fdd88e5d702b178ce0d30d234578"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf2f5fdd88e5d702b178ce0d30d234578">&sect;&nbsp;</a></span>end_function()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; std::pair&lt; std::vector&lt; <a class="el" href="struct_craeft_1_1_type.html">Type</a> &gt;, <a class="el" href="struct_craeft_1_1_template_value.html">TemplateValue</a> &gt; &gt; Craeft::Translator::end_function </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="struct_point.html">Point</a> away from the current function. </p>
+<dl class="section return"><dt>Returns</dt><dd>A vector of specializations referenced in the current function, which need to be defined in the current module or a linked module. </dd></dl>
+
+<p>Definition at line <a class="el" href="_translator_8cpp_source.html#l00204">204</a> of file <a class="el" href="_translator_8cpp_source.html">Translator.cpp</a>.</p>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -1,11 +1,7 @@
 var searchData=
 [
-  ['bit_5fand',['bit_and',['../group___craeft.html#ga5cdc16e927b8c9ec611a9bbe8b777c18',1,'Craeft::Translator']]],
-  ['bit_5fnot',['bit_not',['../group___craeft.html#ga031eb12388137a86f3b50645fbc902d6',1,'Craeft::Translator']]],
-  ['bit_5for',['bit_or',['../group___craeft.html#ga2b9f49bd6a68b14e6c66e9df310aa182',1,'Craeft::Translator']]],
-  ['bit_5fxor',['bit_xor',['../group___craeft.html#ga883833845916d793e33c9a35f2c473ce',1,'Craeft::Translator']]],
-  ['bool_5fand',['bool_and',['../group___craeft.html#gaa6b2dd666ad84deb6d7a0cd8e168e507',1,'Craeft::Translator']]],
-  ['bool_5fnot',['bool_not',['../group___craeft.html#gac2a4e1f24f38fc410463a77e67e36a2a',1,'Craeft::Translator']]],
-  ['bool_5for',['bool_or',['../group___craeft.html#gad4b99680f611c22f5532725803438759',1,'Craeft::Translator']]],
-  ['bound',['bound',['../class_craeft_1_1_environment.html#ade7a1bd7f902e5d1687d621e90c95829',1,'Craeft::Environment']]]
+  ['add',['add',['../group___craeft.html#ga81806d04575bcfada054f13b3861e4d5',1,'Craeft::Translator']]],
+  ['add_5fload',['add_load',['../group___craeft.html#gaf3707e4dbc891e5d27925e478efc474e',1,'Craeft::Translator']]],
+  ['assign',['assign',['../group___craeft.html#ga3fafd5ebd1214055b90ae36d8f2f9756',1,'Craeft::Translator']]],
+  ['at_5feof',['at_eof',['../class_craeft_1_1_lexer.html#ac3b24e7a7f9202ab54550334904dd008',1,'Craeft::Lexer::at_eof()'],['../class_craeft_1_1_parser.html#a73fef9644fd31ff66316837813ac301a',1,'Craeft::Parser::at_eof()']]]
 ];

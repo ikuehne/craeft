@@ -1,12 +1,15 @@
 var searchData=
 [
-  ['left_5fshift',['left_shift',['../group___craeft.html#ga003f75a8fbacdec831857a36a1d32207',1,'Craeft::Translator']]],
-  ['less',['less',['../group___craeft.html#ga530e789932e02cfefbcfbc60ad2e3050',1,'Craeft::Translator']]],
-  ['lesseq',['lesseq',['../group___craeft.html#gabe7178d64d440b773cc89fc2724dbc5a',1,'Craeft::Translator']]],
-  ['lexer',['Lexer',['../class_craeft_1_1_lexer.html',1,'Craeft']]],
-  ['lexer',['Lexer',['../class_craeft_1_1_lexer.html#a52dbd45faef58e7ea838d02cd7198037',1,'Craeft::Lexer']]],
-  ['lexer_2ecpp',['Lexer.cpp',['../_lexer_8cpp.html',1,'']]],
-  ['lookup_5fidentifier',['lookup_identifier',['../class_craeft_1_1_environment.html#aa42c505464d900690a86c70994c3b5bc',1,'Craeft::Environment']]],
-  ['lookup_5ftype',['lookup_type',['../class_craeft_1_1_environment.html#ac87d338a3873c13e0fd5f219ef40dad8',1,'Craeft::Environment']]],
-  ['lvaluecodegen',['LValueCodegen',['../class_craeft_1_1_l_value_codegen.html',1,'Craeft']]]
+  ['instructions_2e',['instructions.',['../group___craeft.html',1,'']]],
+  ['identifier',['Identifier',['../struct_craeft_1_1_tok_1_1_identifier.html',1,'Craeft::Tok']]],
+  ['if',['If',['../struct_craeft_1_1_tok_1_1_if.html',1,'Craeft::Tok']]],
+  ['ifstatement',['IfStatement',['../class_craeft_1_1_a_s_t_1_1_if_statement.html',1,'Craeft::AST']]],
+  ['ifthenelse',['IfThenElse',['../class_craeft_1_1_if_then_else.html',1,'Craeft']]],
+  ['ifthenelseimpl',['IfThenElseImpl',['../struct_craeft_1_1_if_then_else_impl.html',1,'Craeft']]],
+  ['integrationtest',['IntegrationTest',['../classrun_1_1_integration_test.html',1,'run']]],
+  ['intliteral',['IntLiteral',['../class_craeft_1_1_a_s_t_1_1_int_literal.html',1,'Craeft::AST']]],
+  ['intliteral',['IntLiteral',['../struct_craeft_1_1_tok_1_1_int_literal.html',1,'Craeft::Tok']]],
+  ['invalidtoken',['InvalidToken',['../struct_craeft_1_1_tok_1_1_invalid_token.html',1,'Craeft::Tok']]],
+  ['is_5fterminated',['is_terminated',['../class_craeft_1_1_block.html#a0f8b14ac7807a5d18ddac9ad097c38d6',1,'Craeft::Block']]],
+  ['is_5ftype',['is_type',['../_variant_utils_8hh.html#aff569c330b65251161df92cc1ebc4267',1,'VariantUtils.hh']]]
 ];

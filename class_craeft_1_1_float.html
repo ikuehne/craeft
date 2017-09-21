@@ -78,57 +78,28 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a4c102cddd92fb607fd21e827c1b641b9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_float.html#a4c102cddd92fb607fd21e827c1b641b9">Float</a> (llvm::Type *ty)</td></tr>
-<tr class="memdesc:a4c102cddd92fb607fd21e827c1b641b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build a floating-point type corresponding to the given LLVM type.  <a href="#a4c102cddd92fb607fd21e827c1b641b9">More...</a><br /></td></tr>
-<tr class="separator:a4c102cddd92fb607fd21e827c1b641b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29dab180609622cd98442da3af1ff079"><td class="memItemLeft" align="right" valign="top"><a id="a29dab180609622cd98442da3af1ff079"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_float.html#a29dab180609622cd98442da3af1ff079">Float</a> (<a class="el" href="namespace_craeft.html#adb4f095e8733ee11c8a6253861f57971">Precision</a>, llvm::LLVMContext &amp;)</td></tr>
-<tr class="memdesc:a29dab180609622cd98442da3af1ff079"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build a floating-point type of the given precision in the given context. <br /></td></tr>
-<tr class="separator:a29dab180609622cd98442da3af1ff079"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae060741a44377a0560121723ec53c348"><td class="memItemLeft" align="right" valign="top"><a id="ae060741a44377a0560121723ec53c348"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_craeft_1_1_float.html#ae060741a44377a0560121723ec53c348">Float</a> (<a class="el" href="namespace_craeft.html#adb4f095e8733ee11c8a6253861f57971">Precision</a>)</td></tr>
+<tr class="memdesc:ae060741a44377a0560121723ec53c348"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build a floating-point type of the given precision in the given context. <br /></td></tr>
+<tr class="separator:ae060741a44377a0560121723ec53c348"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3316a3d75758e7ac711b0929dca0e0ae"><td class="memItemLeft" align="right" valign="top"><a id="a3316a3d75758e7ac711b0929dca0e0ae"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (const <a class="el" href="class_craeft_1_1_float.html">Float</a> &amp;other) const</td></tr>
 <tr class="separator:a3316a3d75758e7ac711b0929dca0e0ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af15f2bc8cbad0b1aaac02fd6c23c9ddd"><td class="memItemLeft" align="right" valign="top"><a id="af15f2bc8cbad0b1aaac02fd6c23c9ddd"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="class_craeft_1_1_float.html">Float</a> &amp;other) const</td></tr>
 <tr class="separator:af15f2bc8cbad0b1aaac02fd6c23c9ddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ef36321809c063b71bc7d20fe8b0724"><td class="memItemLeft" align="right" valign="top"><a id="a5ef36321809c063b71bc7d20fe8b0724"></a>
-llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>to_llvm</b> (void) const</td></tr>
-<tr class="separator:a5ef36321809c063b71bc7d20fe8b0724"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0821c47443232b120e30bc5afa10b074"><td class="memItemLeft" align="right" valign="top"><a id="a0821c47443232b120e30bc5afa10b074"></a>
+<a class="el" href="namespace_craeft.html#adb4f095e8733ee11c8a6253861f57971">Precision</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get_precision</b> (void) const</td></tr>
+<tr class="separator:a0821c47443232b120e30bc5afa10b074"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade7a53fac4e68134877253ba1fcfdae7"><td class="memItemLeft" align="right" valign="top"><a id="ade7a53fac4e68134877253ba1fcfdae7"></a>
+llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>to_llvm</b> (llvm::LLVMContext &amp;) const</td></tr>
+<tr class="separator:ade7a53fac4e68134877253ba1fcfdae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Floating-point types. </p>
 
-<p>Definition at line <a class="el" href="_type_8hh_source.html#l00112">112</a> of file <a class="el" href="_type_8hh_source.html">Type.hh</a>.</p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a4c102cddd92fb607fd21e827c1b641b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4c102cddd92fb607fd21e827c1b641b9">&sect;&nbsp;</a></span>Float()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">Craeft::Float::Float </td>
-          <td>(</td>
-          <td class="paramtype">llvm::Type *&#160;</td>
-          <td class="paramname"><em>ty</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Build a floating-point type corresponding to the given LLVM type. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">ty</td><td>An LLVM float type. An assertion will be tripped if any other type is given. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="_type_8cpp_source.html#l00067">67</a> of file <a class="el" href="_type_8cpp_source.html">Type.cpp</a>.</p>
-
-</div>
-</div>
-<hr/>The documentation for this class was generated from the following files:<ul>
+<p>Definition at line <a class="el" href="_type_8hh_source.html#l00107">107</a> of file <a class="el" href="_type_8hh_source.html">Type.hh</a>.</p>
+</div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/<a class="el" href="_type_8hh_source.html">Type.hh</a></li>
 <li>src/<a class="el" href="_type_8cpp_source.html">Type.cpp</a></li>
 </ul>

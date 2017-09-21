@@ -147,11 +147,23 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_store</b> (<a cla
 <tr class="memitem:ae78f46c4351f05227aaa8b770d28669f"><td class="memItemLeft" align="right" valign="top"><a id="ae78f46c4351f05227aaa8b770d28669f"></a>
 <a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>bool_not</b> (<a class="el" href="class_craeft_1_1_value.html">Value</a> val, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
 <tr class="separator:ae78f46c4351f05227aaa8b770d28669f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a662c3f3066c4da89c329b0c0e7b60f52"><td class="memItemLeft" align="right" valign="top"><a id="a662c3f3066c4da89c329b0c0e7b60f52"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>field_access</b> (<a class="el" href="class_craeft_1_1_value.html">Value</a> lhs, std::string field, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a662c3f3066c4da89c329b0c0e7b60f52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bdd3fb54c651cfc5904f8dd4e935408"><td class="memItemLeft" align="right" valign="top"><a id="a8bdd3fb54c651cfc5904f8dd4e935408"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>field_address</b> (<a class="el" href="class_craeft_1_1_value.html">Value</a> ptr, std::string field, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a8bdd3fb54c651cfc5904f8dd4e935408"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc231c3179bbb94e2e486896f70f0bd7"><td class="memItemLeft" align="right" valign="top"><a id="abc231c3179bbb94e2e486896f70f0bd7"></a>
 <a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>call</b> (std::string func, std::vector&lt; <a class="el" href="class_craeft_1_1_value.html">Value</a> &gt; &amp;args, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
 <tr class="separator:abc231c3179bbb94e2e486896f70f0bd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a806742bea207322bb3ed7c115939bcdd"><td class="memItemLeft" align="right" valign="top"><a id="a806742bea207322bb3ed7c115939bcdd"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>call</b> (std::string func, std::vector&lt; <a class="el" href="struct_craeft_1_1_type.html">Type</a> &gt; &amp;templ_args, std::vector&lt; <a class="el" href="class_craeft_1_1_value.html">Value</a> &gt; &amp;v_args, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a806742bea207322bb3ed7c115939bcdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d1a17a6f04c1de1512f6a69caf27367"><td class="memItemLeft" align="right" valign="top"><a id="a6d1a17a6f04c1de1512f6a69caf27367"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>string_literal</b> (const std::string &amp;str)</td></tr>
+<tr class="separator:a6d1a17a6f04c1de1512f6a69caf27367"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac9a2de992ae475df5d949456224b32e"><td class="memItemLeft" align="right" valign="top"><a id="aac9a2de992ae475df5d949456224b32e"></a>
-<a class="el" href="struct_craeft_1_1_variable.html">Variable</a>&#160;</td><td class="memItemRight" valign="bottom"><b>declare</b> (const std::string &amp;name, const <a class="el" href="struct_craeft_1_1_type.html">Type</a> &amp;t)</td></tr>
+<a class="el" href="class_craeft_1_1_variable.html">Variable</a>&#160;</td><td class="memItemRight" valign="bottom"><b>declare</b> (const std::string &amp;name, const <a class="el" href="struct_craeft_1_1_type.html">Type</a> &amp;t)</td></tr>
 <tr class="separator:aac9a2de992ae475df5d949456224b32e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae34dc4d264d2b57ee13c1239c017b672"><td class="memItemLeft" align="right" valign="top"><a id="ae34dc4d264d2b57ee13c1239c017b672"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>assign</b> (const std::string &amp;varname, <a class="el" href="class_craeft_1_1_value.html">Value</a> val, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
@@ -159,15 +171,60 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>assign</b> (const std
 <tr class="memitem:acc87aa31175387deaf22240c4adfac75"><td class="memItemLeft" align="right" valign="top"><a id="acc87aa31175387deaf22240c4adfac75"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>return_</b> (<a class="el" href="class_craeft_1_1_value.html">Value</a> val, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
 <tr class="separator:acc87aa31175387deaf22240c4adfac75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d4292eaddfc1745846442de6752731c"><td class="memItemLeft" align="right" valign="top"><a id="a9d4292eaddfc1745846442de6752731c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>create_function_prototype</b> (<a class="el" href="class_craeft_1_1_function.html">Function</a> f, std::string name)</td></tr>
-<tr class="separator:a9d4292eaddfc1745846442de6752731c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe47b6ea896af3a81e68bb4f18f6d3bb"><td class="memItemLeft" align="right" valign="top"><a id="abe47b6ea896af3a81e68bb4f18f6d3bb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>create_and_start_function</b> (<a class="el" href="class_craeft_1_1_function.html">Function</a> f, std::vector&lt; std::string &gt; args, std::string name)</td></tr>
-<tr class="separator:abe47b6ea896af3a81e68bb4f18f6d3bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41dc45f7d48be8e3425d84a650c0a127"><td class="memItemLeft" align="right" valign="top"><a id="a41dc45f7d48be8e3425d84a650c0a127"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>end_function</b> (void)</td></tr>
-<tr class="separator:a41dc45f7d48be8e3425d84a650c0a127"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fd20b5b9c4190cf5a2aba7c05c64a1f"><td class="memItemLeft" align="right" valign="top"><a id="a2fd20b5b9c4190cf5a2aba7c05c64a1f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>return_</b> (<a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a2fd20b5b9c4190cf5a2aba7c05c64a1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a078d2acb7eb07de0ce310c94021296e3"><td class="memItemLeft" align="right" valign="top"><a id="a078d2acb7eb07de0ce310c94021296e3"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get_identifier_addr</b> (std::string ident, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a078d2acb7eb07de0ce310c94021296e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08ca9a8e892c065751571b85a90ad8e5"><td class="memItemLeft" align="right" valign="top"><a id="a08ca9a8e892c065751571b85a90ad8e5"></a>
+<a class="el" href="class_craeft_1_1_value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get_identifier_value</b> (std::string ident, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a08ca9a8e892c065751571b85a90ad8e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af226b42cd92652d113c6951c101f2734"><td class="memItemLeft" align="right" valign="top"><a id="af226b42cd92652d113c6951c101f2734"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>lookup_type</b> (std::string tname, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:af226b42cd92652d113c6951c101f2734"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42d3b7a5ff7dafb27d09f134e62b8003"><td class="memItemLeft" align="right" valign="top"><a id="a42d3b7a5ff7dafb27d09f134e62b8003"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>push_scope</b> (void)</td></tr>
+<tr class="separator:a42d3b7a5ff7dafb27d09f134e62b8003"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9325faafb212bac50de05c5dbe28b33e"><td class="memItemLeft" align="right" valign="top"><a id="a9325faafb212bac50de05c5dbe28b33e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>pop_scope</b> (void)</td></tr>
+<tr class="separator:a9325faafb212bac50de05c5dbe28b33e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2a5e0d50a4ae29db51ec2202b40c771"><td class="memItemLeft" align="right" valign="top"><a id="af2a5e0d50a4ae29db51ec2202b40c771"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>bind_type</b> (std::string, <a class="el" href="struct_craeft_1_1_type.html">Type</a> t)</td></tr>
+<tr class="separator:af2a5e0d50a4ae29db51ec2202b40c771"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3297c3a138e21c83f2b463dacbe3eed6"><td class="memItemLeft" align="right" valign="top"><a id="a3297c3a138e21c83f2b463dacbe3eed6"></a>
+<a class="el" href="struct_craeft_1_1_type.html">Type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>specialize_template</b> (std::string template_name, const std::vector&lt; <a class="el" href="struct_craeft_1_1_type.html">Type</a> &gt; &amp;args, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a3297c3a138e21c83f2b463dacbe3eed6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6dd339dec797f4b32bf44420029c4594"><td class="memItemLeft" align="right" valign="top"><a id="a6dd339dec797f4b32bf44420029c4594"></a>
+<a class="el" href="class_craeft_1_1_struct.html">Struct</a>&lt; <a class="el" href="struct_craeft_1_1_template_type.html">TemplateType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>respecialize_template</b> (std::string template_name, const std::vector&lt; <a class="el" href="struct_craeft_1_1_template_type.html">TemplateType</a> &gt; &amp;args, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a6dd339dec797f4b32bf44420029c4594"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36041626295dceca52423aa87713090f"><td class="memItemLeft" align="right" valign="top"><a id="a36041626295dceca52423aa87713090f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>register_template</b> (std::string name, std::shared_ptr&lt; <a class="el" href="class_craeft_1_1_a_s_t_1_1_function_definition.html">AST::FunctionDefinition</a> &gt;, std::vector&lt; std::string &gt; args, <a class="el" href="struct_craeft_1_1_template_function.html">TemplateFunction</a> func)</td></tr>
+<tr class="separator:a36041626295dceca52423aa87713090f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c26916406f4641854a9f765b3067ced"><td class="memItemLeft" align="right" valign="top"><a id="a7c26916406f4641854a9f765b3067ced"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>register_template</b> (<a class="el" href="struct_craeft_1_1_template_struct.html">TemplateStruct</a>, std::string name)</td></tr>
+<tr class="separator:a7c26916406f4641854a9f765b3067ced"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0498045293bcf2535fbe889ea7c8ad33"><td class="memItemLeft" align="right" valign="top"><a id="a0498045293bcf2535fbe889ea7c8ad33"></a>
+<a class="el" href="class_craeft_1_1_if_then_else.html">IfThenElse</a>&#160;</td><td class="memItemRight" valign="bottom"><b>create_ifthenelse</b> (<a class="el" href="class_craeft_1_1_value.html">Value</a> cond, <a class="el" href="struct_craeft_1_1_source_pos.html">SourcePos</a> pos)</td></tr>
+<tr class="separator:a0498045293bcf2535fbe889ea7c8ad33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31d0a6bf5693e92938611f56f17f7c06"><td class="memItemLeft" align="right" valign="top"><a id="a31d0a6bf5693e92938611f56f17f7c06"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>point_to_else</b> (<a class="el" href="class_craeft_1_1_if_then_else.html">IfThenElse</a> &amp;structure)</td></tr>
+<tr class="separator:a31d0a6bf5693e92938611f56f17f7c06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b2ba8ad51792ae58636d8f5e1d7901a"><td class="memItemLeft" align="right" valign="top"><a id="a7b2ba8ad51792ae58636d8f5e1d7901a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>end_ifthenelse</b> (<a class="el" href="class_craeft_1_1_if_then_else.html">IfThenElse</a> structure)</td></tr>
+<tr class="separator:a7b2ba8ad51792ae58636d8f5e1d7901a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade2773280dab06673d2cd0111eaf7e15"><td class="memItemLeft" align="right" valign="top"><a id="ade2773280dab06673d2cd0111eaf7e15"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>create_function_prototype</b> (<a class="el" href="class_craeft_1_1_function.html">Function</a>&lt;&gt; f, std::string name)</td></tr>
+<tr class="separator:ade2773280dab06673d2cd0111eaf7e15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67874393fa0cfd12ad9253a463f662d6"><td class="memItemLeft" align="right" valign="top"><a id="a67874393fa0cfd12ad9253a463f662d6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>create_and_start_function</b> (<a class="el" href="class_craeft_1_1_function.html">Function</a>&lt;&gt; f, std::vector&lt; std::string &gt; args, std::string name)</td></tr>
+<tr class="separator:a67874393fa0cfd12ad9253a463f662d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea5b40a64c40a74e2429930178fd6b07"><td class="memItemLeft" align="right" valign="top"><a id="aea5b40a64c40a74e2429930178fd6b07"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>create_struct</b> (<a class="el" href="class_craeft_1_1_struct.html">Struct</a>&lt;&gt; t)</td></tr>
+<tr class="separator:aea5b40a64c40a74e2429930178fd6b07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95b693d60f8775af38fb415036a01b94"><td class="memItemLeft" align="right" valign="top"><a id="a95b693d60f8775af38fb415036a01b94"></a>
+std::vector&lt; std::pair&lt; std::vector&lt; <a class="el" href="struct_craeft_1_1_type.html">Type</a> &gt;, <a class="el" href="struct_craeft_1_1_template_value.html">TemplateValue</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>end_function</b> (void)</td></tr>
+<tr class="separator:a95b693d60f8775af38fb415036a01b94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9289ea98dd1dba2f7dd42a4ae69f0569"><td class="memItemLeft" align="right" valign="top"><a id="a9289ea98dd1dba2f7dd42a4ae69f0569"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>validate</b> (std::ostream &amp;)</td></tr>
 <tr class="separator:a9289ea98dd1dba2f7dd42a4ae69f0569"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -183,12 +240,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>emit_obj</b> (int fd)
 <tr class="memitem:a0c09df5426afcac2a428171aa13fc873"><td class="memItemLeft" align="right" valign="top"><a id="a0c09df5426afcac2a428171aa13fc873"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>emit_asm</b> (int fd)</td></tr>
 <tr class="separator:a0c09df5426afcac2a428171aa13fc873"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e7485ca8c13a8b0a022b691f1f6faa6"><td class="memItemLeft" align="right" valign="top"><a id="a0e7485ca8c13a8b0a022b691f1f6faa6"></a>
-llvm::IRBuilder &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_builder</b> (void)</td></tr>
-<tr class="separator:a0e7485ca8c13a8b0a022b691f1f6faa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91a9786931e1f1414ea5f643a6c2b1bc"><td class="memItemLeft" align="right" valign="top"><a id="a91a9786931e1f1414ea5f643a6c2b1bc"></a>
-<a class="el" href="class_craeft_1_1_environment.html">Environment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_env</b> (void)</td></tr>
-<tr class="separator:a91a9786931e1f1414ea5f643a6c2b1bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d9aa926ca774709dfac98c2580ceb08"><td class="memItemLeft" align="right" valign="top"><a id="a7d9aa926ca774709dfac98c2580ceb08"></a>
 llvm::LLVMContext &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_ctx</b> (void)</td></tr>
 <tr class="separator:a7d9aa926ca774709dfac98c2580ceb08"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -197,7 +248,7 @@ llvm::LLVMContext &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ge
 <div class="textblock"><p>Implementation of the <a class="el" href="class_craeft_1_1_translator.html" title="Facilities for translating Craeft to LLVM. ">Translator</a>. </p>
 <p>See <a class="el" href="_translator_8hh.html" title="Facilitates translation from Craeft to LLVM. ">Translator.hh</a> for documentation of public members. </p>
 
-<p>Definition at line <a class="el" href="_translator_impl_8hh_source.html#l00045">45</a> of file <a class="el" href="_translator_impl_8hh_source.html">TranslatorImpl.hh</a>.</p>
+<p>Definition at line <a class="el" href="_translator_impl_8hh_source.html#l00046">46</a> of file <a class="el" href="_translator_impl_8hh_source.html">TranslatorImpl.hh</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/<a class="el" href="_translator_impl_8hh_source.html">TranslatorImpl.hh</a></li>
 <li>src/<a class="el" href="_translator_impl_8cpp_source.html">TranslatorImpl.cpp</a></li>

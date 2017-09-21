@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['parser_2ecpp',['Parser.cpp',['../_parser_8cpp.html',1,'']]],
-  ['parser_2ehh',['Parser.hh',['../_parser_8hh.html',1,'']]],
-  ['parserimpl_2ecpp',['ParserImpl.cpp',['../_parser_impl_8cpp.html',1,'']]],
-  ['parserimpl_2ehh',['ParserImpl.hh',['../_parser_impl_8hh.html',1,'']]]
+  ['module_2ecpp',['Module.cpp',['../_module_8cpp.html',1,'']]],
+  ['module_2ehh',['Module.hh',['../_module_8hh.html',1,'']]],
+  ['moduleimpl_2ecpp',['ModuleImpl.cpp',['../_module_impl_8cpp.html',1,'']]],
+  ['moduleimpl_2ehh',['ModuleImpl.hh',['../_module_impl_8hh.html',1,'']]]
 ];
